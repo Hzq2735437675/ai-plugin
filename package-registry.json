@@ -1,0 +1,26 @@
+{
+  "$schema": "./package-registry.schema.json",
+  "schemaVersion": 1,
+  "repository": {
+    "name": "ai-plugin",
+    "packageLayout": {
+      "currentPackageCompatibilityRoot": "ai-baseline-kit/",
+      "futurePackageRoot": "packages/<package-name>/",
+      "registry": "package-registry.json"
+    },
+    "packageContract": "package-manifest.schema.json"
+  },
+  "packages": [
+    {
+      "name": "ai-baseline-kit",
+      "version": "0.1.0",
+      "path": "ai-baseline-kit",
+      "manifest": "ai-baseline-kit/plugin.json",
+      "readme": "ai-baseline-kit/README.md",
+      "entry": "ai-baseline-kit/AGENTS.md",
+      "installation": "ai-baseline-kit/INSTALL.md",
+      "status": "active",
+      "distribution": "embedded-directory"
+    }
+  ]
+}

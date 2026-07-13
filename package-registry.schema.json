@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "package-registry.schema.json",
+  "title": "AI Plugin Package Registry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "repository", "packages"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "schemaVersion": { "type": "integer", "const": 1 },
+    "repository": {
+      "type": "object",
+      "required": ["name", "packageLayout", "packageContract"],
+      "properties": {
+        "name": { "type": "string" },
+        "packageLayout": {
+          "type": "object",
+          "required": ["currentPackageCompatibilityRoot", "futurePackageRoot", "registry"],
+          "additionalProperties": { "type": "string" }
+        },
+        "packageContract": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "packages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "version", "path", "manifest", "readme", "entry", "installation", "status", "distribution"],
+        "properties": {
+          "name": { "type": "string" },
+          "version": { "type": "string" },
+          "path": { "type": "string" },
+          "manifest": { "type": "string" },
+          "readme": { "type": "string" },
+          "entry": { "type": "string" },
+          "installation": { "type": "string" },
+          "status": { "type": "string" },
+          "distribution": { "type": "string" }
+        },
+        "additionalProperties": true
+      }
+    }
+  }
+}

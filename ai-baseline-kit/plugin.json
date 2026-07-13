@@ -1,0 +1,41 @@
+{
+  "$schema": "./package-manifest.schema.json",
+  "schemaVersion": 1,
+  "name": "ai-baseline-kit",
+  "version": "0.1.0",
+  "type": "embedded-ai-capability-package",
+  "description": "可完整植入目标项目的 AI 开发基线规范包，提供项目地图、结构规划、基线回归和国际化工作流。",
+  "entrypoints": {
+    "primary": "AGENTS.md",
+    "documentation": "README.md",
+    "installation": "INSTALL.md",
+    "skills": "skills/README.md",
+    "validation": "scripts/baseline-check.mjs"
+  },
+  "installation": {
+    "guide": "INSTALL.md",
+    "modes": [
+      "embedded-directory"
+    ],
+    "copyItems": [
+      "ai-baseline-kit/",
+      "AGENTS.md",
+      "CLAUDE.md"
+    ]
+  },
+  "distribution": {
+    "mode": "embedded-directory",
+    "preserveDirectoryName": true,
+    "targetDirectory": "<project-root>/ai-baseline-kit/",
+    "companionFiles": [
+      "AGENTS.md",
+      "CLAUDE.md"
+    ],
+    "sameStackRequired": false
+  },
+  "dependencies": {
+    "packages": [],
+    "runtime": [],
+    "external": []
+  }
+}

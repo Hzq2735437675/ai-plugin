@@ -1,14 +1,14 @@
 project:
   name: ai-plugin
-  purpose: 可植入不同项目、为 AI 开发提供统一规范、工作流、项目地图和基线检查能力的 AI 基线插件仓库。
-  scheme_version: 0.1.0
+  purpose: 可植入不同项目、为 AI 开发提供统一规范、工作流、项目地图和基线检查能力的多包 AI 能力仓库。
+  scheme_version: 0.2.0
   updated_at: 2026-07-13
-  update_source: project-scheme-bootstrap
+  update_source: manual-review-after-package-foundation
 
 stack:
   framework: not-applicable-package-repository
   ui_library: not-applicable-package-repository
-  language: Markdown-YAML-JavaScript
+  language: Markdown-YAML-JSON-JavaScript
   build_tool: not-applicable-package-repository
   router: not-applicable-package-repository
   state_manager: not-applicable-package-repository
@@ -23,15 +23,17 @@ layers:
   common_assets_root: not-applicable-package-repository
 
 entrypoints:
-  app: ai-baseline-kit/README.md
+  app: README.md
   router: not-applicable-package-repository
-  module_assembler: ai-baseline-kit/skills/README.md
+  module_assembler: package-registry.json
   menu_assembler: not-applicable-package-repository
   access_assembler: not-applicable-package-repository
   locale_assembler: not-applicable-package-repository
   store_assembler: not-applicable-package-repository
   api_client: not-applicable-package-repository
   permission_context: not-applicable-package-repository
+  package_registry: package-registry.json
+  package_checker: scripts/package-check.mjs
 
 i18n:
   enabled: false
@@ -44,7 +46,7 @@ base_components:
   root: not-applicable-package-repository
   protocol: not-applicable-package-repository
   notes:
-    - 本仓库提供工程基线能力，不承载业务 UI 基础组件。
+    - 本仓库提供工程基线和 AI 能力包，不承载业务 UI 基础组件。
 
 shared:
   root: ai-baseline-kit/skills
@@ -53,6 +55,30 @@ shared:
     - ai-baseline-kit/skills/README.md
     - ai-baseline-kit/scripts/baseline-check.mjs
   shared_core: ai-baseline-kit/docs
+
+packages:
+  registry: package-registry.json
+  manifest_schema: package-manifest.schema.json
+  registry_schema: package-registry.schema.json
+  future_root: packages
+  contract:
+    required_files:
+      - README.md
+      - plugin.json
+      - INSTALL.md
+      - primary_entry
+    versioning: semver
+    dependencies: explicit-in-plugin-json
+  items:
+    - name: ai-baseline-kit
+      version: 0.1.0
+      root: ai-baseline-kit
+      manifest: ai-baseline-kit/plugin.json
+      readme: ai-baseline-kit/README.md
+      install: ai-baseline-kit/INSTALL.md
+      primary_entry: ai-baseline-kit/AGENTS.md
+      distribution: embedded-directory
+      status: active
 
 modules:
   root: not-applicable-package-repository
@@ -65,21 +91,26 @@ portability:
   notes:
     - 规范包面向不同技术栈项目提供可迁移的规则和 AI 工作流。
     - 业务模块页面组件不属于本仓库的交付内容。
+    - 能力包以独立目录、元数据、入口和安装说明为最小复制单元。
 
 validation:
   typecheck: not-applicable-package-repository
   lint: not-applicable-package-repository
-  test: node ai-baseline-kit/scripts/baseline-check.mjs
+  test: node scripts/package-check.mjs && node ai-baseline-kit/scripts/baseline-check.mjs
   build: not-applicable-package-repository
 
 required_questions: []
 confidence: high
 evidence:
   - source: ai-baseline-kit/README.md
-    finding: 仓库定位为可完整植入目标项目的 AI 基线规范包。
-  - source: ai-baseline-kit/docs/baseline-rules.yml
-    finding: 整包植入模式将 ai-baseline-kit 作为 baseline_root，父目录作为 project_root。
-  - source: ai-baseline-kit/scripts/baseline-check.mjs
-    finding: 仓库提供无第三方依赖的基线硬检查脚本。
+    finding: ai-baseline-kit 是可完整植入目标项目的 AI 基线规范包。
+  - source: ai-baseline-kit/plugin.json
+    finding: 当前包已具备独立名称、版本、入口、安装和分发元数据。
+  - source: package-registry.json
+    finding: 根目录注册表登记当前包，并约定未来包目录为 packages/<package-name>/。
+  - source: package-manifest.schema.json
+    finding: 所有包的元数据契约要求独立 README、入口和安装说明。
+  - source: scripts/package-check.mjs
+    finding: 仓库提供无第三方依赖的包结构与元数据检查。
   - source: repository-scan
-    finding: 当前仓库仅包含 ai-baseline-kit 规范包及根入口文档，未发现 package manifest、业务源码、路由、状态或模块目录。
+    finding: 当前仓库没有业务源码、路由、状态或模块目录；包边界与业务模块边界保持分离。
