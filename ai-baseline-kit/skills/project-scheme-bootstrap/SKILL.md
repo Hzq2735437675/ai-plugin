@@ -10,6 +10,7 @@ description: 自动引导新项目或旧项目生成 docs/project-scheme.yml 的
 
 ## 触发场景
 - `docs/project-scheme.yml` 不存在。
+- `docs/project-scheme.yml` 存在但 `project.map_status` 为 `package-repository-reference`，表示它是随包复制的仓库参考地图，必须覆盖为目标项目地图。
 - 新项目刚复制基线包，还没有项目地图。
 - 空目录或近似空目录中，用户已经说明要使用的技术栈。
 - 空目录或近似空目录中，用户只说明业务需求，没有说明技术栈。
@@ -60,20 +61,28 @@ description: 自动引导新项目或旧项目生成 docs/project-scheme.yml 的
 3. 生成 `baseline_root/docs/project-scheme.yml` 初版。
 4. 允许后续初始化项目骨架，但骨架创建必须由 `baseline-structure-skill` 先规划范围。
 
-### 未指定技术栈
-当仓库为空且用户未说明技术栈时：
+### 新项目未指定技术栈
+当仓库为空或尚未形成应用代码，且用户没有指定技术栈时：
 
-1. 不要自行决定 Vue、React、Next、Nuxt 或其他框架。
-2. 先生成一个最小 `baseline_root/docs/project-scheme.yml`：
-   - 已知业务目标写入 `project.purpose`
-   - 技术栈字段写 `unknown`
-   - `confidence` 写 `low`
-   - `required_questions` 只列最少关键问题
-3. 只问足以开始搭建项目的问题，通常不超过 3 个：
-   - 目标端或应用类型，例如 Web 后台、官网、移动端、小程序、桌面端。
-   - 技术栈偏好，例如 Vue3 + Vite、React + Vite、Next.js。
-   - UI 库偏好，例如 Ant Design、Element Plus、无 UI 库。
-4. 用户回答后，更新 `docs/project-scheme.yml`，再进入 `baseline-structure-skill`。
+1. 如果目标是前端项目，默认采用 `ai-baseline-kit/docs/stack-profiles.yml` 中的 `default_new_frontend`：
+   - React 18
+   - TypeScript
+   - Vite
+   - Ant Design 5
+   - Tailwind CSS 3
+   - React Router 6
+2. 将默认 profile 和 `templates/react18-antd-tailwind-ts/` 写入 `evidence`，并在 `project-scheme.yml` 中记录实际采用的技术栈。
+3. 只有在目标端不是前端、用户明确要求其他技术栈，或需求存在不可安全推断的关键约束时，才提出最少确认问题。
+4. 初始化代码骨架前，必须先使用 `baseline-structure-skill` 明确范围；模板只提供可运行起点，不代替业务需求分析。
+5. 如果用户在初始化前指定 Vue、React 其他版本、Next、Nuxt 或其他技术栈，优先服从用户选择，并将其记录为项目实际技术栈，不套用默认模板。
+
+### 技术栈选择优先级
+按以下顺序选择：
+
+1. 用户明确指定的技术栈。
+2. 旧项目扫描得到的实际技术栈。
+3. 新前端项目的 `default_new_frontend` profile。
+4. 无法可靠判断时保留 `unknown` 并提出最少问题。
 
 ## 旧项目策略
 旧项目中途接入时：
@@ -140,6 +149,7 @@ project:
   name: detected-or-unknown
   purpose: unknown
   scheme_version: 0.1.0
+  map_status: target-project
   updated_at: YYYY-MM-DD
   update_source: project-scheme-bootstrap
 

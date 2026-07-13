@@ -1,5 +1,6 @@
 project:
   name: project-name
+  map_status: target-project
   purpose: describe-current-project
   scheme_version: 0.1.0
   updated_at: YYYY-MM-DD

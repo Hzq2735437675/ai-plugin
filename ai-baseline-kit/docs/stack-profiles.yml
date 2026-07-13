@@ -1,0 +1,46 @@
+profiles:
+  default_new_frontend:
+    id: react18-antd-tailwind-ts
+    name: React 18 + Ant Design + Tailwind CSS + TypeScript
+    status: active
+    selection:
+      mode: new-project
+      when: project_root_has_no_existing_app_stack
+      user_override: allowed-before-initialization
+    stack:
+      framework: React 18
+      ui_library: Ant Design 5
+      language: TypeScript
+      build_tool: Vite
+      router: React Router 6
+      state_manager: project-defined
+      i18n: project-defined
+      style_solution: Tailwind CSS 3 + CSS Modules-or-project-defined-local-styles
+    template_root: templates/react18-antd-tailwind-ts
+    required_outputs:
+      - package.json
+      - src/app
+      - src/shared
+      - src/modules
+      - src/main.tsx
+    validation:
+      install: npm install
+      typecheck: npm run typecheck
+      build: npm run build
+    notes:
+      - 该 profile 只用于新项目初始化，不覆盖已有项目技术栈。
+      - state_manager 和 i18n 在未提出需求时保持 project-defined，不凭空增加全局复杂度。
+
+  existing_project_detected:
+    id: existing-project-detected
+    name: Existing project stack detected
+    status: policy
+    selection:
+      mode: legacy-project
+      when: package_manifest_or_source_or_build_config_exists
+      user_override: not-required
+    behavior:
+      - 读取已有 package manifest、lockfile、构建配置、入口、路由、状态、i18n 和模块目录。
+      - 保留已有 framework、ui_library、language、build_tool、router、state_manager、i18n 和 style_solution。
+      - 只生成或更新 project-scheme.yml，不自动重构旧代码或切换技术栈。
+      - 新增能力遵循旧项目真实技术栈和基线分层规则。

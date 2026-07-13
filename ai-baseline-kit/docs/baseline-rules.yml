@@ -336,3 +336,36 @@ regression_loop_rules:
     - 结果为 pass
     - 存在无法从仓库上下文安全推断的边界歧义
     - 达到最大轮次后仍重复失败
+
+stack_selection_policy:
+  strategy: detect-existing-or-default-new
+  precedence:
+    - user_explicit_request
+    - existing_project_evidence
+    - default_new_frontend_profile
+    - unknown_with_minimal_questions
+  existing_project:
+    trigger: package_manifest_or_source_or_build_config_exists
+    behavior:
+      - preserve_existing_framework_and_toolchain
+      - scan_and_record_actual_stack
+      - do_not_migrate_or_restructure_automatically
+      - develop_new_scope_using_existing_stack
+  new_project:
+    trigger: no_existing_app_stack_detected
+    default_profile: default_new_frontend
+    profile_file: docs/stack-profiles.yml
+    template_root: templates/react18-antd-tailwind-ts
+    default_stack:
+      framework: React 18
+      ui_library: Ant Design 5
+      language: TypeScript
+      build_tool: Vite
+      router: React Router 6
+      style_solution: Tailwind CSS 3
+    override_rule: user_explicit_request_wins_before_initialization
+  ai_behavior:
+    - write_selected_mode_and_evidence_to_project_scheme
+    - run_baseline_structure_planning_before_scaffolding
+    - do_not_apply_default_template_to_legacy_projects
+    - keep_state_manager_and_i18n_project_defined_until_needed

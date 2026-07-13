@@ -13,14 +13,16 @@
   "packages": [
     {
       "name": "ai-baseline-kit",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "path": "ai-baseline-kit",
       "manifest": "ai-baseline-kit/plugin.json",
       "readme": "ai-baseline-kit/README.md",
       "entry": "ai-baseline-kit/AGENTS.md",
       "installation": "ai-baseline-kit/INSTALL.md",
       "status": "active",
-      "distribution": "embedded-directory"
+      "distribution": "embedded-directory",
+      "template": "ai-baseline-kit/templates/react18-antd-tailwind-ts/README.md",
+      "stackProfiles": "ai-baseline-kit/docs/stack-profiles.yml"
     }
   ]
 }

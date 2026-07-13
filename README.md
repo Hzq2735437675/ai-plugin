@@ -8,7 +8,7 @@
 
 | 包 | 版本 | 类型 | 入口 | 安装/植入说明 |
 | --- | --- | --- | --- | --- |
-| `ai-baseline-kit` | `0.1.0` | 可嵌入 AI 工程基线包 | [`ai-baseline-kit/AGENTS.md`](ai-baseline-kit/AGENTS.md) | [`ai-baseline-kit/INSTALL.md`](ai-baseline-kit/INSTALL.md) |
+| `ai-baseline-kit` | `0.2.0` | 可嵌入 AI 工程基线包 | [`ai-baseline-kit/AGENTS.md`](ai-baseline-kit/AGENTS.md) | [`ai-baseline-kit/INSTALL.md`](ai-baseline-kit/INSTALL.md) |
 
 完整登记信息见 [`package-registry.json`](package-registry.json)。
 
@@ -62,3 +62,13 @@ node ai-baseline-kit/scripts/baseline-check.mjs
 4. 运行 `node scripts/package-check.mjs`。
 5. 更新项目地图并运行基线回归。
 6. 使用独立提交记录包的新增或版本升级。
+
+## 技术栈策略
+
+复制 `ai-baseline-kit/` 到其他项目后，AI 按以下优先级工作：
+
+1. 用户明确指定的技术栈。
+2. 旧项目扫描得到的真实技术栈，并保持原项目技术栈开发。
+3. 新前端项目默认采用 React 18 + TypeScript + Vite + Ant Design 5 + Tailwind CSS 3 + React Router 6。
+
+因此，同一个基线包既可以接入 Vue、React 等旧项目，也可以作为未定技术栈项目的默认 React 工程起点。默认策略和参考模板位于 `ai-baseline-kit/docs/stack-profiles.yml` 与 `ai-baseline-kit/templates/react18-antd-tailwind-ts/`。

@@ -1,12 +1,32 @@
 # AI Baseline Kit
 
 - 包名：`ai-baseline-kit`
-- 当前版本：`0.1.0`
+- 当前版本：`0.2.0`
 - 包元数据：[`plugin.json`](plugin.json)
 - 安装/植入说明：[`INSTALL.md`](INSTALL.md)
 - AI 主入口：[`AGENTS.md`](AGENTS.md)
 
-这是一套可以整体植入任意项目根目录的 AI 开发基线包。推荐用法是：不要把包内 `docs/`、`skills/`、`scripts/` 抽散到项目根目录，而是直接保留整个 `ai-baseline-kit/` 文件夹。
+这是一套可以整体植入任意项目根目录的 AI 开发基线包。最小用法是：**只复制整个 `ai-baseline-kit/` 文件夹**，不需要复制本仓库其他目录，也不依赖本仓库的 Git 历史。
+
+## 技术栈选择模式
+
+本包不会把默认 React 模板强加给所有项目，而是按项目状态选择模式：
+
+### 旧项目模式
+
+如果目标项目已经存在 `package.json`、lockfile、源码、构建配置、路由或其他应用入口，AI 先识别实际技术栈并保留它。无论项目使用 Vue、React、Angular 还是其他技术栈，都按旧项目的真实结构继续开发，不自动迁移框架或重构目录。
+
+### 新项目模式
+
+如果目标项目没有既有应用技术栈，且用户没有在初始化前指定其他方案，默认使用：
+
+```text
+React 18 + TypeScript + Vite + Ant Design 5 + Tailwind CSS 3 + React Router 6
+```
+
+默认技术栈策略见 [`docs/stack-profiles.yml`](docs/stack-profiles.yml)，可运行参考模板见 [`templates/react18-antd-tailwind-ts/README.md`](templates/react18-antd-tailwind-ts/README.md)。
+
+用户在初始化前明确指定其他技术栈时，用户选择优先，AI 只记录实际方案并继续遵循同一套边界、模块、装配和回归规则。
 
 ## 能力概览
 
@@ -16,27 +36,20 @@
 - 通过 `baseline-conformance-skill` 在开发后执行基线回归。
 - 通过 `project-i18n-localizer` 处理项目级国际化配置和文案归属。
 - 通过 `baseline-check.mjs` 执行无第三方依赖的硬检查。
+- 通过默认模板示范 shell、shared、modules、manifest 和静态路由/菜单装配。
 
 ## 植入方式
 
-完整的新项目接入、已有项目接入、升级、卸载和验证步骤见 [`INSTALL.md`](INSTALL.md)。核心分发目录是：
+### 最小方式：只复制包目录
 
 ```text
 <target-project>/
-├── ai-baseline-kit/
-├── AGENTS.md
-└── CLAUDE.md
+└── ai-baseline-kit/
 ```
 
-复制后直接和 AI 说需求即可；根入口会要求 AI 读取：
+复制后让 AI 先读取 `ai-baseline-kit/AGENTS.md` 即可使用。若 AI 工具只自动读取根级 `AGENTS.md` 或 `CLAUDE.md`，再按 [`INSTALL.md`](INSTALL.md) 追加一个很短的根级入口；根级文件是自动发现适配层，不是本包的必要依赖。
 
-```text
-ai-baseline-kit/AGENTS.md
-```
-
-如果目标项目已有 `AGENTS.md` 或 `CLAUDE.md`，不要覆盖原文件，应在保留原内容的前提下追加 ai-baseline 强约束段落。
-
-## 路径约定
+### 路径约定
 
 - `baseline_root`: `ai-baseline-kit/`
 - `project_root`: `ai-baseline-kit/` 的父目录，也就是业务项目根目录
@@ -59,6 +72,7 @@ ai-baseline-kit/AGENTS.md
 - `skills/baseline-structure-skill/SKILL.md`: 开发前结构化需求。
 - `skills/baseline-conformance-skill/SKILL.md`: 开发后基线符合性回归。
 - `skills/project-i18n-localizer/SKILL.md`: 项目级国际化识别、配置、文案抽取、翻译和覆盖验证。
+- `templates/react18-antd-tailwind-ts/`: 新前端项目默认参考模板。
 
 ## 启动方式
 

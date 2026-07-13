@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "package-manifest.schema.json",
+  "title": "AI Capability Package Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "name",
+    "version",
+    "type",
+    "description",
+    "entrypoints",
+    "installation",
+    "distribution",
+    "dependencies"
+  ],
+  "properties": {
+    "$schema": { "type": "string" },
+    "schemaVersion": { "type": "integer", "const": 1 },
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*$"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"
+    },
+    "type": { "type": "string" },
+    "description": { "type": "string", "minLength": 1 },
+    "entrypoints": {
+      "type": "object",
+      "required": ["primary", "documentation", "installation"],
+      "properties": {
+        "primary": { "type": "string" },
+        "documentation": { "type": "string" },
+        "installation": { "type": "string" },
+        "skills": { "type": "string" },
+        "validation": { "type": "string" }
+      },
+      "additionalProperties": { "type": "string" }
+    },
+    "installation": {
+      "type": "object",
+      "required": ["guide", "modes", "copyItems"],
+      "properties": {
+        "guide": { "type": "string" },
+        "modes": { "type": "array", "items": { "type": "string" } },
+        "copyItems": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": true
+    },
+    "distribution": {
+      "type": "object",
+      "required": ["mode", "preserveDirectoryName", "sameStackRequired"],
+      "properties": {
+        "mode": { "type": "string" },
+        "preserveDirectoryName": { "type": "boolean" },
+        "targetDirectory": { "type": "string" },
+        "companionFiles": { "type": "array", "items": { "type": "string" } },
+        "sameStackRequired": { "type": "boolean" }
+      },
+      "additionalProperties": true
+    },
+    "dependencies": {
+      "type": "object",
+      "required": ["packages", "runtime", "external"],
+      "properties": {
+        "packages": { "type": "array", "items": { "type": "string" } },
+        "runtime": { "type": "array", "items": { "type": "string" } },
+        "external": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": true
+    }
+  }
+}
