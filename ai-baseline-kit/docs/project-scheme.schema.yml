@@ -1,0 +1,175 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: project-scheme.schema.yml
+title: Project Scheme
+type: object
+additionalProperties: true
+required:
+  - project
+  - stack
+  - layers
+  - entrypoints
+  - modules
+  - validation
+  - required_questions
+  - confidence
+  - evidence
+properties:
+  project:
+    type: object
+    additionalProperties: true
+    required:
+      - name
+      - purpose
+      - scheme_version
+      - updated_at
+      - update_source
+    properties:
+      name:
+        type: string
+      purpose:
+        type: string
+      scheme_version:
+        type: string
+      updated_at:
+        type: string
+      update_source:
+        type: string
+  stack:
+    type: object
+    additionalProperties: true
+    required:
+      - framework
+      - ui_library
+      - language
+      - build_tool
+      - router
+      - state_manager
+      - i18n
+      - style_solution
+    properties:
+      framework:
+        type: string
+      ui_library:
+        type: string
+      language:
+        type: string
+      build_tool:
+        type: string
+      router:
+        type: string
+      state_manager:
+        type: string
+      i18n:
+        type: string
+      style_solution:
+        type: string
+  layers:
+    type: object
+    additionalProperties: true
+    required:
+      - shell_root
+      - shared_root
+      - modules_root
+      - base_components_root
+      - common_assets_root
+    properties:
+      shell_root:
+        type: string
+      shared_root:
+        type: string
+      modules_root:
+        type: string
+      base_components_root:
+        type: string
+      common_assets_root:
+        type: string
+  entrypoints:
+    type: object
+    additionalProperties: true
+    required:
+      - app
+      - router
+      - module_assembler
+      - api_client
+    properties:
+      app:
+        type: string
+      router:
+        type: string
+      module_assembler:
+        type: string
+      menu_assembler:
+        type: string
+      access_assembler:
+        type: string
+      locale_assembler:
+        type: string
+      store_assembler:
+        type: string
+      api_client:
+        type: string
+      permission_context:
+        type: string
+  i18n:
+    type: object
+    additionalProperties: true
+    properties:
+      enabled:
+        type:
+          - boolean
+          - string
+      library:
+        type: string
+      locales:
+        type: array
+      resource_roots:
+        type: array
+      key_style:
+        type: string
+  base_components:
+    type: object
+    additionalProperties: true
+  shared:
+    type: object
+    additionalProperties: true
+  modules:
+    type: object
+    additionalProperties: true
+    required:
+      - root
+      - items
+    properties:
+      root:
+        type: string
+      manifest_pattern:
+        type: string
+      items:
+        type: array
+  validation:
+    type: object
+    additionalProperties: true
+    required:
+      - typecheck
+      - lint
+      - test
+      - build
+    properties:
+      typecheck:
+        type: string
+      lint:
+        type: string
+      test:
+        type: string
+      build:
+        type: string
+  required_questions:
+    type: array
+  confidence:
+    type: string
+    enum:
+      - high
+      - medium
+      - low
+      - unknown
+  evidence:
+    type: array

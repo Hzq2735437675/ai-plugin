@@ -1,0 +1,4 @@
+interface:
+  display_name: "基线结构规划"
+  short_description: "开发前将需求整理为符合项目基线的实现方案。"
+  default_prompt: "使用 $baseline-structure-skill 读取当前项目规则，将需求整理为目标层级、模块、入口、组件、API、状态、文案、样式、依赖和验证计划。"

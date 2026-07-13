@@ -1,0 +1,174 @@
+purpose: 为 AI 和开发者提供可执行工程化工作流；`baseline-rules.yml` 定义规则，本文件定义不同任务如何按规则落地。
+
+path_mode:
+  baseline_root: ai-baseline-kit 目录；本文件、baseline-rules.yml、skills、scripts 和 project-scheme.yml 均位于此目录内。
+  project_root: ai-baseline-kit 的父目录；业务代码、依赖、路由、模块和资源均按此目录扫描或修改。
+  embedded_usage: 整包植入项目时，不把 docs/skills/scripts 抽到业务项目根目录；AI 应先读取 ai-baseline-kit/AGENTS.md。
+
+principles:
+  - 先读规则，再做计划，再实施，再回归。
+  - 每次任务都必须限定范围，避免顺手重构。
+  - 新增内容必须可定位、可裁剪、可迁移、可回归。
+  - 同技术栈项目之间的模块迁移必须先做 preflight，不直接复制或整分支合并。
+  - AI 可以负责分析、规划和执行，但人负责审核关键边界、业务语义和最终验收。
+
+required_entrypoints:
+  before_work:
+    - ai-baseline-kit/AGENTS.md 或项目根 AGENTS.md 薄入口
+    - ai-baseline-kit/docs/baseline-rules.yml
+    - ai-baseline-kit/docs/engineering-workflow.yml
+    - ai-baseline-kit/docs/project-scheme.yml (if present)
+    - ai-baseline-kit/skills/project-scheme-bootstrap/SKILL.md (if project-scheme.yml missing)
+    - ai-baseline-kit/skills/baseline-structure-skill/SKILL.md
+  after_work:
+    - ai-baseline-kit/skills/baseline-conformance-skill/SKILL.md
+
+workflows:
+  bootstrap_existing_project:
+    goal: 在旧项目中途接入基线规则，不要求人工预先填写 project-defined。
+    steps:
+      - 读取 AGENTS.md、baseline-rules.yml 和 engineering-workflow.yml。
+      - 使用 project-scheme-bootstrap 扫描 package manifest、框架配置、构建配置、路由、状态、i18n、API client、目录结构、已有模块和验证脚本。
+      - 生成 baseline_root/docs/project-scheme.yml，能确定的字段写入 detected 值，不能确定的字段写 unknown 并列入 required_questions。
+      - 不移动旧代码，不做结构重构，只建立项目地图和接入边界。
+      - 使用 baseline-conformance-skill 对 scheme 自身做轻量回归。
+    output:
+      - docs/project-scheme.yml
+      - detected stack/layers/entrypoints/modules
+      - unknown 字段和最少确认问题
+      - 后续改造建议
+
+  bootstrap_new_project:
+    goal: 在新项目初始化时接入基线规则，不要求人工预先填写 project-defined。
+    steps:
+      - 读取 AGENTS.md、baseline-rules.yml 和 engineering-workflow.yml。
+      - 如果用户已经说明技术栈，从用户需求中提取 framework、ui_library、language、build_tool、router、state_manager、i18n 和 style_solution。
+      - 如果用户没有说明技术栈且仓库为空，不凭空选择框架，只询问目标端、技术栈和 UI 库等最少关键问题。
+      - 如果项目已有依赖或配置，优先从文件推断。
+      - 使用 project-scheme-bootstrap 生成 baseline_root/docs/project-scheme.yml 初版。
+      - 在 scheme 中记录 shell/shared/modules、基础组件层、API client、路由、状态、i18n、样式方案和验证命令。
+      - 后续新增页面或模块必须先经过 baseline-structure-skill。
+    output:
+      - docs/project-scheme.yml
+      - 新项目基线落点
+      - 缺失决策的最少问题
+
+  new_feature:
+    goal: 在新项目或已基线化项目中新增功能。
+    steps:
+      - 读取 baseline-rules.yml 和本 workflow。
+      - 如果 docs/project-scheme.yml 不存在，先运行 bootstrap_existing_project 或 bootstrap_new_project。
+      - 使用 baseline-structure-skill 输出目标层级、模块、页面、路由、组件、API、状态、文案、样式、资源、manifest、依赖和验证计划。
+      - 只在目标模块或目标共享层内新增文件。
+      - 为模块补齐 manifest、routes、menus、access、locales、stores、assets 和 dependencies。
+      - 使用静态装配入口接入模块，不新增隐式注册点。
+      - 运行 baseline-conformance-skill。
+    output:
+      - 结构化开发方案
+      - 完整模块或功能改动
+      - 回归结果 pass/fail
+
+  refactor_existing_page:
+    goal: 在不改变业务行为的前提下，把已有页面整理到基线结构。
+    steps:
+      - 如果 docs/project-scheme.yml 不存在，先运行 bootstrap_existing_project。
+      - 明确只改一个页面或一个小模块。
+      - 盘点页面依赖的组件、API、状态、文案、样式、资源和路由。
+      - 区分页面私有内容、模块内容、shared 内容和基础组件内容。
+      - 将页面私有内容收敛到页面目录，将模块内容收敛到模块目录。
+      - 外置样式，补齐文案命名空间，消除跨模块直接引用。
+      - 更新 manifest 和装配入口。
+      - 运行 baseline-conformance-skill。
+    output:
+      - 页面依赖清单
+      - 基线化后的页面模块结构
+      - 回归结果 pass/fail
+
+  modularize_legacy_page:
+    goal: 将旧项目中的单个页面整理成可移植模块资产。
+    steps:
+      - 如果 docs/project-scheme.yml 不存在，先运行 bootstrap_existing_project。
+      - 锁定页面入口、路由、菜单和业务边界。
+      - 追踪页面直接依赖和必要间接依赖。
+      - 将页面、子组件、API、types、stores、locales、styles、assets 归入模块目录。
+      - 将真正跨模块复用能力上移到 shared；不要把页面私有逻辑放入 shared。
+      - 为模块补齐 manifest，并声明 shared、base_components、npm、env、assets、permissions 依赖。
+      - 运行 baseline-conformance-skill，确认模块可被独立复制。
+    output:
+      - 可移植模块目录
+      - manifest 依赖声明
+      - 迁移前置风险列表
+
+  migrate_module_between_projects:
+    goal: 在同技术栈、同装配协议项目之间迁移模块。
+    preflight:
+      - 读取源项目和目标项目的 baseline-rules.yml。
+      - 比较 framework、ui_library、build_tool、router、state_manager、i18n、style_solution。
+      - 比较 module_contract、assembler_contract、base_component_rules。
+      - 读取源模块 manifest。
+      - 检查 shared、base_components、npm、env、assets、permissions 依赖。
+      - 检查命名空间、路由 name、store id、文案 namespace 冲突。
+      - 输出 can_migrate / needs_adapter / blocked。
+    steps:
+      - 只复制模块目录和 manifest 声明的必要共享依赖。
+      - 只修改目标项目标准装配入口。
+      - 不整分支 merge，不整项目 cherry-pick。
+      - 运行 baseline-conformance-skill。
+      - 运行目标项目构建、类型检查、单测或等价验证。
+    output:
+      - preflight 结论
+      - 迁移文件清单
+      - 装配入口变更清单
+      - 回归结果 pass/fail
+
+  initialize_new_project:
+    goal: 使用公司基线初始化一个同技术栈新项目。
+    steps:
+      - 固定技术栈、构建工具、路由、状态、i18n、样式方案、UI 基础组件协议。
+      - 创建 shell、shared、modules、base components、common assets 等项目根结构。
+      - 将完整 ai-baseline-kit/ 放入项目根目录；不要把 docs、skills、scripts 抽散到业务项目根目录。
+      - 如需自动发现规范包，可在项目根目录放置分发目录同级的 AGENTS.md 和 CLAUDE.md 薄入口。
+      - 不自动修改项目根 .gitignore；保留 ai-baseline-kit/ 的 Git 可见性，便于审计和同步规范包变化。
+      - 使用 project-scheme-bootstrap 生成 baseline_root/docs/project-scheme.yml 初版；可由 AI 辅助维护，待基线稳定后再接入自动生成脚本。
+      - 建立统一 API client、权限上下文、模块装配器、文案装配器、状态装配器。
+      - 生成示例模块，验证 manifest 和装配链路。
+      - 跑 baseline-conformance-skill 和项目基础构建。
+    output:
+      - 新项目骨架
+      - 示例模块
+      - 基础回归结果
+
+  regression:
+    goal: 对任意实现或迁移结果做基线回归。
+    steps:
+      - 如果 baseline_root/docs/project-scheme.yml 不存在，先运行 project-scheme-bootstrap 并生成项目地图。
+      - 使用 baseline-conformance-skill 检查层级、边界、manifest、API、状态、资源、文案、样式、命名和依赖。
+      - 运行项目要求的构建、类型检查、单测或等价验证。
+      - 输出 pass/fail、violations、required_fixes、rerun、verify。
+    output:
+      - 回归报告
+
+  fix_verify_loop:
+    goal: 失败后只修复违规项并重新验证。
+    max_rounds: 5
+    steps:
+      - 只修复 violations 中列出的内容。
+      - 不扩大任务范围，不做顺手重构。
+      - 每轮修复后重新运行相同检查。
+      - 达到 max_rounds 仍失败时停止，并说明阻塞原因。
+    stop_conditions:
+      - pass
+      - 规则歧义需要人确认
+      - 达到最大轮次
+
+ai_readability:
+  required_artifacts:
+    - baseline-rules.yml 用于机器读取规则。
+    - engineering-workflow.yml 用于机器选择任务流程。
+    - project-scheme.yml 用于机器读取当前项目地图。
+    - module manifest 用于机器识别模块能力和依赖。
+    - conformance report 用于机器进入修复到验证闭环。
+  design_intent:
+    - 让 AI 少猜测，多按结构字段执行。
+    - 让模块迁移先判断，再执行。
+    - 让人审核计划、依赖、风险和最终结果。

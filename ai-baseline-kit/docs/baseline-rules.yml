@@ -1,0 +1,338 @@
+project:
+  purpose: 面向 AI 可读、复制优先、可裁剪、可审计、可复用、同技术栈模块可迁移的通用项目基线。
+  stack:
+    portability_scope: same-technology-stack-only
+    framework: project-defined
+    ui_library: project-defined
+    language: project-defined
+    build_tool: project-defined
+    router: project-defined
+    state_manager: project-defined
+    i18n: project-defined
+    style_solution: project-defined
+  ownership:
+    shell_layer: project-defined
+    shared_layer: project-defined
+    module_layer: project-defined
+
+project_scheme:
+  purpose: 项目说明书和项目地图；供 AI 读取当前项目真实结构、装配入口、模块能力和迁移边界。
+  path_mode:
+    embedded_baseline_root: ai-baseline-kit
+    scheme_location: ai-baseline-kit/docs/project-scheme.yml
+    project_root: ai-baseline-kit 的父目录
+  embedded_package_rules:
+    - ai-baseline-kit 作为完整规范包植入项目根目录，不把 docs、skills、scripts 抽散到业务项目根目录。
+    - 业务改动默认只发生在 project_root，不修改 ai-baseline-kit；只有维护规范包时才改 baseline_root。
+    - 项目根 AGENTS.md 和 CLAUDE.md 应包含 ai-baseline 强入口约束；缺失时创建，已有但不完整时追加受控段落，不覆盖原内容。
+    - 不要自动向目标项目 .gitignore 追加 ai-baseline-kit/；规范包变化应允许在 Git 中显示，便于审计、同步和提交。
+    - 如果目标项目 .gitignore 已忽略 ai-baseline-kit/，需要显示规范包变化时应由开发者显式移除该忽略规则。
+  status:
+    current_branch: generated_or_bootstrapped_per_project
+    generation_mode: ai_bootstrap_first_then_manual_review
+    automation_mode: deferred_until_baseline_complete
+  bootstrap_rules:
+    - 当 ai-baseline-kit/docs/project-scheme.yml 不存在时，先运行 skills/project-scheme-bootstrap/SKILL.md
+    - 新项目优先从用户需求中提取技术栈、目标端、UI 库和业务类型；旧项目优先从 package manifest、框架配置、路由入口、状态入口、i18n 入口、API client、目录结构和已有模块推断
+    - 空项目且用户未指定技术栈时，不凭空选择框架，只提出目标端、技术栈和 UI 库等最少确认问题
+    - 无法可靠推断的字段保留为 unknown，并在 required_questions 中列出最少问题
+    - 不因为缺少 scheme 直接开始业务改动
+  required_when_enabled:
+    - current tech stack summary
+    - shell/shared/modules map
+    - module manifest index
+    - assembler entrypoints
+    - api client location
+    - permission context
+    - i18n entrypoints
+    - store entrypoints
+    - base components location
+    - shared-core location
+    - modules portability summary
+    - scheme version and update source
+  update_rules:
+    - 结构变更后必须更新 scheme
+    - 模块新增、删除、迁移或重命名后必须更新 scheme
+    - 装配入口变化后必须更新 scheme
+    - 当 baseline 未完成时，不生成执行层自动化脚本驱动的 scheme
+
+layers:
+  shell:
+    scope:
+      - 应用启动
+      - 全局布局或壳层
+      - 全局主题
+      - 全局样式
+      - 全局路由装配
+      - 全局状态
+      - 全局指令
+      - 全局文案
+      - 无明确业务域归属的基础页面
+    must_not:
+      - 依赖模块私有实现细节
+      - 承载应属于 shared 或 modules 的业务逻辑
+  shared:
+    scope:
+      - 跨域复用组件
+      - 共享 hooks 与 utils
+      - 共享 types
+      - 共享状态
+      - 共享文案
+      - 明确跨域复用但不属于基础层的页面
+    must_not:
+      - 依赖某个具体模块
+      - 承载基础入口页或兜底页
+  modules:
+    scope:
+      - 权限或业务域专属页面
+      - 路由
+      - 菜单
+      - 访问控制
+      - API
+      - 模块类型
+      - 模块状态
+      - 模块指令
+      - 模块文案
+      - 模块样式
+    must_not:
+      - 直接导入另一个模块
+      - 暴露隐式跨模块耦合
+
+directory_conventions:
+  roots:
+    shell_root: project-defined
+    shared_root: project-defined
+    modules_root: project-defined
+    base_components_root: project-defined
+    common_assets_root: project-defined
+  module_layout:
+    - index.ts
+    - manifest.ts
+    - routes.ts
+    - menu.ts
+    - access.ts
+    - api/
+    - types/
+    - composables/
+    - pages/
+    - components/
+    - stores/
+    - directives/
+    - locales/
+    - styles/
+    - assets/
+  page_layout:
+    preferred: kebab-case 目录，内部使用 `index` 页面文件和同目录样式文件
+  component_layout:
+    preferred: kebab-case 目录，内部使用 `index` 组件文件和同目录样式文件
+
+module_contract:
+  portability_scope: 同技术栈项目之间应具备直接迁移能力；跨技术栈只复用规则、数据契约和业务协议，不承诺页面组件直接迁移。
+  required_files:
+    - index.ts
+    - manifest.ts
+    - routes.ts
+    - menu.ts
+    - access.ts
+  required_directories:
+    - pages/
+    - components/
+    - api/
+    - types/
+    - stores/
+    - locales/
+    - styles/
+    - assets/
+  required_exports:
+    index.ts:
+      - moduleManifest
+      - routes
+      - menus
+      - access
+      - locales
+      - stores
+      - directives
+  manifest_schema:
+    required_fields:
+      - name
+      - version
+      - domain
+      - routes
+      - menus
+      - access
+      - locales
+      - stores
+      - directives
+      - dependencies
+    dependencies:
+      shared: []
+      base_components: []
+      npm: []
+      env: []
+      assets: []
+      permissions: []
+  module_namespace:
+    rule: 模块 name、路由 name、文案 namespace、store id、样式 class 前缀应保持可追踪一致。
+    fix_direction: 使用模块唯一命名空间，避免跨模块和跨项目导入时冲突。
+
+module_boundary_rules:
+  - id: module_zero_cross_import
+    rule: 模块不得导入其他模块的页面、组件、逻辑、状态、类型、接口、指令、样式或文案。
+    fix_direction: 将可复用能力上移到 shared，或把模块私有逻辑保留在所属模块内。
+  - id: shared_is_not_module
+    rule: shared 可以被 modules 和 shell 使用，但 shared 不得依赖具体模块。
+    fix_direction: 移除 shared 对模块的依赖，或拆出真正可共享的抽象。
+  - id: static_import_only
+    rule: 模块装配只能使用显式静态导入或显式静态注册。
+    fix_direction: 用静态注册替代字符串拼接、glob 扫描或运行时路径加载。
+  - id: no_hidden_registry
+    rule: 模块注册必须集中在明确的装配入口。
+    fix_direction: 将零散注册移动到标准路由、文案、状态或指令装配层。
+  - id: declared_dependencies_only
+    rule: 模块只能依赖 manifest 中显式声明的 shared、base_components、npm、env、assets 和 permissions。
+    fix_direction: 将隐式依赖补入 manifest，或移除该依赖，或改为模块内私有实现。
+  - id: no_project_private_dependency
+    rule: 可迁移模块不得依赖项目私有 shared、项目私有全局变量或未声明的全局上下文。
+    fix_direction: 改用 shared-core 或项目标准适配接口；确实不可迁移的依赖必须在 manifest 标记。
+
+page_route_component_rules:
+  - 基础入口页和兜底页归属 shell 层。
+  - 壳层只提供框架和容器结构，不承载完整业务页本体。
+  - 模块页面表达自身业务域，可在模块边界内使用本地组件、逻辑和样式。
+  - 组件复用优先进入 shared；基础 UI 封装只进入项目定义的基础组件层。
+  - 路由必须指向所属层级的页面文件，不得直接路由到其他模块页面。
+
+api_rules:
+  - 模块 API 必须通过项目统一 API client 或统一服务适配层访问。
+  - 模块不得自行创建与项目标准冲突的请求实例、拦截器或鉴权逻辑。
+  - API 文件应放在模块 `api/` 目录下；跨模块 API 复用必须上移到 shared 或服务协议层。
+  - 请求错误处理、鉴权、租户、区域、语言等上下文由项目标准 API client 注入，模块只声明自身接口。
+
+store_rules:
+  - 模块私有状态放在模块 `stores/`。
+  - 跨模块共享状态放在 shared 或项目定义的共享状态层。
+  - 模块不得直接读取另一个模块的 store。
+  - 依赖全局用户、权限、租户等上下文时，必须通过项目标准上下文接口或 manifest 依赖声明。
+
+asset_rules:
+  - 模块私有图片、图标、模板、静态文件放在模块 `assets/`。
+  - 跨模块通用资源放在项目 common assets 层。
+  - 模块不得依赖未声明的项目私有静态资源路径。
+  - 资源文件命名应带模块或语义前缀，避免导入母版本后冲突。
+
+style_rules:
+  - 页面、组件和模块样式优先外置为项目标准样式文件。
+  - 不新增与项目无关的新样式语法分支。
+  - 样式块仅在必要时作为样式导入口。
+  - 页面和组件样式放在所属目录旁。
+  - 全局样式只放全局级别内容，不要把页面级业务样式混入全局聚合入口。
+  - 可迁移模块只能依赖项目公共设计 token、主题变量或 manifest 声明的样式依赖，不依赖项目私有全局 class。
+
+i18n_rules:
+  - 文案分为 shell/global、shared、module、local page/component 等层级。
+  - 模块自有文案必须放在模块文案文件中。
+  - 全局文案只服务基础层和未迁移的共享旧链路。
+  - 模块完成结构迁移后，不得继续把模块业务文案留在全局文案中。
+  - 模块迁移必须完成：补齐模块文案，切换模块引用，验证不再依赖全局文案，再清理全局副本。
+  - 模块文案必须使用模块命名空间，避免多个项目模块组合后 key 覆盖。
+
+base_component_rules:
+  - 基础组件层是 UI 库适配和统一交互协议层，不承载业务模块逻辑。
+  - 同技术栈项目要实现模块直接迁移，必须共享同一套基础组件协议，或在 manifest 中声明所需基础组件。
+  - 模块不得直接依赖项目私有的基础组件变体，除非 manifest 已明确标记为不可通用依赖。
+
+assembler_contract:
+  module_list:
+    rule: 母版本只维护显式静态模块列表，不通过运行时字符串拼接或目录扫描装配模块。
+  routes:
+    input: moduleManifest.routes
+    output: project route records
+  menus:
+    input: moduleManifest.menus
+    output: project menu records
+  access:
+    input: moduleManifest.access
+    output: project permission records
+  locales:
+    input: moduleManifest.locales
+    output: merged locale messages by module namespace
+  stores:
+    input: moduleManifest.stores
+    output: registered module stores
+  directives:
+    input: moduleManifest.directives
+    output: registered module directives
+  dependencies:
+    input: moduleManifest.dependencies
+    output: preflight dependency report before module import
+
+naming_rules:
+  - 业务目录、页面和局部组件使用 kebab-case。
+  - 模块名和功能名保持稳定、清晰、可检索。
+  - 避免同一功能区长期混用 PascalCase 与 kebab-case。
+  - 基础组件层的内部实现文件可保留组件库风格，但对外命名要统一。
+
+validation_rules:
+  - 检查是否存在跨模块直接导入。
+  - 检查项目根 AGENTS.md 和 CLAUDE.md 是否包含 ai-baseline 强入口约束。
+  - 检查目标项目 .gitignore 是否隐藏 ai-baseline-kit/，并提示移除会遮挡规范包变化的忽略规则。
+  - 检查页面是否放在正确层级。
+  - 检查新增或重构文件的样式是否外置为项目标准样式文件。
+  - 检查文案是否补在所属层。
+  - 检查 shared 与基础组件层边界是否混淆。
+  - 检查新增依赖是否明确且最小。
+  - 检查模块 manifest 是否存在且导出完整。
+  - 检查模块依赖是否全部显式声明。
+  - 检查模块 assets、styles、locales 是否跟随模块或进入正确共享层。
+  - 检查模块是否依赖项目私有 shared、私有全局变量或未声明上下文。
+  - 检查模块命名空间是否与已有模块冲突。
+
+portability_checks:
+  same_stack_required:
+    rule: 页面模块直接迁移只在同技术栈、同装配协议、同基础组件协议项目之间承诺。
+  preflight:
+    - 读取源项目和目标项目的 baseline-rules.yml
+    - 比较 stack、module_contract、assembler_contract、base_component_rules
+    - 读取模块 manifest
+    - 检查 shared、base_components、npm、env、assets、permissions 依赖
+    - 检查命名空间、路由 name、store id、文案 namespace 冲突
+    - 输出可迁移、需适配或禁止迁移结论
+  migration:
+    - 只复制模块目录和 manifest 声明的必要共享依赖
+    - 只修改目标项目标准装配入口
+    - 不整分支 merge，不整项目 cherry-pick
+  verify:
+    - 运行 baseline-conformance-skill
+    - 运行项目构建、类型检查、单测或等价验证
+    - 如失败，按 violations 修复后重新验证
+
+scheme_rules:
+  source_of_truth:
+    - baseline-rules.yml
+    - engineering-workflow.yml
+    - module manifests
+    - project scheme when present
+    - bootstrap scan result when project scheme is missing
+  generation:
+    - 当前阶段优先由 AI 扫描生成 project-scheme.yml
+    - 人只审核或补齐 AI 无法可靠推断的字段
+    - 基线完成后再引入自动生成脚本
+  usage:
+    - AI 先读或生成 scheme，再做迁移判断
+    - 人先看 scheme 再审核范围和风险
+  not_now:
+    - 不在基线未完成时生成执行层脚本
+    - 不把 scheme 自动化提前固化为唯一来源
+
+regression_loop_rules:
+  max_rounds: 5
+  loop:
+    - 开发前先结构化需求
+    - 只实现限定范围内的改动
+    - 运行基线符合性检查
+    - 如失败，只修复列出的违规项
+    - 重新回归，直到通过或达到最大轮次
+  stop_conditions:
+    - 结果为 pass
+    - 存在无法从仓库上下文安全推断的边界歧义
+    - 达到最大轮次后仍重复失败

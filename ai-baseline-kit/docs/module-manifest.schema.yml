@@ -1,0 +1,63 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: module-manifest.schema.yml
+title: Module Manifest
+type: object
+additionalProperties: true
+required:
+  - name
+  - version
+  - domain
+  - routes
+  - menus
+  - access
+  - locales
+  - stores
+  - directives
+  - dependencies
+properties:
+  name:
+    type: string
+  version:
+    type: string
+  domain:
+    type: string
+  description:
+    type: string
+  routes:
+    type: array
+  menus:
+    type: array
+  access:
+    type: array
+  locales:
+    type: array
+  stores:
+    type: array
+  directives:
+    type: array
+  dependencies:
+    type: object
+    additionalProperties: true
+    required:
+      - shared
+      - base_components
+      - npm
+      - env
+      - assets
+      - permissions
+    properties:
+      shared:
+        type: array
+      base_components:
+        type: array
+      npm:
+        type: array
+      env:
+        type: array
+      assets:
+        type: array
+      permissions:
+        type: array
+  portability:
+    type: object
+    additionalProperties: true

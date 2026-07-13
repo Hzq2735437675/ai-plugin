@@ -1,0 +1,27 @@
+name: module-name
+version: 0.1.0
+domain: business-domain
+description: module responsibility
+
+routes: []
+menus: []
+access: []
+locales: []
+stores: []
+directives: []
+
+dependencies:
+  shared: []
+  base_components: []
+  npm: []
+  env: []
+  assets: []
+  permissions: []
+
+portability:
+  same_stack_only: true
+  notes: []
+
+evidence:
+  owner: unknown
+  source: manual-or-ai

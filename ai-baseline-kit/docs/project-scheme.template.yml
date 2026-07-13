@@ -1,0 +1,85 @@
+project:
+  name: project-name
+  purpose: describe-current-project
+  scheme_version: 0.1.0
+  updated_at: YYYY-MM-DD
+  update_source: project-scheme-bootstrap
+
+stack:
+  framework: project-defined
+  ui_library: project-defined
+  language: project-defined
+  build_tool: project-defined
+  router: project-defined
+  state_manager: project-defined
+  i18n: project-defined
+  style_solution: project-defined
+
+layers:
+  shell_root: project-defined
+  shared_root: project-defined
+  modules_root: project-defined
+  base_components_root: project-defined
+  common_assets_root: project-defined
+
+entrypoints:
+  app: project-defined
+  router: project-defined
+  module_assembler: project-defined
+  menu_assembler: project-defined
+  access_assembler: project-defined
+  locale_assembler: project-defined
+  store_assembler: project-defined
+  api_client: project-defined
+  permission_context: project-defined
+
+i18n:
+  enabled: project-defined
+  library: project-defined
+  locales: []
+  resource_roots: []
+  key_style: project-defined
+
+base_components:
+  root: project-defined
+  protocol: project-defined
+  notes: []
+
+shared:
+  root: project-defined
+  public_entrypoints: []
+  shared_core: project-defined
+
+modules:
+  root: project-defined
+  manifest_pattern: project-defined
+  items: []
+  # - name: module-name
+  #   domain: domain-name
+  #   root: src/modules/module-name
+  #   routes: []
+  #   menus: []
+  #   stores: []
+  #   locales: []
+  #   dependencies:
+  #     shared: []
+  #     base_components: []
+  #     npm: []
+  #     env: []
+  #     assets: []
+  #     permissions: []
+
+portability:
+  same_stack_required: true
+  module_copy_unit: module_directory_plus_manifest_dependencies
+  notes: []
+
+validation:
+  typecheck: project-defined
+  lint: project-defined
+  test: project-defined
+  build: project-defined
+
+required_questions: []
+confidence: medium
+evidence: []

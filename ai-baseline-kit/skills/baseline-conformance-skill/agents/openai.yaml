@@ -1,0 +1,4 @@
+interface:
+  display_name: "基线符合性检查"
+  short_description: "开发后检查改动是否符合项目基线并给出修复闭环。"
+  default_prompt: "使用 $baseline-conformance-skill 读取当前项目规则和本轮改动，输出 pass/fail、violations、required_fixes、rerun 和 verify。"
