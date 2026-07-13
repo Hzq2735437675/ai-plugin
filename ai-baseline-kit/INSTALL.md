@@ -1,7 +1,7 @@
 # AI Baseline Kit 安装与植入说明
 
 - 包名：`ai-baseline-kit`
-- 当前版本：`0.2.0`
+- 当前版本：`0.3.0`
 - 包元数据：[`plugin.json`](plugin.json)
 - 主入口：[`AGENTS.md`](AGENTS.md)
 - 详细说明：[`README.md`](README.md)
@@ -42,10 +42,32 @@ ai-baseline-kit/AGENTS.md
 
 1. 复制 `ai-baseline-kit/` 到目标项目根目录。
 2. 如果项目是前端项目且未指定技术栈，AI 使用 `templates/react18-antd-tailwind-ts/` 作为默认起点。
-3. 如果用户已经指定技术栈，用户选择优先。
-4. 首次接入前生成或审核 `ai-baseline-kit/docs/project-scheme.yml`。
-5. 先读取结构规划 skill，再开始实现。
-6. 开发后运行基线一致性回归。
+3. 如果用户明确选择 Vue 3 + Vite，AI 使用 `templates/vue3-vite-ts/`。
+4. 如果用户已经指定其他技术栈，用户选择优先；本包不自动生成第三方标准模板。
+5. 首次接入前运行诊断并生成或审核 `ai-baseline-kit/docs/project-scheme.yml`。
+6. 先读取结构规划 skill，再开始实现。
+7. 开发后运行基线一致性回归。
+
+## 项目工具命令
+
+在目标项目根目录执行：
+
+```bash
+# 诊断技术栈和项目边界
+node ai-baseline-kit/scripts/project-doctor.mjs
+
+# 生成/更新项目地图
+node ai-baseline-kit/scripts/project-bootstrap.mjs
+
+# 仅在空目录初始化标准模板（二选一）
+node ai-baseline-kit/scripts/project-bootstrap.mjs --init-template --stack react18-antd-tailwind-ts
+node ai-baseline-kit/scripts/project-bootstrap.mjs --init-template --stack vue3-vite-ts
+
+# 统一验证
+node ai-baseline-kit/scripts/project-validate.mjs --typecheck --build
+```
+
+内置标准模板只有 React 18 + Vite 与 Vue 3 + Vite 两个。检测到旧项目后，bootstrap 只生成项目地图，不会复制模板；旧项目的 Vue、React、Angular 等技术栈都原样保留。
 
 ## 已有项目植入
 
@@ -96,7 +118,8 @@ node ai-baseline-kit/scripts/baseline-check.mjs
 植入包后，AI 会根据目标项目状态选择开发模式：
 
 - **旧项目**：检测到 `package.json`、lockfile、源码、构建配置、路由或应用入口时，保留旧项目真实技术栈。Vue、React、Angular 等都可以接入，不自动迁移。
-- **新前端项目**：没有既有应用技术栈且用户没有指定其他方案时，使用 `templates/react18-antd-tailwind-ts/` 作为默认起点：React 18 + TypeScript + Vite + Ant Design 5 + Tailwind CSS 3 + React Router 6。
+- **新前端项目**：没有既有应用技术栈且用户没有指定其他方案时，使用 `templates/react18-antd-tailwind-ts/` 作为默认起点。
+- **Vue 新项目**：用户明确选择 Vue 3 + Vite 时，使用 `templates/vue3-vite-ts/`。
 - **用户指定优先**：用户在初始化前指定其他技术栈时，按用户选择创建项目，并继续使用本包的边界、模块、装配和回归规则。
 
 默认策略文件：
@@ -105,10 +128,11 @@ node ai-baseline-kit/scripts/baseline-check.mjs
 ai-baseline-kit/docs/stack-profiles.yml
 ```
 
-默认模板说明：
+标准模板说明：
 
 ```text
 ai-baseline-kit/templates/react18-antd-tailwind-ts/README.md
+ai-baseline-kit/templates/vue3-vite-ts/README.md
 ```
 
 模板只在新项目初始化时作为可运行参考，不应套用于已有项目。

@@ -23,13 +23,30 @@
 `ai-baseline-kit` 支持两种项目接入模式：
 
 - **旧项目模式**：先扫描项目的 package manifest、lockfile、源码、构建配置、路由、状态、i18n 和模块目录；保留旧项目已有技术栈，不因为接入基线包而迁移到默认模板。
-- **新项目模式**：如果没有检测到既有应用技术栈，且用户没有指定其他方案，默认使用 `docs/stack-profiles.yml` 中的 `default_new_frontend`，即 React 18 + TypeScript + Vite + Ant Design 5 + Tailwind CSS 3 + React Router 6。
+- **新项目模式**：如果没有检测到既有应用技术栈，且用户没有指定其他方案，使用 `docs/stack-profiles.yml` 中的 `default_new_frontend`，即 React 18 + TypeScript + Vite + Ant Design 5 + Tailwind CSS 3 + React Router 6。
+- **Vue 标准模板**：如果用户在初始化前明确选择 Vue 3 + Vite，使用 `templates/vue3-vite-ts/`。
+- **旧项目模式优先**：只要检测到既有项目文件或应用技术栈，就不复制标准模板，保留 Vue、React、Angular、Svelte 或其他真实技术栈。
 
-初始化新项目时，AI 先读取：
+内置标准新项目模板只有两个：
+
+```text
+ai-baseline-kit/templates/react18-antd-tailwind-ts/
+ai-baseline-kit/templates/vue3-vite-ts/
+```
+
+初始化或接入时，AI 先读取：
 
 ```text
 ai-baseline-kit/docs/stack-profiles.yml
-ai-baseline-kit/templates/react18-antd-tailwind-ts/README.md
+ai-baseline-kit/templates/<selected-profile>/README.md
 ```
 
-如果用户在初始化前明确选择 Vue、React 其他版本、Next、Nuxt 或其他技术栈，用户选择优先，AI 只记录实际方案并按同一套边界规则实施。
+可使用无第三方依赖的工具完成诊断、地图初始化和验证：
+
+```bash
+node ai-baseline-kit/scripts/project-doctor.mjs
+node ai-baseline-kit/scripts/project-bootstrap.mjs
+node ai-baseline-kit/scripts/project-validate.mjs
+```
+
+如果用户在初始化前明确选择其他技术栈，用户选择优先；本包只提供 React 18 + Vite 与 Vue 3 + Vite 两个内置新项目模板，其他技术栈由 AI 按用户选择创建或在旧项目中原地维护。

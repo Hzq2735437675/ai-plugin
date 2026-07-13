@@ -73,15 +73,16 @@ description: 自动引导新项目或旧项目生成 docs/project-scheme.yml 的
    - React Router 6
 2. 将默认 profile 和 `templates/react18-antd-tailwind-ts/` 写入 `evidence`，并在 `project-scheme.yml` 中记录实际采用的技术栈。
 3. 只有在目标端不是前端、用户明确要求其他技术栈，或需求存在不可安全推断的关键约束时，才提出最少确认问题。
-4. 初始化代码骨架前，必须先使用 `baseline-structure-skill` 明确范围；模板只提供可运行起点，不代替业务需求分析。
-5. 如果用户在初始化前指定 Vue、React 其他版本、Next、Nuxt 或其他技术栈，优先服从用户选择，并将其记录为项目实际技术栈，不套用默认模板。
+4. 如果用户明确选择 Vue 3 + Vite，使用 `ai-baseline-kit/templates/vue3-vite-ts/`，并记录 `vue3-vite-ts` profile。
+5. 初始化代码骨架前，必须先使用 `baseline-structure-skill` 明确范围；模板只提供可运行起点，不代替业务需求分析。
+6. 如果用户在初始化前指定 React 其他版本、Next、Nuxt、Angular 或其他技术栈，优先服从用户选择，并将其记录为项目实际技术栈；本包不套用两个内置模板。
 
 ### 技术栈选择优先级
 按以下顺序选择：
 
 1. 用户明确指定的技术栈。
 2. 旧项目扫描得到的实际技术栈。
-3. 新前端项目的 `default_new_frontend` profile。
+3. 新前端项目的 `default_new_frontend` profile；若用户明确选择 Vue 3 + Vite，则使用 `vue3-vite-ts` profile。
 4. 无法可靠判断时保留 `unknown` 并提出最少问题。
 
 ## 旧项目策略

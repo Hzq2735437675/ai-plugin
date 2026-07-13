@@ -1,10 +1,10 @@
 project:
   name: ai-plugin
   map_status: package-repository-reference
-  purpose: 可植入不同项目、为 AI 开发提供统一规范、工作流、项目地图和基线检查能力的多包 AI 能力仓库。
-  scheme_version: 0.2.0
+  purpose: 可植入不同项目、为 AI 开发提供统一规范、工作流、项目地图、诊断和验证能力的多包 AI 能力仓库。
+  scheme_version: 0.3.0
   updated_at: 2026-07-13
-  update_source: manual-review-after-package-foundation
+  update_source: manual-review-after-project-tooling-and-vue-template
 
 stack:
   framework: not-applicable-package-repository
@@ -35,6 +35,10 @@ entrypoints:
   permission_context: not-applicable-package-repository
   package_registry: package-registry.json
   package_checker: scripts/package-check.mjs
+  project_doctor: ai-baseline-kit/scripts/project-doctor.mjs
+  project_bootstrap: ai-baseline-kit/scripts/project-bootstrap.mjs
+  project_validation: ai-baseline-kit/scripts/project-validate.mjs
+  project_tools_self_check: ai-baseline-kit/scripts/project-tools-check.mjs
 
 i18n:
   enabled: false
@@ -55,14 +59,20 @@ shared:
     - ai-baseline-kit/README.md
     - ai-baseline-kit/skills/README.md
     - ai-baseline-kit/scripts/baseline-check.mjs
+    - ai-baseline-kit/scripts/project-doctor.mjs
+    - ai-baseline-kit/scripts/project-bootstrap.mjs
+    - ai-baseline-kit/scripts/project-validate.mjs
   shared_core: ai-baseline-kit/docs
 
 stack_selection:
-  policy: detect-existing-or-default-new
+  policy: detect-existing-or-select-one-of-two-standard-new-project-profiles
   profile_file: ai-baseline-kit/docs/stack-profiles.yml
   existing_project_behavior: preserve-detected-stack
   default_new_frontend_profile: react18-antd-tailwind-ts
   default_new_frontend_template: ai-baseline-kit/templates/react18-antd-tailwind-ts
+  explicit_vue3_vite_profile: vue3-vite-ts
+  explicit_vue3_vite_template: ai-baseline-kit/templates/vue3-vite-ts
+  standard_template_count: 2
   user_override: allowed-before-initialization
 
 packages:
@@ -80,7 +90,7 @@ packages:
     dependencies: explicit-in-plugin-json
   items:
     - name: ai-baseline-kit
-      version: 0.2.0
+      version: 0.3.0
       root: ai-baseline-kit
       manifest: ai-baseline-kit/plugin.json
       readme: ai-baseline-kit/README.md
@@ -88,6 +98,14 @@ packages:
       primary_entry: ai-baseline-kit/AGENTS.md
       distribution: embedded-directory
       status: active
+      standard_templates:
+        - ai-baseline-kit/templates/react18-antd-tailwind-ts
+        - ai-baseline-kit/templates/vue3-vite-ts
+      tools:
+        - ai-baseline-kit/scripts/project-doctor.mjs
+        - ai-baseline-kit/scripts/project-bootstrap.mjs
+        - ai-baseline-kit/scripts/project-validate.mjs
+        - ai-baseline-kit/scripts/project-tools-check.mjs
 
 modules:
   root: not-applicable-package-repository
@@ -99,32 +117,39 @@ portability:
   module_copy_unit: ai-baseline-kit directory as an embedded package
   notes:
     - 规范包面向不同技术栈项目提供可迁移的规则和 AI 工作流。
+    - 旧项目保留真实技术栈，不自动套用 React 或 Vue 标准模板。
+    - 新项目只提供 React 18 + Vite 与 Vue 3 + Vite 两个内置标准模板。
     - 业务模块页面组件不属于本仓库的交付内容。
     - 能力包以独立目录、元数据、入口和安装说明为最小复制单元。
 
 validation:
   typecheck: not-applicable-package-repository
   lint: not-applicable-package-repository
-  test: node scripts/package-check.mjs && node ai-baseline-kit/scripts/baseline-check.mjs
+  test: node scripts/package-check.mjs && node ai-baseline-kit/scripts/project-tools-check.mjs && node ai-baseline-kit/scripts/baseline-check.mjs
   build: not-applicable-package-repository
 
 required_questions: []
 confidence: high
 evidence:
   - source: ai-baseline-kit/README.md
-    finding: ai-baseline-kit 是可完整植入目标项目的 AI 基线规范包，并支持旧项目识别与新项目默认模板。
+    finding: ai-baseline-kit 是可完整植入目标项目的 AI 基线规范包，并支持旧项目识别、项目诊断、地图初始化和统一验证。
   - source: ai-baseline-kit/plugin.json
-    finding: 当前包已具备独立名称、版本、入口、安装和分发元数据。
+    finding: 当前包版本为 0.3.0，具备独立名称、入口、安装、诊断、模板和分发元数据。
   - source: package-registry.json
-    finding: 根目录注册表登记当前包，并约定未来包目录为 packages/<package-name>/。
+    finding: 根目录注册表登记当前包、两个标准模板和项目工具，并约定未来包目录为 packages/<package-name>/。
   - source: package-manifest.schema.json
     finding: 所有包的元数据契约要求独立 README、入口和安装说明。
   - source: scripts/package-check.mjs
     finding: 仓库提供无第三方依赖的包结构与元数据检查。
+  - source: ai-baseline-kit/scripts/project-doctor.mjs
+    finding: 支持识别 Vue、React、Angular、Svelte 等旧项目的框架、构建工具、UI、路由、状态、i18n、样式、模块和验证脚本。
+  - source: ai-baseline-kit/scripts/project-bootstrap.mjs
+    finding: 支持生成目标项目地图，并在空目录按指定 profile 初始化 React 或 Vue 标准模板。
+  - source: ai-baseline-kit/scripts/project-validate.mjs
+    finding: 统一调用基线检查，并按需执行 typecheck、lint、test 和 build。
+  - source: ai-baseline-kit/templates/react18-antd-tailwind-ts
+    finding: 提供可运行的 React 18 + Vite + Ant Design + Tailwind CSS + TypeScript 默认前端参考模板。
+  - source: ai-baseline-kit/templates/vue3-vite-ts
+    finding: 提供可运行的 Vue 3 + Vite + Vue Router + TypeScript 标准前端参考模板。
   - source: repository-scan
     finding: 当前仓库没有业务源码、路由、状态或模块目录；包边界与业务模块边界保持分离。
-
-  - source: ai-baseline-kit/docs/stack-profiles.yml
-    finding: 新前端项目默认使用 React 18、TypeScript、Vite、Ant Design 5、Tailwind CSS 3 和 React Router 6；旧项目保留实际检测到的技术栈。
-  - source: ai-baseline-kit/templates/react18-antd-tailwind-ts
-    finding: 提供可运行的默认前端参考模板，展示 shell、shared、modules、manifest、静态路由和基础验证命令。

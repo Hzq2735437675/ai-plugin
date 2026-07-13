@@ -8,7 +8,7 @@
 
 | 包 | 版本 | 类型 | 入口 | 安装/植入说明 |
 | --- | --- | --- | --- | --- |
-| `ai-baseline-kit` | `0.2.0` | 可嵌入 AI 工程基线包 | [`ai-baseline-kit/AGENTS.md`](ai-baseline-kit/AGENTS.md) | [`ai-baseline-kit/INSTALL.md`](ai-baseline-kit/INSTALL.md) |
+| `ai-baseline-kit` | `0.3.0` | 可嵌入 AI 工程基线包 | [`ai-baseline-kit/AGENTS.md`](ai-baseline-kit/AGENTS.md) | [`ai-baseline-kit/INSTALL.md`](ai-baseline-kit/INSTALL.md) |
 
 完整登记信息见 [`package-registry.json`](package-registry.json)。
 
@@ -69,6 +69,11 @@ node ai-baseline-kit/scripts/baseline-check.mjs
 
 1. 用户明确指定的技术栈。
 2. 旧项目扫描得到的真实技术栈，并保持原项目技术栈开发。
-3. 新前端项目默认采用 React 18 + TypeScript + Vite + Ant Design 5 + Tailwind CSS 3 + React Router 6。
+3. 未设定技术栈的新前端项目默认采用 React 18 + TypeScript + Vite + Ant Design 5 + Tailwind CSS 3 + React Router 6。
 
-因此，同一个基线包既可以接入 Vue、React 等旧项目，也可以作为未定技术栈项目的默认 React 工程起点。默认策略和参考模板位于 `ai-baseline-kit/docs/stack-profiles.yml` 与 `ai-baseline-kit/templates/react18-antd-tailwind-ts/`。
+内置标准新项目模板只提供两个：
+
+- `react18-antd-tailwind-ts`：未指定技术栈时的默认模板。
+- `vue3-vite-ts`：用户明确选择 Vue 3 + Vite 时使用。
+
+因此，同一个基线包既可以接入 Vue、React、Angular 等旧项目，也可以作为未定技术栈项目的 React 或明确选择 Vue 的工程起点。默认策略、诊断工具和两个模板位于 `ai-baseline-kit/docs/stack-profiles.yml`、`ai-baseline-kit/scripts/` 与 `ai-baseline-kit/templates/`。

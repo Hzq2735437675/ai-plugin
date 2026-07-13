@@ -43,8 +43,9 @@ workflows:
     steps:
       - 读取 AGENTS.md、baseline-rules.yml 和 engineering-workflow.yml。
       - 如果用户已经说明技术栈，从用户需求中提取 framework、ui_library、language、build_tool、router、state_manager、i18n 和 style_solution。
-      - 如果用户没有说明技术栈且仓库为空，不凭空选择框架，只询问目标端、技术栈和 UI 库等最少关键问题。
-      - 如果项目已有依赖或配置，优先从文件推断。
+      - 如果用户明确选择 Vue 3 + Vite，使用内置 `vue3-vite-ts` 模板；如果用户明确选择其他技术栈，按用户选择创建，不套用内置模板。
+      - 如果用户没有说明技术栈且仓库为空，使用内置 `react18-antd-tailwind-ts` 作为默认新前端模板。
+      - 如果项目已有依赖或配置，优先从文件推断，并按旧项目模式保留真实技术栈。
       - 使用 project-scheme-bootstrap 生成 baseline_root/docs/project-scheme.yml 初版。
       - 在 scheme 中记录 shell/shared/modules、基础组件层、API client、路由、状态、i18n、样式方案和验证命令。
       - 后续新增页面或模块必须先经过 baseline-structure-skill。

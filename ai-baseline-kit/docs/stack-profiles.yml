@@ -1,11 +1,12 @@
+# 内置标准模板只覆盖两个新前端选择；旧项目不套模板，只保留真实技术栈。
 profiles:
   default_new_frontend:
     id: react18-antd-tailwind-ts
-    name: React 18 + Ant Design + Tailwind CSS + TypeScript
+    name: React 18 + Vite + Ant Design + Tailwind CSS + TypeScript
     status: active
     selection:
       mode: new-project
-      when: project_root_has_no_existing_app_stack
+      when: project_root_has_no_existing_app_stack_and_user_did_not_choose_a_stack
       user_override: allowed-before-initialization
     stack:
       framework: React 18
@@ -31,6 +32,38 @@ profiles:
       - 该 profile 只用于新项目初始化，不覆盖已有项目技术栈。
       - state_manager 和 i18n 在未提出需求时保持 project-defined，不凭空增加全局复杂度。
 
+  vue3_vite:
+    id: vue3-vite-ts
+    name: Vue 3 + Vite + Vue Router + TypeScript
+    status: active
+    selection:
+      mode: new-project
+      when: user_explicitly_chooses_vue_3_and_vite_before_initialization
+      user_override: required-selection
+    stack:
+      framework: Vue 3
+      ui_library: project-defined
+      language: TypeScript
+      build_tool: Vite
+      router: Vue Router 4
+      state_manager: project-defined
+      i18n: project-defined
+      style_solution: project-defined-local-styles
+    template_root: templates/vue3-vite-ts
+    required_outputs:
+      - package.json
+      - src/app
+      - src/shared
+      - src/modules
+      - src/main.ts
+    validation:
+      install: npm install
+      typecheck: npm run typecheck
+      build: npm run build
+    notes:
+      - 该 profile 只用于用户明确选择 Vue 3 + Vite 的新项目。
+      - UI library、state_manager、i18n 和 API client 按项目需求显式选择，不强行预置。
+
   existing_project_detected:
     id: existing-project-detected
     name: Existing project stack detected
@@ -42,5 +75,20 @@ profiles:
     behavior:
       - 读取已有 package manifest、lockfile、构建配置、入口、路由、状态、i18n 和模块目录。
       - 保留已有 framework、ui_library、language、build_tool、router、state_manager、i18n 和 style_solution。
+      - 旧项目即使使用 Vue、React、Angular、Svelte 或其他框架，也不自动复制两个标准模板。
       - 只生成或更新 project-scheme.yml，不自动重构旧代码或切换技术栈。
       - 新增能力遵循旧项目真实技术栈和基线分层规则。
+
+standard_templates:
+  only:
+    - id: react18-antd-tailwind-ts
+      path: templates/react18-antd-tailwind-ts
+      role: default-new-frontend
+    - id: vue3-vite-ts
+      path: templates/vue3-vite-ts
+      role: explicit-vue3-vite-choice
+  not_included:
+    - Next.js
+    - Nuxt
+    - Angular
+    - Svelte

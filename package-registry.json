@@ -13,7 +13,7 @@
   "packages": [
     {
       "name": "ai-baseline-kit",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "path": "ai-baseline-kit",
       "manifest": "ai-baseline-kit/plugin.json",
       "readme": "ai-baseline-kit/README.md",
@@ -21,8 +21,17 @@
       "installation": "ai-baseline-kit/INSTALL.md",
       "status": "active",
       "distribution": "embedded-directory",
-      "template": "ai-baseline-kit/templates/react18-antd-tailwind-ts/README.md",
-      "stackProfiles": "ai-baseline-kit/docs/stack-profiles.yml"
+      "stackProfiles": "ai-baseline-kit/docs/stack-profiles.yml",
+      "templates": [
+        "ai-baseline-kit/templates/react18-antd-tailwind-ts/README.md",
+        "ai-baseline-kit/templates/vue3-vite-ts/README.md"
+      ],
+      "tools": [
+        "ai-baseline-kit/scripts/project-doctor.mjs",
+        "ai-baseline-kit/scripts/project-bootstrap.mjs",
+        "ai-baseline-kit/scripts/project-validate.mjs",
+        "ai-baseline-kit/scripts/project-tools-check.mjs"
+      ]
     }
   ]
 }

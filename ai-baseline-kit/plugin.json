@@ -2,9 +2,9 @@
   "$schema": "./package-manifest.schema.json",
   "schemaVersion": 1,
   "name": "ai-baseline-kit",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "type": "embedded-ai-capability-package",
-  "description": "可完整植入目标项目的 AI 开发基线规范包，支持旧项目技术栈识别和新前端项目默认模板。",
+  "description": "可完整植入目标项目的 AI 开发基线规范包，支持旧项目技术栈诊断、新项目 React/Vue 标准模板和统一项目验证。",
   "entrypoints": {
     "primary": "AGENTS.md",
     "documentation": "README.md",
@@ -12,7 +12,12 @@
     "skills": "skills/README.md",
     "validation": "scripts/baseline-check.mjs",
     "stackProfiles": "docs/stack-profiles.yml",
-    "template": "templates/react18-antd-tailwind-ts/README.md"
+    "doctor": "scripts/project-doctor.mjs",
+    "bootstrap": "scripts/project-bootstrap.mjs",
+    "projectValidation": "scripts/project-validate.mjs",
+    "toolSelfCheck": "scripts/project-tools-check.mjs",
+    "reactTemplate": "templates/react18-antd-tailwind-ts/README.md",
+    "vueTemplate": "templates/vue3-vite-ts/README.md"
   },
   "installation": {
     "guide": "INSTALL.md",
