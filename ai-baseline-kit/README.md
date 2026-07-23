@@ -2,7 +2,7 @@
 
 - 产品展示名称：AI 前端模块装配系统
 - 机器包名：`ai-baseline-kit`
-- 当前版本：`0.6.0`
+- 当前版本：`0.7.0`
 - 包元数据：[`plugin.json`](plugin.json)
 - 安装/植入说明：[`INSTALL.md`](INSTALL.md)
 - AI 主入口：[`AGENTS.md`](AGENTS.md)
@@ -233,3 +233,17 @@ node ai-baseline-kit/scripts/template-build-check.mjs --profile react18-antd-tai
 8. 涉及用户可见文案或 i18n 时，使用 `ai-baseline-kit/skills/project-i18n-localizer/SKILL.md`。
 9. 不自动向 `.gitignore` 追加 `ai-baseline-kit/`，让规范包变化保持 Git 可见。
 10. 可运行 `node ai-baseline-kit/scripts/baseline-check.mjs` 做硬检查。
+
+## 自然语言模块装配总控（0.7.0）
+
+```bash
+# 默认仅规划，不改目标项目
+node ai-baseline-kit/scripts/project-compose-from-requirement.mjs --request <需求.md或json> --sources "a=<项目A>;b=<项目B>" --target <项目C> --stack vue3-vite-ts
+# 应用、验证，失败自动回滚
+node ai-baseline-kit/scripts/project-compose-from-requirement.mjs --request <需求.md或json> --sources "a=<项目A>;b=<项目B>" --target <项目C> --stack vue3-vite-ts --apply
+# 恢复或回滚
+node ai-baseline-kit/scripts/project-compose-from-requirement.mjs --resume <workspace>
+node ai-baseline-kit/scripts/project-compose-from-requirement.mjs --rollback <workspace>
+```
+
+总控按 `discover -> select/question -> export -> safe repair -> compatibility -> transaction -> compose -> validate -> commit/rollback` 执行。自动修复仅限模块身份、路由前缀和权限命名空间；shared 内容和 npm 主版本等语义冲突继续阻断并提问。运行记录使用 `docs/composition-run.schema.json`，请求契约使用 `docs/composition-request.schema.json`。

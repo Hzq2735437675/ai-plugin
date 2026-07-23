@@ -17,40 +17,101 @@
     "path": "docs/product/order-management.md",
     "text": ""
   },
-  "actors": [{ "id": "operator", "name": "运营人员" }],
-  "capabilities": ["order:list", "order:detail", "order:cancel"],
-  "pages": [{
-    "id": "order-list",
-    "name": "订单列表",
-    "route": "/orders",
-    "menu": true,
-    "permission": "order:view",
-    "states": ["loading", "empty", "error", "ready", "permission-denied"]
-  }],
-  "actions": [{
-    "id": "cancel-order",
-    "name": "取消订单",
-    "permission": "order:cancel",
-    "confirmationRequired": true
-  }],
-  "entities": [{ "name": "Order", "fields": [] }],
-  "api": [{ "id": "list-orders", "method": "GET", "path": "/api/orders", "purpose": "查询订单" }],
-  "state": { "scope": "module", "persistence": "none", "items": [] },
-  "permissions": ["order:view", "order:cancel"],
-  "dependencies": { "modules": [], "shared": [], "npm": [] },
-  "ui": { "library": "project-default", "theme": "global-theme", "reuse": [] },
-  "acceptance": [{
-    "id": "accept-order-list",
-    "given": "用户拥有 order:view 权限",
-    "when": "访问 /orders",
-    "then": "显示订单列表，并完整处理 loading、empty、error 和 ready 状态"
-  }],
-  "requiredQuestions": [{
-    "id": "confirm-api-response",
-    "field": "api[0].response",
-    "question": "请确认订单列表接口的分页和响应字段。",
-    "reason": "产品文档未给出响应契约。",
-    "blocking": true
-  }],
+  "actors": [
+    {
+      "id": "operator",
+      "name": "运营人员"
+    }
+  ],
+  "capabilities": [
+    "order:list",
+    "order:detail",
+    "order:cancel"
+  ],
+  "pages": [
+    {
+      "id": "order-list",
+      "name": "订单列表",
+      "route": "/orders",
+      "menu": true,
+      "permission": "order:view",
+      "states": [
+        "loading",
+        "empty",
+        "error",
+        "ready",
+        "permission-denied"
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "id": "cancel-order",
+      "name": "取消订单",
+      "permission": "order:cancel",
+      "confirmationRequired": true
+    }
+  ],
+  "entities": [
+    {
+      "name": "Order",
+      "fields": []
+    }
+  ],
+  "api": [
+    {
+      "id": "list-orders",
+      "method": "GET",
+      "path": "/api/orders",
+      "purpose": "查询订单"
+    }
+  ],
+  "state": {
+    "scope": "module",
+    "persistence": "none",
+    "items": []
+  },
+  "permissions": [
+    "order:view",
+    "order:cancel"
+  ],
+  "dependencies": {
+    "modules": [],
+    "shared": [],
+    "npm": []
+  },
+  "ui": {
+    "library": "project-default",
+    "theme": "global-theme",
+    "reuse": []
+  },
+  "acceptance": [
+    {
+      "id": "accept-order-list",
+      "given": "用户拥有 order:view 权限",
+      "when": "访问 /orders",
+      "then": "显示订单列表，并完整处理 loading、empty、error 和 ready 状态",
+      "automation": {
+        "route": "/orders",
+        "steps": [],
+        "assertions": [
+          {
+            "type": "visible",
+            "role": "heading",
+            "name": "订单列表"
+          }
+        ]
+      }
+    }
+  ],
+  "requiredQuestions": [
+    {
+      "id": "confirm-api-response",
+      "field": "api[0].response",
+      "question": "请确认订单列表接口的分页和响应字段。",
+      "reason": "产品文档未给出响应契约。",
+      "blocking": true
+    }
+  ],
   "notes": []
 }

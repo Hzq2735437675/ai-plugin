@@ -2,7 +2,7 @@
 
 > 机器包名：`ai-baseline-kit`
 
-> 当前版本：`0.6.0`
+> 当前版本：`0.7.0`
 
 AI 前端模块装配系统是一套**由 AI 编排、以工程契约约束、在构建期组合模块**的前端工程能力包。它面向自然语言或产品文档驱动的开发场景，让 AI 不只是生成页面代码，还必须完成需求确认、模块拆解、文件边界控制、自动测试、跨项目模块迁移、项目组合和最终验收。
 
@@ -109,7 +109,7 @@ node ai-baseline-kit/scripts/baseline-check.mjs --project-root <project-c> --fai
 
 | 产品展示名称 | 机器包名 | 版本 | 类型 | AI 主入口 | 安装说明 |
 | --- | --- | --- | --- | --- | --- |
-| AI 前端模块装配系统 | `ai-baseline-kit` | `0.6.0` | 可嵌入 AI 工程能力包 | [`ai-baseline-kit/AGENTS.md`](ai-baseline-kit/AGENTS.md) | [`ai-baseline-kit/INSTALL.md`](ai-baseline-kit/INSTALL.md) |
+| AI 前端模块装配系统 | `ai-baseline-kit` | `0.7.0` | 可嵌入 AI 工程能力包 | [`ai-baseline-kit/AGENTS.md`](ai-baseline-kit/AGENTS.md) | [`ai-baseline-kit/INSTALL.md`](ai-baseline-kit/INSTALL.md) |
 
 完整登记信息见 [`package-registry.json`](package-registry.json)。
 
@@ -211,3 +211,27 @@ node ai-baseline-kit/scripts/template-build-check.mjs --profile vue3-vite-ts
 - `plugin.json.entrypoints.primary` 必须指向包的 AI 主入口。
 - 包之间不得通过隐式相对路径耦合。
 - 新增包需要登记到 `package-registry.json` 并通过 `scripts/package-check.mjs`。
+
+## 0.7.0：自然语言模块装配总控
+
+现在可以把“从项目 A 抽离客户管理、从项目 B 抽离结算模块并形成项目 C”作为大白话或 JSON 请求交给统一入口：
+
+```bash
+node ai-baseline-kit/scripts/project-compose-from-requirement.mjs \
+  --request docs/composition-request.json \
+  --sources "a=<project-a>;b=<project-b>" \
+  --target <project-c> \
+  --stack vue3-vite-ts
+
+# 确认计划后真正执行
+node ai-baseline-kit/scripts/project-compose-from-requirement.mjs \
+  --request docs/composition-request.json \
+  --sources "a=<project-a>;b=<project-b>" \
+  --target <project-c> \
+  --stack vue3-vite-ts \
+  --apply
+```
+
+默认先做模块自动发现和置信度判断；无法可靠识别、shared 内容冲突、npm 主版本冲突等语义问题会生成 blocking questions。可机械证明安全的同名模块、路由和权限冲突可按策略添加来源/模块前缀。执行前创建项目外事务快照，失败默认自动回滚；可通过 `--rollback <workspace>` 手工回滚，通过 `--resume <workspace>` 断点重跑。
+
+相关入口：`module-discover.mjs`、`module-bundle-repair.mjs`、`project-compose-from-requirement.mjs`、`composition-contract-check.mjs`。Feature Spec 的 acceptance 可声明结构化 `automation`，生成真实 Playwright 动作和断言；未声明时继续保留 `fixme`，不伪造验收完成。`project-validate.mjs --with-e2e` 可运行项目的 `test:e2e`，`--install-playwright` 仅在明确要求时安装 Chromium。

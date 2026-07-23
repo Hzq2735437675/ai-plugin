@@ -1,0 +1,12 @@
+{
+  "$schema": "./composition-request.schema.json",
+  "schemaVersion": 1,
+  "kind": "ai-baseline-composition-request",
+  "status": "ready",
+  "request": { "text": "从项目 A 抽离客户管理，从项目 B 抽离财务结算形成项目 C" },
+  "sources": [{ "id": "a", "projectRoot": "../project-a" }, { "id": "b", "projectRoot": "../project-b" }],
+  "target": { "projectRoot": "../project-c", "stack": "vue3-vite-ts" },
+  "selections": [],
+  "policies": { "moduleNameConflict": "prefix-source", "routeConflict": "prefix-module", "permissionConflict": "prefix-module", "sharedConflict": "ask", "dependencyConflict": "ask", "rollbackOnFailure": true, "validate": true, "e2e": false },
+  "requiredQuestions": []
+}

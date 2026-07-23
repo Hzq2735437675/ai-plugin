@@ -1,7 +1,7 @@
 # AI Baseline Kit 安装与植入说明
 
 - 包名：`ai-baseline-kit`
-- 当前版本：`0.6.0`
+- 当前版本：`0.7.0`
 - 包元数据：[`plugin.json`](plugin.json)
 - 主入口：[`AGENTS.md`](AGENTS.md)
 - 详细说明：[`README.md`](README.md)
@@ -181,3 +181,14 @@ node ai-baseline-kit/scripts/project-compose.mjs --project-root <new-project> --
 ```bash
 node ai-baseline-kit/scripts/ast-boundary-check.mjs --project-root <project-root> --require-parser
 ```
+
+## 自然语言跨项目组合
+
+安装后可执行：
+
+```bash
+node ai-baseline-kit/scripts/project-compose-from-requirement.mjs --request <需求文档> --sources "a=<项目A>;b=<项目B>" --target <项目C> --stack vue3-vite-ts
+node ai-baseline-kit/scripts/project-compose-from-requirement.mjs --request <需求文档> --sources "a=<项目A>;b=<项目B>" --target <项目C> --stack vue3-vite-ts --apply
+```
+
+首次命令默认只输出计划和必须确认问题；`--apply` 才修改目标项目。失败默认事务回滚。真实浏览器验收需项目声明 `test:e2e`，并显式传入 `--with-e2e`；浏览器安装也必须显式传入 `--install-playwright`。

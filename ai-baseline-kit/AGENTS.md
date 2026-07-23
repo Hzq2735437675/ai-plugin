@@ -71,3 +71,7 @@ node ai-baseline-kit/scripts/project-validate.mjs
 ```
 
 如果用户在初始化前明确选择其他技术栈，用户选择优先；本包只提供 React 18 + Vite 与 Vue 3 + Vite + Element Plus 两个内置新项目模板，其他技术栈由 AI 按用户选择创建或在旧项目中原地维护。
+
+## 自然语言跨项目组合强制流程
+
+当用户要求从一个或多个项目抽离模块形成新项目时，优先运行 `scripts/project-compose-from-requirement.mjs`。默认先 dry-run；任何 blocking `requiredQuestions` 必须向用户确认。仅允许自动修复模块名、路由前缀和权限命名空间冲突；shared 内容、npm 主版本和业务语义冲突不得猜测。`--apply` 前必须建立目标项目外事务快照，失败回滚，恢复使用 `--resume`。

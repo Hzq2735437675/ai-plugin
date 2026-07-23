@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ai-baseline.local/composition-run.schema.json",
+  "title": "AI Baseline Composition Run",
+  "type": "object",
+  "required": ["schemaVersion", "kind", "id", "status", "request", "steps", "requiredQuestions"],
+  "properties": {
+    "schemaVersion": { "const": 1 }, "kind": { "const": "ai-baseline-composition-run" }, "id": { "type": "string" },
+    "status": { "enum": ["running", "planned", "needs-confirmation", "failed", "rolled-back", "completed"] },
+    "request": { "type": "object" }, "steps": { "type": "array", "items": { "type": "object" } }, "requiredQuestions": { "type": "array", "items": { "type": "object" } },
+    "transactionRoot": { "type": "string" }, "error": { "type": "object" }
+  }
+}

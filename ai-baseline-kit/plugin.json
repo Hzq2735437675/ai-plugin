@@ -2,7 +2,7 @@
   "$schema": "./package-manifest.schema.json",
   "schemaVersion": 1,
   "name": "ai-baseline-kit",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "type": "embedded-ai-capability-package",
   "description": "AI 前端模块装配系统：可完整植入目标项目，支持需求确认、结构化生成、验收测试、同栈模块迁移组合、AST 边界检查和旧项目增量治理闭环。",
   "entrypoints": {
@@ -34,7 +34,14 @@
     "projectComposer": "scripts/project-compose.mjs",
     "moduleBundleSchema": "docs/module-bundle.schema.json",
     "projectCompositionSchema": "docs/project-composition.schema.json",
-    "astBoundaryChecker": "scripts/ast-boundary-check.mjs"
+    "astBoundaryChecker": "scripts/ast-boundary-check.mjs",
+    "moduleDiscovery": "scripts/module-discover.mjs",
+    "moduleBundleRepair": "scripts/module-bundle-repair.mjs",
+    "compositionOrchestrator": "scripts/project-compose-from-requirement.mjs",
+    "compositionContractSelfCheck": "scripts/composition-contract-check.mjs",
+    "compositionRequestSchema": "docs/composition-request.schema.json",
+    "compositionRunSchema": "docs/composition-run.schema.json",
+    "moduleDiscoverySchema": "docs/module-discovery.schema.json"
   },
   "installation": {
     "guide": "INSTALL.md",

@@ -41,5 +41,10 @@
   },
   "provenance": [
     "standard-template"
+  ],
+  "title": "首页",
+  "aliases": [
+    "首页",
+    "工作台"
   ]
 }

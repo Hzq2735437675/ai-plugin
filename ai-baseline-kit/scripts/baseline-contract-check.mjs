@@ -340,6 +340,10 @@ try {
   assert.equal(legacyReport.entrypoints.api_client, 'src/http/client.ts');
   assert.match(legacyScheme, /required_questions:\r?\n\s+- field:/);
 
+  const compositionContracts = spawnSync(process.execPath, [path.join(baselineRoot, 'scripts', 'composition-contract-check.mjs')], { cwd: baselineRoot, encoding: 'utf8' });
+  assertPass(compositionContracts, 'composition contract check');
+  console.log(compositionContracts.stdout.trim());
+
   console.log('baseline-contract-check: pass');
   console.log('requirement-confirmation-gate: pass');
   console.log('react-create-and-extend: pass');

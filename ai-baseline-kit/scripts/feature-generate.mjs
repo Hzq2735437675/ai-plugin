@@ -141,6 +141,8 @@ function updateGeneratedModule(moduleRoot, moduleVar, pages, spec, npmDependenci
 
   const metaFile = path.join(moduleRoot, 'module.meta.json');
   const meta = readJson(metaFile);
+  meta.title ||= spec.feature.title;
+  meta.aliases = unique([...(meta.aliases ?? []), spec.feature.title, spec.feature.domain]);
   meta.capabilities = unique([...(meta.capabilities ?? []), ...(spec.capabilities ?? [])]);
   meta.permissions = unique([...(meta.permissions ?? []), ...(spec.permissions ?? [])]);
   meta.dependencies ??= { modules: [], shared: [], npm: [], dev: [] };
@@ -193,6 +195,8 @@ try {
       schemaVersion: 1,
       kind: 'ai-baseline-module',
       name: moduleId,
+      title: spec.feature.title,
+      aliases: unique([spec.feature.title, spec.feature.domain]),
       version: '0.1.0',
       domain: spec.feature.domain || moduleId,
       archetype: spec.feature.archetype || 'custom',

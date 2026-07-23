@@ -462,12 +462,19 @@ export function importModuleBundle({ bundlePath, projectRoot, dryRun = false }) 
   };
 }
 
+function dependencyMajor(version) {
+  const match = String(version || '').match(/(\d+)/);
+  return match ? Number(match[1]) : null;
+}
+
 export function validateBundleSet(bundlePaths) {
   const bundles = bundlePaths.map((bundlePath) => readModuleBundle(bundlePath));
   const blockers = [];
+  const warnings = [];
   const moduleNames = new Set();
   const routes = new Map();
   const shared = new Map();
+  const dependencies = new Map();
   for (const bundle of bundles) {
     const name = bundle.manifest.module.name;
     if (moduleNames.has(name)) blockers.push({ code: 'duplicate-module', module: name, message: `组合清单包含重复模块: ${name}` });
@@ -481,6 +488,24 @@ export function validateBundleSet(bundlePaths) {
       if (shared.has(key) && shared.get(key).sha256 !== item.sha256) blockers.push({ code: 'bundle-shared-conflict', path: key, modules: [shared.get(key).module, name], message: `模块包之间 shared 契约冲突: ${key}` });
       else shared.set(key, { sha256: item.sha256, module: name });
     }
+    for (const bucket of ['npm', 'dev']) {
+      for (const [dependency, version] of Object.entries(bundle.manifest.contracts?.[bucket] ?? {})) {
+        const key = `${bucket}:${dependency}`;
+        const previous = dependencies.get(key);
+        if (!previous) {
+          dependencies.set(key, { module: name, version });
+          continue;
+        }
+        if (previous.version === version) continue;
+        const leftMajor = dependencyMajor(previous.version);
+        const rightMajor = dependencyMajor(version);
+        if (leftMajor !== null && rightMajor !== null && leftMajor !== rightMajor) {
+          blockers.push({ code: 'bundle-dependency-major-conflict', bucket, dependency, versions: [previous.version, version], modules: [previous.module, name], message: `模块包 npm 主版本冲突: ${dependency} (${previous.version} / ${version})` });
+        } else {
+          warnings.push({ code: 'bundle-dependency-range-difference', bucket, dependency, versions: [previous.version, version], modules: [previous.module, name], message: `模块包依赖范围不同但主版本一致: ${dependency} (${previous.version} / ${version})` });
+        }
+      }
+    }
   }
-  return { compatible: blockers.length === 0, blockers, bundles };
+  return { compatible: blockers.length === 0, blockers, warnings, bundles };
 }

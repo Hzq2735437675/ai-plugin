@@ -82,6 +82,23 @@ if (!args['baseline-only']) {
   }
 }
 
+
+if (!args['baseline-only'] && args['install-playwright']) {
+  const command = packageManager === 'npm' ? 'npx' : packageManager === 'pnpm' ? 'pnpm' : 'yarn';
+  const commandArgs = packageManager === 'npm' ? ['playwright', 'install', 'chromium'] : packageManager === 'pnpm' ? ['exec', 'playwright', 'install', 'chromium'] : ['playwright', 'install', 'chromium'];
+  run(`${command} ${commandArgs.join(' ')}`, command, commandArgs);
+}
+
+if (!args['baseline-only'] && args['with-e2e']) {
+  if (!packageData?.scripts?.['test:e2e']) {
+    results.push({ label: 'test:e2e', passed: false, status: null });
+    console.error('project-validate: --with-e2e 要求 package.json scripts.test:e2e');
+  } else {
+    const [command, commandArgs] = packageRunCommand(packageManager, 'test:e2e');
+    run(`${command} ${commandArgs.join(' ')}`, command, commandArgs);
+  }
+}
+
 const failed = results.filter((item) => !item.passed).length;
 console.log(`project-validate: ${failed ? 'fail' : 'pass'}`);
 console.log(`profile: ${selectedProfile()}`);

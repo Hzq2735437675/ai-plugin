@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ai-baseline.local/composition-request.schema.json",
+  "title": "AI Baseline Composition Request",
+  "type": "object",
+  "required": ["schemaVersion", "kind", "request", "sources", "target"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "kind": { "const": "ai-baseline-composition-request" },
+    "status": { "enum": ["ready", "needs-confirmation"] },
+    "request": { "type": "object", "required": ["text"], "properties": { "text": { "type": "string" } } },
+    "sources": { "type": "array", "minItems": 1, "items": { "type": "object", "required": ["id", "projectRoot"], "properties": { "id": { "type": "string" }, "projectRoot": { "type": "string" } } } },
+    "target": { "type": "object", "required": ["projectRoot"], "properties": { "projectRoot": { "type": "string" }, "stack": { "type": "string" } } },
+    "selections": { "type": "array", "items": { "type": "object", "required": ["source", "modules"], "properties": { "source": { "type": "string" }, "modules": { "type": "array", "items": { "type": "string" } } } } },
+    "policies": { "type": "object", "properties": { "moduleNameConflict": { "enum": ["ask", "prefix-source"] }, "routeConflict": { "enum": ["ask", "prefix-module"] }, "permissionConflict": { "enum": ["keep", "prefix-module"] }, "sharedConflict": { "const": "ask" }, "dependencyConflict": { "const": "ask" }, "rollbackOnFailure": { "type": "boolean" }, "validate": { "type": "boolean" }, "e2e": { "type": "boolean" } } },
+    "requiredQuestions": { "type": "array", "items": { "type": "object" } }
+  }
+}

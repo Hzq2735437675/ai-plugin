@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ai-baseline.local/module-discovery.schema.json",
+  "title": "AI Baseline Module Discovery Report",
+  "type": "object",
+  "required": ["schemaVersion", "kind", "projectRoot", "modules", "summary"],
+  "properties": { "schemaVersion": { "const": 1 }, "kind": { "const": "ai-baseline-module-discovery-report" }, "projectRoot": { "type": "string" }, "modules": { "type": "array", "items": { "type": "object" } }, "summary": { "type": "object" } }
+}
