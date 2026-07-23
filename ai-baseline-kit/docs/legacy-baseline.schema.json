@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ai-baseline.local/legacy-baseline.schema.json",
+  "title": "AI Baseline Legacy Violation Snapshot",
+  "type": "object",
+  "required": ["schemaVersion", "kind", "generatedAt", "projectRoot", "violations"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "kind": { "const": "ai-baseline-legacy-snapshot" },
+    "generatedAt": { "type": "string" },
+    "projectRoot": { "type": "string" },
+    "violations": { "type": "array", "items": { "type": "object", "required": ["level", "id", "message", "file", "fingerprint"] } }
+  }
+}

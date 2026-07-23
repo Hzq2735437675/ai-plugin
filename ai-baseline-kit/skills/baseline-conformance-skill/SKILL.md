@@ -51,6 +51,13 @@ description: 开发后检查任意项目的新增或修改内容是否符合当�
 9. 整包植入时，目标项目 `.gitignore` 是否隐藏 `ai-baseline-kit/`，从而导致规范包变化不可见。
 10. 是否误改无关文件。
 
+## 新项目与旧项目验证模式
+
+- 标准新项目：`baseline-check --mode full --fail-on-warn`。
+- 已建立 `docs/legacy-baseline.json` 的旧项目：`baseline-check --mode changed --fail-on-warn`，历史违规不阻断，但任何新增违规都必须修复。
+- 新增模块即使位于旧项目，也必须完整拥有 `module.meta.json`、manifest、acceptance、契约目录和公开入口。
+- 不得通过刷新 legacy snapshot 绕过本轮新增违规。
+
 ## fix -> verify 闭环
 1. 如果结果为 `fail`，只修复 `violations` 中列出的项。
 2. 每轮修复后重新运行同一检查。

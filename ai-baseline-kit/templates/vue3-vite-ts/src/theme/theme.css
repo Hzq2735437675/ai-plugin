@@ -1,0 +1,40 @@
+/*
+ * 项目级视觉变量与 Element Plus 主题覆盖的唯一入口。
+ * 默认不覆盖 --el-*，因此直接使用 Element Plus 原生默认配色。
+ * 使用 html:root 提高项目覆盖优先级，避免按需注入的组件样式改变主题覆盖结果。
+ * 如需换品牌色，只在本文件覆盖 --el-color-primary 及其 light/dark 衍生变量，
+ * 页面、shared 和 modules 仍只消费 --app-* 语义变量或 Element Plus 组件 token。
+ */
+html:root {
+  --app-color-primary: var(--el-color-primary);
+  --app-color-success: var(--el-color-success);
+  --app-color-warning: var(--el-color-warning);
+  --app-color-error: var(--el-color-danger);
+  --app-color-info: var(--el-color-info);
+  --app-color-text: var(--el-text-color-primary);
+  --app-color-text-secondary: var(--el-text-color-regular);
+  --app-color-bg-layout: var(--el-bg-color-page);
+  --app-color-bg-container: var(--el-bg-color);
+  --app-color-border: var(--el-border-color);
+  --app-border-radius: var(--el-border-radius-base);
+  --app-font-size: var(--el-font-size-base);
+  --app-space-xs: 8px;
+  --app-space-sm: 12px;
+  --app-space-md: 16px;
+  --app-space-lg: 24px;
+  --app-space-xl: 32px;
+}
+
+/*
+ * 品牌色覆盖示例（按需取消注释并替换颜色，禁止复制到页面或模块）：
+ *
+ * html:root {
+ *   --el-color-primary: #409eff;
+ *   --el-color-primary-light-3: #79bbff;
+ *   --el-color-primary-light-5: #a0cfff;
+ *   --el-color-primary-light-7: #c6e2ff;
+ *   --el-color-primary-light-8: #d9ecff;
+ *   --el-color-primary-light-9: #ecf5ff;
+ *   --el-color-primary-dark-2: #337ecc;
+ * }
+ */

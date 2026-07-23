@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ai-baseline.local/feature-spec.schema.json",
+  "title": "AI Baseline Frontend Feature Spec",
+  "type": "object",
+  "required": ["schemaVersion", "kind", "status", "feature", "pages", "actions", "acceptance", "requiredQuestions"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "kind": { "const": "frontend-feature-spec" },
+    "status": { "enum": ["ready", "needs-confirmation"] },
+    "feature": {
+      "type": "object",
+      "required": ["id", "title", "domain", "module", "archetype", "summary", "ownership"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+        "title": { "type": "string", "minLength": 1 },
+        "domain": { "type": "string" },
+        "module": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+        "archetype": { "enum": ["crud", "workflow", "dashboard", "configuration", "master-detail", "real-time-monitoring", "custom"] },
+        "summary": { "type": "string" },
+        "ownership": { "enum": ["module", "shared", "shell"] }
+      }
+    },
+    "actors": { "type": "array", "items": { "type": "object" } },
+    "capabilities": { "type": "array", "items": { "type": "string" } },
+    "pages": { "type": "array", "items": { "type": "object", "required": ["id", "name", "route", "states"] } },
+    "actions": { "type": "array", "items": { "type": "object", "required": ["id", "name"] } },
+    "entities": { "type": "array", "items": { "type": "object" } },
+    "api": { "type": "array", "items": { "type": "object" } },
+    "state": { "type": "object" },
+    "permissions": { "type": "array", "items": { "type": "string" } },
+    "dependencies": { "type": "object" },
+    "ui": { "type": "object" },
+    "acceptance": { "type": "array", "items": { "type": "object", "required": ["id", "given", "when", "then"] } },
+    "requiredQuestions": { "type": "array", "items": { "type": "object", "required": ["id", "field", "question", "blocking"] } },
+    "source": { "type": "object" },
+    "notes": { "type": "array", "items": { "type": "string" } }
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "$schema": "./change-plan.schema.json",
+  "schemaVersion": 1,
+  "kind": "frontend-change-plan",
+  "status": "ready",
+  "featureSpec": "docs/features/order-management.feature.json",
+  "project": { "mode": "new-frontend-project", "framework": "React 18", "profile": "react18-antd-tailwind-ts" },
+  "decision": { "type": "create-module", "reason": "订单是独立业务域，当前不存在 order 模块。" },
+  "ownership": { "layer": "modules", "module": "order", "moduleRoot": "src/modules/order" },
+  "reuse": { "shared": [], "baseComponents": [], "forbiddenModuleImports": ["src/modules/*"] },
+  "assembly": { "moduleAssembler": "src/app/module-assembler.ts", "routes": true, "menus": true, "access": true, "locales": true, "stores": false, "api": true },
+  "dependencies": { "shared": ["shared/types/module"], "npm": ["react", "antd"], "permissions": ["order:view", "order:cancel"] },
+  "files": { "create": [], "modify": ["src/app/module-assembler.ts"], "allowedRoots": ["src/modules/order", "src/app/module-assembler.ts"], "forbidden": ["src/modules/*/private/**", "ai-baseline-kit/**"] },
+  "moduleContract": { "contractVersion": 1, "archetype": "crud", "portable": true, "sameStackOnly": true },
+  "requiredQuestions": []
+}

@@ -2,7 +2,7 @@ project:
   name: project-name
   map_status: target-project
   purpose: describe-current-project
-  scheme_version: 0.1.0
+  scheme_version: 0.6.0
   updated_at: YYYY-MM-DD
   update_source: project-scheme-bootstrap
 
@@ -15,6 +15,7 @@ stack:
   state_manager: project-defined
   i18n: project-defined
   style_solution: project-defined
+  package_manager: project-defined
 
 layers:
   shell_root: project-defined
@@ -32,6 +33,7 @@ entrypoints:
   locale_assembler: project-defined
   store_assembler: project-defined
   api_client: project-defined
+  theme: project-defined
   permission_context: project-defined
 
 i18n:
@@ -66,6 +68,7 @@ modules:
   #     shared: []
   #     base_components: []
   #     npm: []
+  #     dev: []
   #     env: []
   #     assets: []
   #     permissions: []

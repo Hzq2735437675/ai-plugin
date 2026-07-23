@@ -44,13 +44,25 @@ src/
 │   ├── AppShell.tsx
 │   └── module-assembler.ts
 ├── shared/                      # 跨模块复用的类型和组件
+│   ├── api/                    # 项目统一请求入口
 │   ├── components/
 │   └── types/
 ├── modules/
 │   └── home/                    # 示例业务模块
+│       ├── access.ts
+│       ├── api/
+│       ├── assets/
+│       ├── components/
+│       ├── directives/
 │       ├── index.ts
-│       ├── manifest.tsx
-│       └── pages/
+│       ├── locales/
+│       ├── manifest.ts
+│       ├── menu.ts
+│       ├── pages/
+│       ├── routes.ts
+│       ├── stores/
+│       ├── styles/
+│       └── types/
 ├── main.tsx
 └── styles.css
 ```
@@ -69,3 +81,23 @@ src/
 - 生产环境部署配置
 
 这些能力应根据项目需求，按 `ai-baseline-kit` 的结构规划流程逐项增加。
+
+
+## 全局主题与模块生成
+
+- 唯一全局主题入口：`src/theme/theme.css`。默认视觉：Ant Design 5 原生默认 token。
+- 页面和模块样式消费 `--app-*` 语义变量，不复制品牌 token。
+- `src/app/module-assembler.ts`、模块 routes/menu/access 内置受控标记，可由 `feature-generate.mjs` 安全新增或扩展模块。
+- 每个模块必须包含 `module.meta.json`、`manifest.ts`、`acceptance.md` 和唯一公开 `index.ts`。
+
+
+## 验收测试与边界验证
+
+```bash
+npm run test
+node ai-baseline-kit/scripts/ast-boundary-check.mjs --require-parser
+npm run typecheck
+npm run build
+```
+
+模块 `tests/` 由 Feature Spec 自动生成；Playwright 浏览器执行使用 `npm run test:e2e`，首次运行前按 Playwright 提示安装浏览器。

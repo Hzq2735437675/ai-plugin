@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ai-baseline.local/project-composition.schema.json",
+  "title": "AI Baseline Project Composition",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "kind",
+    "generatedAt",
+    "status",
+    "target",
+    "modules",
+    "compatibility"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "kind": {
+      "const": "ai-baseline-project-composition"
+    },
+    "generatedAt": {
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "planned",
+        "applied"
+      ]
+    },
+    "target": {
+      "type": "object"
+    },
+    "modules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "version",
+          "capabilities",
+          "routes",
+          "permissions",
+          "shared",
+          "npm",
+          "dev",
+          "themeTokens"
+        ]
+      }
+    },
+    "compatibility": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "module",
+          "compatible",
+          "actions"
+        ]
+      }
+    }
+  }
+}

@@ -30,11 +30,11 @@ project_scheme:
   status:
     current_branch: generated_or_bootstrapped_per_project
     generation_mode: ai_bootstrap_first_then_manual_review
-    automation_mode: deferred_until_baseline_complete
+    automation_mode: requirement_spec_plan_generate_validate_closed_loop
   bootstrap_rules:
     - 当 ai-baseline-kit/docs/project-scheme.yml 不存在时，先运行 skills/project-scheme-bootstrap/SKILL.md
     - 新项目优先从用户需求中提取技术栈、目标端、UI 库和业务类型；旧项目优先从 package manifest、框架配置、路由入口、状态入口、i18n 入口、API client、目录结构和已有模块推断
-    - 空项目且用户未指定技术栈时，不凭空选择框架，只提出目标端、技术栈和 UI 库等最少确认问题
+    - 空项目且用户未指定技术栈时，使用 stack-profiles.yml 的 default_new_frontend_profile；只有用户需求与默认方案冲突或关键信息不足时才提出最少确认问题
     - 无法可靠推断的字段保留为 unknown，并在 required_questions 中列出最少问题
     - 不因为缺少 scheme 直接开始业务改动
   required_when_enabled:
@@ -121,6 +121,7 @@ directory_conventions:
     - locales/
     - styles/
     - assets/
+    - tests/
   page_layout:
     preferred: kebab-case 目录，内部使用 `index` 页面文件和同目录样式文件
   component_layout:
@@ -369,3 +370,119 @@ stack_selection_policy:
     - run_baseline_structure_planning_before_scaffolding
     - do_not_apply_default_template_to_legacy_projects
     - keep_state_manager_and_i18n_project_defined_until_needed
+
+requirement_compilation:
+  purpose: 将自然语言、详细大白话、产品文档、API 文档或原型说明转换为可确认、可验收的 Frontend Feature Spec。
+  entrypoints:
+    skill: skills/requirement-to-feature-spec/SKILL.md
+    schema: docs/feature-spec.schema.json
+    template: docs/feature-spec.template.json
+    compiler: scripts/requirement-compile.mjs
+  gates:
+    - AI 必须区分文档明确事实、基于证据的推断和未知项。
+    - 模块归属、权限、API、路由、状态、危险动作和验收条件存在不确定时，必须写入 requiredQuestions 并向用户提问。
+    - Feature Spec 存在 blocking requiredQuestions 或 status 不是 ready 时，禁止生成业务代码。
+    - 确定性抽取脚本不能替代大模型对产品语义的理解，也不能把推断当作产品事实。
+
+feature_architecture_plan:
+  purpose: 将 ready Feature Spec 和项目地图转换为模块归属、装配点、依赖与文件白名单。
+  entrypoints:
+    skill: skills/feature-architecture-planner/SKILL.md
+    schema: docs/change-plan.schema.json
+    planner: scripts/feature-plan.mjs
+    generator: scripts/feature-generate.mjs
+    module_creator: scripts/module-create.mjs
+  decisions:
+    - create-module
+    - extend-module
+    - shared-capability
+    - shell-change
+  write_boundary:
+    - 计划必须列出 create、modify、allowedRoots 和 forbidden。
+    - AI 与生成器不得修改 allowedRoots 之外的业务文件。
+    - 旧项目装配代码缺少受控标记时，不允许正则猜测改写，必须先向用户确认或由 AI 明确改造装配点。
+
+portable_module_metadata:
+  required_file: module.meta.json
+  schema: docs/module-meta.schema.json
+  purpose: 为模块拆解、组合、迁移和自动审计提供静态机器可读描述；manifest.ts 继续负责运行时装配。
+  required:
+    - identity and semantic version
+    - domain and archetype
+    - capabilities
+    - public entrypoints
+    - shared and npm dependencies
+    - permissions
+    - portability constraints
+    - feature spec provenance
+  invariants:
+    - dependencies.modules 必须为空。
+    - 模块只通过 index.ts 暴露公开能力。
+    - 同技术栈迁移前比较 module.meta.json、运行时 manifest 和目标项目装配协议。
+
+design_system:
+  reference: docs/design-system.yml
+  default_policy: 新 React 项目沿用 Ant Design 5 原生默认 token；Vue 标准模板使用 Element Plus 并沿用其原生默认 CSS variables。
+  global_theme_entrypoint: project-scheme.entrypoints.theme
+  rules:
+    - 每个项目必须登记唯一全局主题变量入口或在 required_questions 中确认创建方案。
+    - 项目级颜色、圆角、字号和基础间距优先从全局 CSS 变量读取。
+    - 模块不得写死品牌色或复制一套全局 token。
+    - 旧项目保留现有 UI 框架和主题，只进行入口登记与增量治理。
+
+legacy_incremental_governance:
+  purpose: 旧项目接入时保留历史问题，只阻断接入后的新增违规。
+  snapshot: docs/legacy-baseline.json
+  schema: docs/legacy-baseline.schema.json
+  commands:
+    initialize: node ai-baseline-kit/scripts/baseline-check.mjs --write-baseline
+    validate_incremental: node ai-baseline-kit/scripts/baseline-check.mjs --mode changed --fail-on-warn
+    validate_full: node ai-baseline-kit/scripts/baseline-check.mjs --mode full --fail-on-warn
+  rules:
+    - project-bootstrap 对首次识别的旧项目创建一次历史快照，重复执行默认保留，不得自动吞并后续新增违规。
+    - 只有显式 refresh-legacy-baseline 才能刷新快照，刷新前必须人工审查。
+    - 新项目和标准模板使用 full 模式。
+    - changed 模式以稳定违规指纹比较历史问题；快照缺失或损坏必须失败。
+
+
+module_portability_cli:
+  workflow:
+    - module-export
+    - module-compatibility-check
+    - module-import
+    - project-compose
+  safety:
+    - 仅自动迁移同技术栈且 modules_root/shared_root 一致的模块。
+    - 同名模块、路由冲突、shared hash 冲突、缺失依赖版本或失控装配器必须阻断。
+    - 权限、路由、菜单、i18n 通过模块 manifest 和 shell 静态装配器合并。
+    - 主题只合并模块真实消费且 bundle 携带定义的 --app-* token。
+    - 每次导入生成 docs/module-imports/<module>.json；项目组合生成 docs/project-composition.json。
+
+acceptance_automation:
+  module_test_root: tests/
+  generated_artifacts:
+    - acceptance contract
+    - Vitest page-state tests
+    - Vitest permission tests
+    - Vitest component tests
+    - API mock
+    - Playwright E2E skeleton
+  rules:
+    - module.meta.json 与 manifest.dependencies 必须分别声明 npm 运行时依赖和 dev 测试依赖。
+    - 生产源码不得只依赖 dependencies.dev。
+    - 无法可靠自动推导的自然语言验收行为使用 todo/fixme，不伪造通过。
+
+ast_boundary_check:
+  parser_source: target-project
+  parsers:
+    - TypeScript compiler API
+    - Vue compiler-sfc with script fallback
+  checks:
+    - module 禁止直接依赖 other module
+    - shared 禁止依赖 module
+    - shell 只能通过 module index 公开入口装配
+    - module 禁止依赖 shell 私有实现
+    - runtime/test bare imports 必须匹配 module.meta.json dependencies.npm/dev
+  fallback:
+    - 目标项目未安装 TypeScript 时只记录 info 降级信息。
+    - 安装依赖后的验证必须使用 --require-parser。

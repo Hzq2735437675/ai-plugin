@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ai-baseline.local/module-meta.schema.json",
+  "title": "AI Baseline Portable Module Metadata",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "kind",
+    "name",
+    "version",
+    "domain",
+    "archetype",
+    "ownership",
+    "capabilities",
+    "entrypoints",
+    "dependencies",
+    "portability",
+    "provenance"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "kind": {
+      "const": "ai-baseline-module"
+    },
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "domain": {
+      "type": "string"
+    },
+    "archetype": {
+      "enum": [
+        "crud",
+        "workflow",
+        "dashboard",
+        "configuration",
+        "master-detail",
+        "real-time-monitoring",
+        "custom"
+      ]
+    },
+    "ownership": {
+      "const": "module"
+    },
+    "capabilities": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "entrypoints": {
+      "type": "object"
+    },
+    "dependencies": {
+      "type": "object",
+      "required": [
+        "modules",
+        "shared",
+        "npm",
+        "dev"
+      ],
+      "properties": {
+        "modules": {
+          "type": "array",
+          "maxItems": 0
+        },
+        "shared": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "npm": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "dev": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "permissions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "portability": {
+      "type": "object"
+    },
+    "provenance": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

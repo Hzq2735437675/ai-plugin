@@ -1,0 +1,23 @@
+/*
+ * 全局视觉变量唯一入口。
+ * 默认值对齐 Ant Design 5 默认主题；用户或 AI 应优先修改本文件，而不是在页面中散落颜色和间距。
+ */
+:root {
+  --app-color-primary: #1677ff;
+  --app-color-success: #52c41a;
+  --app-color-warning: #faad14;
+  --app-color-error: #ff4d4f;
+  --app-color-text: rgb(0 0 0 / 88%);
+  --app-color-text-secondary: rgb(0 0 0 / 65%);
+  --app-color-bg-layout: #f5f5f5;
+  --app-color-bg-container: #ffffff;
+  --app-color-border: #d9d9d9;
+  --app-color-sidebar: #001529;
+  --app-border-radius: 6px;
+  --app-font-size: 14px;
+  --app-space-xs: 8px;
+  --app-space-sm: 12px;
+  --app-space-md: 16px;
+  --app-space-lg: 24px;
+  --app-space-xl: 32px;
+}

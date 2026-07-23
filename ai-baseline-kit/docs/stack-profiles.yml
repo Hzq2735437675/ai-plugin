@@ -18,6 +18,8 @@ profiles:
       i18n: project-defined
       style_solution: Tailwind CSS 3 + CSS Modules-or-project-defined-local-styles
     template_root: templates/react18-antd-tailwind-ts
+    theme_entrypoint: src/theme/theme.css
+    theme_adapter: src/theme/antd-theme.ts
     required_outputs:
       - package.json
       - src/app
@@ -26,6 +28,8 @@ profiles:
       - src/main.tsx
     validation:
       install: npm install
+      test: npm run test
+      ast_boundary: node ai-baseline-kit/scripts/ast-boundary-check.mjs --require-parser
       typecheck: npm run typecheck
       build: npm run build
     notes:
@@ -34,7 +38,7 @@ profiles:
 
   vue3_vite:
     id: vue3-vite-ts
-    name: Vue 3 + Vite + Vue Router + TypeScript
+    name: Vue 3 + Vite + Element Plus + TypeScript
     status: active
     selection:
       mode: new-project
@@ -42,14 +46,17 @@ profiles:
       user_override: required-selection
     stack:
       framework: Vue 3
-      ui_library: project-defined
+      ui_library: Element Plus
       language: TypeScript
       build_tool: Vite
       router: Vue Router 4
       state_manager: project-defined
       i18n: project-defined
-      style_solution: project-defined-local-styles
+      style_solution: Element Plus CSS variables + project-defined-local-styles
     template_root: templates/vue3-vite-ts
+    theme_entrypoint: src/theme/theme.css
+    theme_adapter: Element Plus CSS variables in src/theme/theme.css
+    component_import: unplugin-vue-components + ElementPlusResolver
     required_outputs:
       - package.json
       - src/app
@@ -58,11 +65,16 @@ profiles:
       - src/main.ts
     validation:
       install: npm install
+      test: npm run test
+      ast_boundary: node ai-baseline-kit/scripts/ast-boundary-check.mjs --require-parser
       typecheck: npm run typecheck
       build: npm run build
     notes:
       - 该 profile 只用于用户明确选择 Vue 3 + Vite 的新项目。
-      - UI library、state_manager、i18n 和 API client 按项目需求显式选择，不强行预置。
+      - Element Plus 是该标准模板的默认 UI library；state_manager、i18n 和 API client 按项目需求显式选择。
+      - Element Plus 组件通过 unplugin-vue-components + ElementPlusResolver 按需导入，JavaScript API 保持显式 import。
+      - 默认保留 Element Plus 原生配色，项目级覆盖只允许进入 src/theme/theme.css。
+      - 用户初始化前明确指定其他 Vue UI 框架时，用户选择优先。
 
   existing_project_detected:
     id: existing-project-detected
@@ -78,6 +90,9 @@ profiles:
       - 旧项目即使使用 Vue、React、Angular、Svelte 或其他框架，也不自动复制两个标准模板。
       - 只生成或更新 project-scheme.yml，不自动重构旧代码或切换技术栈。
       - 新增能力遵循旧项目真实技术栈和基线分层规则。
+      - 首次接入写入 legacy baseline snapshot；日常验证使用 changed 模式，只阻断新增违规。
+      - 历史快照不得在普通功能开发中刷新；只有明确治理历史债务或重新建立基线时才允许更新。
+      - 保留旧项目已有主题；若主题入口无法识别，必须向用户确认后再新增或登记全局主题文件。
 
 standard_templates:
   only:

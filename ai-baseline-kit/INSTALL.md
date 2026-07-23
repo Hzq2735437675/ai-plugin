@@ -1,7 +1,7 @@
 # AI Baseline Kit 安装与植入说明
 
 - 包名：`ai-baseline-kit`
-- 当前版本：`0.3.0`
+- 当前版本：`0.6.0`
 - 包元数据：[`plugin.json`](plugin.json)
 - 主入口：[`AGENTS.md`](AGENTS.md)
 - 详细说明：[`README.md`](README.md)
@@ -27,7 +27,7 @@ ai-baseline-kit/AGENTS.md
 
 `ai-baseline-kit/` 内已经包含规则、skills、项目地图模板、默认新项目模板、入口文档、包元数据和无第三方依赖的检查脚本，不依赖本仓库的 Git 历史或根目录文件。
 
-## 可选：接入 AI 工具的根级自动入口
+## 自动接入 AI 工具的根级强入口
 
 部分 AI 工具只会自动读取目标项目根目录的 `AGENTS.md` 或 `CLAUDE.md`。为了让这些工具无需额外提示就发现本包，可在目标项目根目录创建或追加入口约束：
 
@@ -36,13 +36,13 @@ ai-baseline-kit/AGENTS.md
 ai-baseline-kit/AGENTS.md
 ```
 
-目标项目已有 `AGENTS.md` 或 `CLAUDE.md` 时，不要覆盖原内容，只追加上述入口约束。根级入口是**可选的激活适配层**，不是 `ai-baseline-kit/` 的运行依赖。
+运行 `project-bootstrap.mjs` 后会自动完成此步骤：目标项目已有 `AGENTS.md` 或 `CLAUDE.md` 时只追加受控段落，不覆盖原内容；缺失时自动创建。根级入口是 AI 自动发现和强制执行基线的必要激活层。
 
 ## 新项目植入
 
 1. 复制 `ai-baseline-kit/` 到目标项目根目录。
 2. 如果项目是前端项目且未指定技术栈，AI 使用 `templates/react18-antd-tailwind-ts/` 作为默认起点。
-3. 如果用户明确选择 Vue 3 + Vite，AI 使用 `templates/vue3-vite-ts/`。
+3. 如果用户明确选择 Vue 3 + Vite，AI 使用默认集成 Element Plus 的 `templates/vue3-vite-ts/`。
 4. 如果用户已经指定其他技术栈，用户选择优先；本包不自动生成第三方标准模板。
 5. 首次接入前运行诊断并生成或审核 `ai-baseline-kit/docs/project-scheme.yml`。
 6. 先读取结构规划 skill，再开始实现。
@@ -63,11 +63,14 @@ node ai-baseline-kit/scripts/project-bootstrap.mjs
 node ai-baseline-kit/scripts/project-bootstrap.mjs --init-template --stack react18-antd-tailwind-ts
 node ai-baseline-kit/scripts/project-bootstrap.mjs --init-template --stack vue3-vite-ts
 
-# 统一验证
-node ai-baseline-kit/scripts/project-validate.mjs --typecheck --build
+# 统一验证：严格基线 + 自动执行项目已声明的 typecheck/lint/test/build
+node ai-baseline-kit/scripts/project-validate.mjs
+
+# 仅检查基线边界
+node ai-baseline-kit/scripts/project-validate.mjs --baseline-only
 ```
 
-内置标准模板只有 React 18 + Vite 与 Vue 3 + Vite 两个。检测到旧项目后，bootstrap 只生成项目地图，不会复制模板；旧项目的 Vue、React、Angular 等技术栈都原样保留。
+内置标准模板只有 React 18 + Vite 与 Vue 3 + Vite + Element Plus 两个。检测到旧项目后，bootstrap 只生成项目地图，不会复制模板；旧项目的 Vue、React、Angular 等技术栈都原样保留。
 
 ## 已有项目植入
 
@@ -79,7 +82,7 @@ node ai-baseline-kit/scripts/project-validate.mjs --typecheck --build
 6. 回归检查：
 
 ```bash
-node ai-baseline-kit/scripts/baseline-check.mjs
+node ai-baseline-kit/scripts/project-validate.mjs
 ```
 
 ## 目录约定
@@ -93,10 +96,11 @@ node ai-baseline-kit/scripts/baseline-check.mjs
 
 ## 升级
 
-升级时以包版本为单位替换完整的 `ai-baseline-kit/` 目录，并保留目标项目根目录已有的 AI 入口文件和业务代码。升级后重新运行：
+升级前先备份目标项目专属的 `ai-baseline-kit/docs/project-scheme.yml`。以包版本为单位替换其余 `ai-baseline-kit/` 内容后，恢复项目地图（或重新运行 bootstrap 生成并人工审核），并保留目标项目根目录已有的 AI 入口文件和业务代码。升级后重新运行：
 
 ```bash
-node ai-baseline-kit/scripts/baseline-check.mjs
+node ai-baseline-kit/scripts/project-bootstrap.mjs
+node ai-baseline-kit/scripts/project-validate.mjs
 ```
 
 如果目标项目的基线规则或项目地图发生变化，应由 AI 按当前版本重新读取并审核 `docs/project-scheme.yml`。
@@ -113,13 +117,36 @@ node ai-baseline-kit/scripts/baseline-check.mjs
 - `MINOR`：向后兼容地新增 skill、规则或检查能力。
 - `PATCH`：向后兼容地修复文档、规则或脚本问题。
 
+## 接入后的需求生产闭环
+
+AI 必须依次读取和执行：
+
+1. `skills/requirement-to-feature-spec/SKILL.md`：理解自然语言或产品文档，生成 Feature Spec；有关键未知项时向用户提问。
+2. `skills/feature-architecture-planner/SKILL.md`：决定创建/扩展模块或共享能力，限定文件白名单。
+3. `scripts/feature-generate.mjs` 或 AI 按计划实现。
+4. `skills/baseline-conformance-skill/SKILL.md` 与 `scripts/project-validate.mjs`：完成检查闭环。
+
+旧项目首次 bootstrap 默认创建历史违规快照，日常验证使用增量模式：
+
+```bash
+node ai-baseline-kit/scripts/baseline-check.mjs --mode changed --fail-on-warn
+```
+
+标准新项目使用全量基线检查模式。全局主题入口登记在 `project-scheme.yml.entrypoints.theme`；React/Vue 模板默认是 `src/theme/theme.css`；Vue 模板通过组件解析器按需导入 Element Plus，并默认不覆盖其原生颜色变量。
+
+基线包维护者可运行以下真实构建回归；脚本会在系统临时目录中初始化模板、生成示例模块、安装依赖并执行 typecheck/build：
+
+```bash
+node ai-baseline-kit/scripts/template-build-check.mjs
+```
+
 ## 技术栈选择
 
 植入包后，AI 会根据目标项目状态选择开发模式：
 
 - **旧项目**：检测到 `package.json`、lockfile、源码、构建配置、路由或应用入口时，保留旧项目真实技术栈。Vue、React、Angular 等都可以接入，不自动迁移。
 - **新前端项目**：没有既有应用技术栈且用户没有指定其他方案时，使用 `templates/react18-antd-tailwind-ts/` 作为默认起点。
-- **Vue 新项目**：用户明确选择 Vue 3 + Vite 时，使用 `templates/vue3-vite-ts/`。
+- **Vue 新项目**：用户明确选择 Vue 3 + Vite 时，使用默认集成 Element Plus 的 `templates/vue3-vite-ts/`。
 - **用户指定优先**：用户在初始化前指定其他技术栈时，按用户选择创建项目，并继续使用本包的边界、模块、装配和回归规则。
 
 默认策略文件：
@@ -136,3 +163,21 @@ ai-baseline-kit/templates/vue3-vite-ts/README.md
 ```
 
 模板只在新项目初始化时作为可运行参考，不应套用于已有项目。
+
+
+## 模块迁移和组合
+
+模块跨项目复用必须先导出 bundle，再在目标项目执行兼容性检查；禁止直接复制模块目录后绕过 shared、主题、依赖、路由和装配契约。
+
+```bash
+node ai-baseline-kit/scripts/module-export.mjs --project-root <project-a> --module <module> --output <bundle-dir>
+node ai-baseline-kit/scripts/module-compatibility-check.mjs --project-root <project-b> --bundle <bundle-dir>
+node ai-baseline-kit/scripts/module-import.mjs --project-root <project-b> --bundle <bundle-dir>
+node ai-baseline-kit/scripts/project-compose.mjs --project-root <new-project> --stack vue3-vite-ts --bundles <bundle-a>,<bundle-b>
+```
+
+目标项目安装依赖后，使用以下命令强制 AST 解析器可用并复核导入边界：
+
+```bash
+node ai-baseline-kit/scripts/ast-boundary-check.mjs --project-root <project-root> --require-parser
+```

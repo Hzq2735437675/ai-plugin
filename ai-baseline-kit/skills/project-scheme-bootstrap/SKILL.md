@@ -56,6 +56,7 @@ description: 自动引导新项目或旧项目生成 docs/project-scheme.yml 的
    - state_manager
    - i18n
    - style_solution
+   - package_manager
    - app_type 或 target
 2. 如果某些字段未明说，但能由技术栈常识稳定推断，可以写入推断值，并在 `evidence` 中标记来自用户需求或常见搭配。
 3. 生成 `baseline_root/docs/project-scheme.yml` 初版。
@@ -73,7 +74,7 @@ description: 自动引导新项目或旧项目生成 docs/project-scheme.yml 的
    - React Router 6
 2. 将默认 profile 和 `templates/react18-antd-tailwind-ts/` 写入 `evidence`，并在 `project-scheme.yml` 中记录实际采用的技术栈。
 3. 只有在目标端不是前端、用户明确要求其他技术栈，或需求存在不可安全推断的关键约束时，才提出最少确认问题。
-4. 如果用户明确选择 Vue 3 + Vite，使用 `ai-baseline-kit/templates/vue3-vite-ts/`，并记录 `vue3-vite-ts` profile。
+4. 如果用户明确选择 Vue 3 + Vite，使用默认集成 Element Plus 的 `ai-baseline-kit/templates/vue3-vite-ts/`，并记录 `vue3-vite-ts` profile；用户明确指定其他 Vue UI 框架时以用户选择为准。
 5. 初始化代码骨架前，必须先使用 `baseline-structure-skill` 明确范围；模板只提供可运行起点，不代替业务需求分析。
 6. 如果用户在初始化前指定 React 其他版本、Next、Nuxt、Angular 或其他技术栈，优先服从用户选择，并将其记录为项目实际技术栈；本包不套用两个内置模板。
 
@@ -139,7 +140,7 @@ description: 自动引导新项目或旧项目生成 docs/project-scheme.yml 的
 - 在 `required_questions` 中列出最少确认问题。
 - 在 `confidence` 中标记 `high`、`medium` 或 `low`。
 - 在 `evidence` 中记录关键判断依据，例如文件路径、依赖名或配置名。
-- 新项目未指定技术栈时，可以先写低置信度 scheme，但不得开始生成业务代码。
+- 新前端项目未指定技术栈时，直接采用 `default_new_frontend` profile 并写入高置信度 scheme；只有需求与默认 profile 冲突或目标端不明确时才提问。
 - 旧项目接入时，不移动旧文件，不创建模块结构，不改变路由或构建配置。
 
 ## 输出结构
@@ -149,7 +150,7 @@ description: 自动引导新项目或旧项目生成 docs/project-scheme.yml 的
 project:
   name: detected-or-unknown
   purpose: unknown
-  scheme_version: 0.1.0
+  scheme_version: 0.6.0
   map_status: target-project
   updated_at: YYYY-MM-DD
   update_source: project-scheme-bootstrap
@@ -163,6 +164,7 @@ stack:
   state_manager: detected-or-unknown
   i18n: detected-or-unknown
   style_solution: detected-or-unknown
+  package_manager: detected-or-unknown
 
 layers:
   shell_root: detected-or-unknown
@@ -187,7 +189,9 @@ validation:
   test: detected-or-unknown
   build: detected-or-unknown
 
-required_questions: []
+required_questions:
+  - field: layers.modules_root
+    question: 请确认业务模块或业务域的根目录。
 confidence: medium
 evidence:
   - source: package.json or user_request
@@ -195,8 +199,8 @@ evidence:
 ```
 
 ## 失败处理
-- 如果仓库为空或尚未选择技术栈，先从用户需求提取；仍无法判断时，只问目标端、技术栈和 UI 库这类最少关键问题。
-- 如果用户要求“你来决定技术栈”，可以根据应用类型给出一个保守推荐，但必须把该选择写入 `evidence` 和 `required_questions` 或方案说明中，等待用户确认后再搭建。
+- 如果仓库为空且属于新前端项目，用户未指定其他方案时采用默认 React profile；只有目标端不明确或需求与默认方案冲突时，才问最少关键问题。
+- 如果用户要求“你来决定技术栈”，新前端项目使用默认 React profile，并把选择写入 `evidence`；不再为默认选择制造阻塞式确认。
 - 如果多个框架信号冲突，保留 `unknown` 并列出冲突证据。
 - 如果缺少模块结构，不强制创建；只记录当前项目尚未模块化。
 - 如果目标项目已经有等价架构文档，优先把它吸收到 `project-scheme.yml`，不要另立一套冲突规则。

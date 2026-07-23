@@ -1,0 +1,129 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ai-baseline.local/module-bundle.schema.json",
+  "title": "AI Baseline Portable Module Bundle",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "kind",
+    "createdAt",
+    "module",
+    "source",
+    "files",
+    "contracts",
+    "shared"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "kind": {
+      "const": "ai-baseline-module-bundle"
+    },
+    "createdAt": {
+      "type": "string"
+    },
+    "module": {
+      "type": "object"
+    },
+    "source": {
+      "type": "object",
+      "required": [
+        "project",
+        "stack",
+        "roots"
+      ]
+    },
+    "files": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/file"
+      }
+    },
+    "contracts": {
+      "type": "object",
+      "required": [
+        "routes",
+        "permissions",
+        "capabilities",
+        "npm",
+        "dev",
+        "shared",
+        "theme"
+      ],
+      "properties": {
+        "routes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "permissions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "capabilities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "npm": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "dev": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "shared": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "theme": {
+          "type": "object",
+          "required": [
+            "requiredTokens",
+            "definitions"
+          ]
+        }
+      }
+    },
+    "shared": {
+      "type": "object",
+      "required": [
+        "files",
+        "unresolved"
+      ]
+    }
+  },
+  "$defs": {
+    "file": {
+      "type": "object",
+      "required": [
+        "bundlePath",
+        "sha256"
+      ],
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "bundlePath": {
+          "type": "string"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      }
+    }
+  }
+}

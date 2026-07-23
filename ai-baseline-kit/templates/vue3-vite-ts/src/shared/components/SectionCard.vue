@@ -5,8 +5,12 @@ defineProps<{
 </script>
 
 <template>
-  <section class="section-card">
-    <h2>{{ title }}</h2>
-    <p><slot /></p>
-  </section>
+  <el-card class="section-card" shadow="never">
+    <template #header>
+      <strong>{{ title }}</strong>
+    </template>
+    <div class="section-card__body">
+      <slot />
+    </div>
+  </el-card>
 </template>

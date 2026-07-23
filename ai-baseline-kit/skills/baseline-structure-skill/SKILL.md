@@ -15,6 +15,12 @@ description: 开发前将任意项目的变更需求整理成符合项目基线�
 - `project_root`: `ai-baseline-kit/` 的父目录，业务代码、依赖、路由、模块和资源均按此目录读取或修改。
 - 读取规则时优先使用 `baseline_root`；规划业务变更时只触碰 `project_root` 中的目标范围。
 
+## 与产品需求闭环的关系
+
+- 输入是自然语言、产品文档或原型说明时，先使用 `requirement-to-feature-spec`，不得跳过 blocking `requiredQuestions`。
+- 复杂功能或模块变更在本 skill 前先使用 `feature-architecture-planner` 生成 change plan；本 skill 以 `files.allowedRoots` 为硬边界补充实现细节。
+- 简单、明确且不改变模块边界的小改动可直接使用本 skill，但仍需记录最小范围。
+
 ## 输入
 优先读取：
 - `ai-baseline-kit/AGENTS.md` 或当前仓库的 `AGENTS.md`

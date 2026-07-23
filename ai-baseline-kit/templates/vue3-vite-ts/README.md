@@ -1,4 +1,4 @@
-# Vue 3 + Vite + TypeScript 标准模板
+# Vue 3 + Vite + Element Plus + TypeScript 标准模板
 
 这是 `ai-baseline-kit` 支持的 Vue 标准模板，适用于：
 
@@ -6,7 +6,7 @@
 - 用户明确选择 Vue 3 + Vite。
 - 目标项目尚未形成既有业务技术栈。
 
-旧项目即使使用 Vue，也不能直接套用本模板；旧项目必须先扫描并保留原有目录、依赖、路由和状态管理。
+旧项目即使使用 Vue，也不能直接套用本模板；旧项目必须先扫描并保留原有目录、依赖、路由、状态管理和 UI 框架。
 
 ## 技术栈
 
@@ -15,9 +15,10 @@ Vue 3
 TypeScript
 Vite
 Vue Router 4
+Element Plus
 ```
 
-UI 库、状态管理、国际化和 API Client 保持 `project-defined`，只有业务确实需要时再接入。
+Element Plus 是 Vue 标准模板的默认 UI 框架。状态管理、国际化和 API Client 保持 `project-defined`，只有业务确实需要时再接入。用户在初始化前明确指定其他 Vue UI 框架时，以用户选择为准。
 
 ## 运行
 
@@ -38,15 +39,30 @@ src/
 │   ├── module-assembler.ts
 │   └── router.ts
 ├── shared/
+│   ├── api/                    # 项目统一请求入口
 │   ├── components/
 │   └── types/
 ├── modules/
 │   └── home/
+│       ├── access.ts
+│       ├── api/
+│       ├── assets/
+│       ├── components/
+│       ├── directives/
 │       ├── index.ts
+│       ├── locales/
 │       ├── manifest.ts
-│       └── pages/
+│       ├── menu.ts
+│       ├── module.meta.json
+│       ├── pages/
+│       ├── routes.ts
+│       ├── stores/
+│       ├── styles/
+│       └── types/
+├── theme/
+│   └── theme.css              # 唯一项目级主题覆盖入口
 ├── main.ts
-└── styles.css
+└── styles.css                 # 只维护应用布局，不定义第二套品牌 token
 ```
 
 模块能力通过 `src/app/module-assembler.ts` 静态装配，路由通过 `src/app/router.ts` 集中注册，模块之间不得直接引用彼此的私有实现。
@@ -63,3 +79,25 @@ src/
 - 具体业务模块以外的复杂基础设施。
 
 这些能力应由 AI 根据需求先规划，再按 `ai-baseline-kit` 的边界规则逐项增加。
+
+## 全局主题与模块生成
+
+- Element Plus 组件由 `unplugin-vue-components` + `ElementPlusResolver` 在构建时按需导入；`src/main.ts` 不做全量注册。
+- 唯一项目级主题覆盖入口是 `src/theme/theme.css`；默认不覆盖 `--el-*`，所以保留 Element Plus 原生默认配色。主题选择器使用 `html:root`，确保未来品牌变量覆盖不受组件样式注入顺序影响。
+- 调整品牌视觉时只修改 `theme.css` 中的 Element Plus CSS 变量及 `--app-*` 语义映射，不在页面、shared 或 modules 中复制品牌 token。
+- `src/styles.css` 只承载壳层和通用布局，模块局部样式仍随模块存放。
+- `ElMessage`、`ElNotification` 等 JavaScript API 必须在使用文件中从 `element-plus` 显式导入，禁止额外引入 API 自动导入以保持依赖可审计。
+- `src/app/module-assembler.ts`、模块 routes/menu/access 内置受控标记，可由 `feature-generate.mjs` 安全新增或扩展模块。
+- 每个模块必须包含 `module.meta.json`、`manifest.ts`、`acceptance.md` 和唯一公开 `index.ts`，使用 Element Plus 的模块必须在静态与运行时依赖契约中声明 `element-plus`。
+
+
+## 验收测试与边界验证
+
+```bash
+npm run test
+node ai-baseline-kit/scripts/ast-boundary-check.mjs --require-parser
+npm run typecheck
+npm run build
+```
+
+模块 `tests/` 由 Feature Spec 自动生成；Playwright 浏览器执行使用 `npm run test:e2e`，首次运行前按 Playwright 提示安装浏览器。

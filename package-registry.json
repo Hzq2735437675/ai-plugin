@@ -13,7 +13,7 @@
   "packages": [
     {
       "name": "ai-baseline-kit",
-      "version": "0.3.0",
+      "version": "0.6.0",
       "path": "ai-baseline-kit",
       "manifest": "ai-baseline-kit/plugin.json",
       "readme": "ai-baseline-kit/README.md",
@@ -30,7 +30,18 @@
         "ai-baseline-kit/scripts/project-doctor.mjs",
         "ai-baseline-kit/scripts/project-bootstrap.mjs",
         "ai-baseline-kit/scripts/project-validate.mjs",
-        "ai-baseline-kit/scripts/project-tools-check.mjs"
+        "ai-baseline-kit/scripts/project-tools-check.mjs",
+        "ai-baseline-kit/scripts/baseline-contract-check.mjs",
+        "ai-baseline-kit/scripts/template-build-check.mjs",
+        "ai-baseline-kit/scripts/requirement-compile.mjs",
+        "ai-baseline-kit/scripts/feature-plan.mjs",
+        "ai-baseline-kit/scripts/feature-generate.mjs",
+        "ai-baseline-kit/scripts/module-create.mjs",
+        "ai-baseline-kit/scripts/module-export.mjs",
+        "ai-baseline-kit/scripts/module-import.mjs",
+        "ai-baseline-kit/scripts/module-compatibility-check.mjs",
+        "ai-baseline-kit/scripts/project-compose.mjs",
+        "ai-baseline-kit/scripts/ast-boundary-check.mjs"
       ]
     }
   ]

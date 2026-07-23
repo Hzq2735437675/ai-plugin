@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "kind": "ai-baseline-module",
+  "name": "home",
+  "version": "0.1.0",
+  "domain": "home",
+  "archetype": "dashboard",
+  "ownership": "module",
+  "capabilities": [
+    "home:view"
+  ],
+  "entrypoints": {
+    "public": "index.ts",
+    "manifest": "manifest.ts",
+    "routes": "routes.ts",
+    "menus": "menu.ts",
+    "access": "access.ts"
+  },
+  "dependencies": {
+    "modules": [],
+    "shared": [
+      "shared/components/PagePrimitives",
+      "shared/types/module"
+    ],
+    "npm": [
+      "antd",
+      "react"
+    ],
+    "dev": [
+      "@playwright/test",
+      "@testing-library/react",
+      "jsdom",
+      "vitest"
+    ]
+  },
+  "permissions": [],
+  "portability": {
+    "sameStackOnly": true,
+    "shellPrivateImports": false,
+    "crossModuleImports": false
+  },
+  "provenance": [
+    "standard-template"
+  ]
+}

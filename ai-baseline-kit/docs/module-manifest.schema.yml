@@ -42,6 +42,7 @@ properties:
       - shared
       - base_components
       - npm
+      - dev
       - env
       - assets
       - permissions
@@ -51,6 +52,8 @@ properties:
       base_components:
         type: array
       npm:
+        type: array
+      dev:
         type: array
       env:
         type: array

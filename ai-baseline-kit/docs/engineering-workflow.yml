@@ -43,7 +43,7 @@ workflows:
     steps:
       - 读取 AGENTS.md、baseline-rules.yml 和 engineering-workflow.yml。
       - 如果用户已经说明技术栈，从用户需求中提取 framework、ui_library、language、build_tool、router、state_manager、i18n 和 style_solution。
-      - 如果用户明确选择 Vue 3 + Vite，使用内置 `vue3-vite-ts` 模板；如果用户明确选择其他技术栈，按用户选择创建，不套用内置模板。
+      - 如果用户明确选择 Vue 3 + Vite，使用默认集成 Element Plus 的内置 `vue3-vite-ts` 模板；如果用户明确选择其他技术栈或其他 Vue UI 框架，按用户选择创建，不套用该默认组合。
       - 如果用户没有说明技术栈且仓库为空，使用内置 `react18-antd-tailwind-ts` 作为默认新前端模板。
       - 如果项目已有依赖或配置，优先从文件推断，并按旧项目模式保留真实技术栈。
       - 使用 project-scheme-bootstrap 生成 baseline_root/docs/project-scheme.yml 初版。
@@ -162,6 +162,49 @@ workflows:
       - 规则歧义需要人确认
       - 达到最大轮次
 
+
+  requirement_document_to_feature:
+    goal: 将任意自然语言或产品文档转为可确认的前端功能规格。
+    steps:
+      - 使用 requirement-to-feature-spec 完整读取用户输入和上传文档。
+      - 区分 explicit、inferred、unknown。
+      - 生成 docs/features/<feature-id>.feature.json。
+      - 对模块、权限、API、路由、状态和验收缺口向用户提出最少确认问题。
+      - requiredQuestions 清零并由用户确认后将 status 改为 ready。
+    stop_conditions:
+      - 产品文档无法读取或内容缺失。
+      - 存在 blocking requiredQuestions。
+    output:
+      - ready Feature Spec 或用户确认问题
+
+  feature_spec_to_modular_code:
+    goal: 从 ready Feature Spec 生成强模块边界的项目文件。
+    steps:
+      - 使用 feature-architecture-planner 生成 change plan。
+      - 决定 create-module、extend-module、shared-capability 或 shell-change。
+      - 固定 files.allowedRoots 和 files.forbidden。
+      - 对标准 React/Vue 模块运行 feature-generate；不受支持的框架由 AI 按同一计划实现。
+      - 更新 project-scheme 和 module.meta.json。
+      - 运行 baseline conformance、类型检查、测试和构建。
+    output:
+      - 模块代码
+      - module.meta.json 与 manifest.ts
+      - 静态装配变更
+      - 验收与验证报告
+
+  onboard_legacy_incrementally:
+    goal: 旧项目接入基线后只阻断新增违规。
+    steps:
+      - 运行 project-bootstrap 识别真实技术栈和边界。
+      - 首次接入创建 docs/legacy-baseline.json；之后默认保留快照。
+      - 日常验证使用 baseline-check --mode changed。
+      - 新增或修改模块仍必须满足完整模块契约。
+      - 历史治理按模块逐步清理，清理后人工刷新快照。
+    output:
+      - 旧项目地图
+      - 历史违规快照
+      - 新增违规阻断结果
+
 ai_readability:
   required_artifacts:
     - baseline-rules.yml 用于机器读取规则。
@@ -173,3 +216,37 @@ ai_readability:
     - 让 AI 少猜测，多按结构字段执行。
     - 让模块迁移先判断，再执行。
     - 让人审核计划、依赖、风险和最终结果。
+
+module_composition_workflow:
+  export:
+    - 读取 module.meta.json、manifest、shared 契约、npm/dev 版本、路由、权限和主题 token。
+    - 生成带 SHA-256 文件清单的 module-bundle.json。
+  compatibility:
+    - 校验技术栈、目录根、同名模块、路由、shared hash、依赖、主题和静态装配器。
+    - blockers 非空时不得导入。
+  import:
+    - 只执行兼容性报告中的受控动作。
+    - 更新依赖、缺失 shared、主题 token、module assembler 和导入回执。
+  compose:
+    - 先校验 bundle 集合内部的模块名、路由和 shared 冲突。
+    - 空目录按显式 stack 初始化标准模板，再逐模块导入。
+    - 输出 docs/project-composition.json。
+
+acceptance_test_workflow:
+  source: Feature Spec acceptance/pages/permissions/api
+  active_assertions:
+    - contract completeness
+    - page state declaration
+    - permission coverage
+    - generated page ready state
+  deferred_assertions:
+    - 无法从自然语言确定实现细节的业务行为标记 todo/fixme。
+  validation:
+    - npm run test
+    - npm run typecheck
+    - Playwright 配置和 E2E 文件进入类型检查；浏览器执行按项目 CI 环境启用。
+
+ast_boundary_workflow:
+  before_install: 允许明确降级为 info。
+  after_install: ast-boundary-check.mjs --require-parser。
+  output: files、edges、parser mode 和 violations 组成可审计依赖图报告。

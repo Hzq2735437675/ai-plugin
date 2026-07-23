@@ -105,6 +105,8 @@ if (registry) {
     checkFile(item.readme, 'README');
     checkFile(item.entry, '主入口');
     checkFile(item.installation, '安装说明');
+    for (const template of item.templates ?? []) checkFile(template, '标准模板');
+    for (const tool of item.tools ?? []) checkFile(tool, '包工具');
     checkManifest(item);
   }
 }

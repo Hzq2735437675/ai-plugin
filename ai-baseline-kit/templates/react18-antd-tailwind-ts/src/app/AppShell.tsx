@@ -10,9 +10,9 @@ export function AppShell() {
   const location = useLocation();
 
   return (
-    <Layout className="min-h-screen">
-      <Sider breakpoint="lg" collapsedWidth="0">
-        <div className="px-5 py-5 text-lg font-semibold text-white">AI Baseline</div>
+    <Layout className="app-layout min-h-screen">
+      <Sider className="app-sider" breakpoint="lg" collapsedWidth="0">
+        <div className="app-brand">AI Baseline</div>
         <Menu
           theme="dark"
           mode="inline"
@@ -22,11 +22,11 @@ export function AppShell() {
         />
       </Sider>
       <Layout>
-        <Header className="flex items-center justify-between bg-white px-6 shadow-sm">
-          <span className="font-medium text-slate-700">默认 React 项目模板</span>
-          <span className="text-sm text-slate-500">React 18 · Ant Design · Tailwind · TypeScript</span>
+        <Header className="app-header">
+          <span className="app-header__title">默认 React 项目模板</span>
+          <span className="app-header__meta">React 18 · Ant Design · Tailwind · TypeScript</span>
         </Header>
-        <Content className="bg-slate-50 p-6">
+        <Content className="app-content">
           <Outlet />
         </Content>
       </Layout>

@@ -1,0 +1,47 @@
+design_system:
+  version: 1
+  principle: 默认沿用 UI 框架原生视觉，所有项目级覆盖集中到唯一全局主题入口；禁止页面散落品牌色、状态色和基础间距常量。
+  default_new_frontend:
+    profile: react18-antd-tailwind-ts
+    ui_library: Ant Design 5
+    color_policy: Ant Design 5 default tokens
+    theme_entrypoint: src/theme/theme.css
+    adapter: src/theme/antd-theme.ts
+  vue_template:
+    profile: vue3-vite-ts
+    ui_library: Element Plus
+    color_policy: Element Plus native default CSS variables
+    theme_entrypoint: src/theme/theme.css
+    adapter: Element Plus CSS variables
+    component_import: unplugin-vue-components + ElementPlusResolver
+    javascript_api_import: explicit imports from element-plus
+  required_tokens:
+    - app-color-primary
+    - app-color-success
+    - app-color-warning
+    - app-color-error
+    - app-color-text
+    - app-color-text-secondary
+    - app-color-bg-layout
+    - app-color-bg-container
+    - app-color-border
+    - app-border-radius
+    - app-font-size
+    - app-space-xs
+    - app-space-sm
+    - app-space-md
+    - app-space-lg
+    - app-space-xl
+  rules:
+    - 新项目默认不创建第二套主题文件。
+    - 用户或 AI 调整品牌视觉时优先修改 theme_entrypoint；UI 库需要 JS 配置时通过薄适配层读取同一 CSS 变量。
+    - Vue 标准模板只自动解析 Element Plus 组件；消息、通知等 JavaScript API 必须在使用位置显式导入。
+    - 模块样式必须消费全局 token，并允许模块局部语义变量，但不得覆盖全局品牌 token。
+    - 旧项目保留原 UI 库；若已有主题入口，将其登记到 project-scheme，不强制迁移为 Ant Design 或 Element Plus。
+    - 跨项目组合模块时，模块不得假设具体品牌色，只依赖全局语义 token。
+
+
+module_theme_portability:
+  token_scope: --app-*
+  merge_policy: 只合并导入模块真实引用且目标主题缺失的 token。
+  conflict_policy: 目标已有 token 保持目标项目定义，不由模块导入器覆盖。

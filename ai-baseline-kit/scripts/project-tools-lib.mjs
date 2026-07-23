@@ -23,18 +23,19 @@ export const STANDARD_PROFILES = Object.freeze({
     entrypoint: 'src/main.tsx',
     router_entrypoint: 'src/app/AppRoutes.tsx',
     module_assembler: 'src/app/module-assembler.ts',
+    theme: 'src/theme/theme.css',
   },
   'vue3-vite-ts': {
     id: 'vue3-vite-ts',
-    name: 'Vue 3 + Vite + Vue Router + TypeScript',
+    name: 'Vue 3 + Vite + Element Plus + TypeScript',
     framework: 'Vue 3',
-    ui_library: 'project-defined',
+    ui_library: 'Element Plus',
     language: 'TypeScript',
     build_tool: 'Vite',
     router: 'Vue Router 4',
     state_manager: 'project-defined',
     i18n: 'project-defined',
-    style_solution: 'project-defined local styles',
+    style_solution: 'Element Plus CSS variables + project-defined local styles',
     template: 'templates/vue3-vite-ts',
     shell_root: 'src/app',
     shared_root: 'src/shared',
@@ -44,6 +45,7 @@ export const STANDARD_PROFILES = Object.freeze({
     entrypoint: 'src/main.ts',
     router_entrypoint: 'src/app/router.ts',
     module_assembler: 'src/app/module-assembler.ts',
+    theme: 'src/theme/theme.css',
   },
 });
 
@@ -54,6 +56,8 @@ const FRAMEWORK_DEPENDENCIES = [
   ['React', ['react', '@vitejs/plugin-react', '@vitejs/plugin-react-swc']],
   ['Angular', ['@angular/core', '@angular/cli']],
   ['Svelte', ['svelte', '@sveltejs/vite-plugin-svelte']],
+  ['Preact', ['preact', '@preact/preset-vite']],
+  ['Solid', ['solid-js', 'vite-plugin-solid']],
 ];
 
 const UI_DEPENDENCIES = [
@@ -69,6 +73,8 @@ const STATE_DEPENDENCIES = [
   ['Vuex', ['vuex']],
   ['Zustand', ['zustand']],
   ['Redux Toolkit', ['@reduxjs/toolkit', 'redux']],
+  ['MobX', ['mobx', 'mobx-react', 'mobx-react-lite']],
+  ['Jotai', ['jotai']],
 ];
 
 const I18N_DEPENDENCIES = [
@@ -107,7 +113,7 @@ const ROUTER_CANDIDATES = [
   'src/app/AppRoutes.tsx',
 ];
 
-const MODULE_ROOT_CANDIDATES = ['src/modules', 'src/features', 'modules', 'features'];
+const MODULE_ROOT_CANDIDATES = ['src/modules', 'src/features', 'src/domains', 'src/packages', 'modules', 'features'];
 
 function normalize(value) {
   return value.replace(/\\/g, '/');
@@ -171,14 +177,39 @@ function detectRouter(map) {
   if (map.has('react-router-dom')) return 'React Router 6';
   if (map.has('vue-router')) return 'Vue Router 4';
   if (map.has('@angular/router')) return 'Angular Router';
+  if (map.has('wouter')) return 'Wouter';
+  if (map.has('@tanstack/react-router')) return 'TanStack Router';
   return 'unknown';
 }
 
+function projectContainsSourceExtension(projectRoot, extensions) {
+  const ignored = new Set(['node_modules', '.git', 'dist', 'build', '.next', '.nuxt', 'coverage', 'ai-baseline-kit']);
+  const queue = [projectRoot];
+  while (queue.length) {
+    const directory = queue.shift();
+    for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+      if (ignored.has(entry.name)) continue;
+      const full = path.join(directory, entry.name);
+      if (entry.isDirectory()) queue.push(full);
+      else if (extensions.has(path.extname(entry.name))) return true;
+    }
+  }
+  return false;
+}
+
 function detectLanguage(map, projectRoot) {
-  if (map.has('typescript') || fs.existsSync(path.join(projectRoot, 'tsconfig.json'))) return 'TypeScript';
-  if (fs.existsSync(path.join(projectRoot, 'jsconfig.json'))) return 'JavaScript';
+  if (
+    map.has('typescript')
+    || fs.existsSync(path.join(projectRoot, 'tsconfig.json'))
+    || projectContainsSourceExtension(projectRoot, new Set(['.ts', '.tsx']))
+  ) return 'TypeScript';
+  if (
+    fs.existsSync(path.join(projectRoot, 'jsconfig.json'))
+    || projectContainsSourceExtension(projectRoot, new Set(['.js', '.jsx', '.mjs', '.cjs']))
+  ) return 'JavaScript';
   return 'unknown';
 }
+
 
 function detectConfigFiles(projectRoot) {
   const names = [
@@ -194,7 +225,19 @@ function detectConfigFiles(projectRoot) {
 }
 
 function detectModules(projectRoot) {
-  const root = MODULE_ROOT_CANDIDATES.find((candidate) => directoryExists(projectRoot, candidate)) ?? '';
+  let root = MODULE_ROOT_CANDIDATES.find((candidate) => directoryExists(projectRoot, candidate)) ?? '';
+  if (!root && directoryExists(projectRoot, 'packages')) {
+    const packageEntries = fs.readdirSync(path.join(projectRoot, 'packages'), { withFileTypes: true })
+      .filter((entry) => entry.isDirectory());
+    const hasModuleManifests = packageEntries.some((entry) => firstExisting(projectRoot, [
+      `packages/${entry.name}/manifest.ts`,
+      `packages/${entry.name}/manifest.tsx`,
+      `packages/${entry.name}/manifest.js`,
+      `packages/${entry.name}/manifest.json`,
+      `packages/${entry.name}/manifest.yml`,
+    ]));
+    if (hasModuleManifests) root = 'packages';
+  }
   if (!root) return { root: 'unknown', items: [] };
   const items = fs.readdirSync(path.join(projectRoot, root), { withFileTypes: true })
     .filter((entry) => entry.isDirectory())
@@ -211,6 +254,7 @@ function detectModules(projectRoot) {
         name: entry.name,
         root: moduleRoot,
         manifest: manifest || 'unknown',
+        metadata: firstExisting(projectRoot, [`${moduleRoot}/module.meta.json`]) || 'unknown',
       };
     });
   return { root, items };
@@ -224,7 +268,14 @@ function detectEntrypoints(projectRoot) {
       'src/app/module-assembler.ts',
       'src/app/module-assembler.tsx',
       'src/app/module-assembler.js',
-      'src/app/module-assembler.tsx',
+      'src/app/module-assembler.jsx',
+    ]) || 'unknown',
+    theme: firstExisting(projectRoot, [
+      'src/theme/theme.css',
+      'src/styles/theme.css',
+      'src/styles/tokens.css',
+      'src/assets/styles/theme.css',
+      'src/theme/index.css',
     ]) || 'unknown',
     api_client: firstExisting(projectRoot, [
       'src/shared/api/client.ts',
@@ -232,17 +283,32 @@ function detectEntrypoints(projectRoot) {
       'src/services/http.ts',
       'src/services/api.ts',
       'src/api/index.ts',
+      'src/http/request.ts',
+      'src/http/client.ts',
+      'src/utils/request.ts',
+      'src/lib/http.ts',
     ]) || 'unknown',
   };
 }
 
-function detectValidation(packageData, profile) {
+function detectPackageManager(projectRoot, packageData) {
+  const declared = String(packageData?.packageManager ?? '').split('@')[0];
+  if (['npm', 'pnpm', 'yarn', 'bun'].includes(declared)) return declared;
+  if (fs.existsSync(path.join(projectRoot, 'pnpm-lock.yaml'))) return 'pnpm';
+  if (fs.existsSync(path.join(projectRoot, 'yarn.lock'))) return 'yarn';
+  if (fs.existsSync(path.join(projectRoot, 'bun.lockb')) || fs.existsSync(path.join(projectRoot, 'bun.lock'))) return 'bun';
+  if (fs.existsSync(path.join(projectRoot, 'package-lock.json'))) return 'npm';
+  return 'npm';
+}
+
+function detectValidation(packageData, profile, packageManager = 'npm') {
   const scripts = packageData?.scripts ?? {};
+  const run = packageManager === 'yarn' ? 'yarn' : `${packageManager} run`;
   return {
-    typecheck: scripts.typecheck ? 'npm run typecheck' : 'unknown',
-    lint: scripts.lint ? 'npm run lint' : 'unknown',
-    test: scripts.test ? 'npm test' : 'unknown',
-    build: scripts.build ? 'npm run build' : profile ? 'npm run build' : 'unknown',
+    typecheck: scripts.typecheck ? `${run} typecheck` : 'unknown',
+    lint: scripts.lint ? `${run} lint` : 'unknown',
+    test: scripts.test ? `${run} test` : 'unknown',
+    build: scripts.build ? `${run} build` : 'unknown',
   };
 }
 
@@ -269,6 +335,7 @@ export function analyzeProject(projectRoot, options = {}) {
   const existing = hasApplicationSignal(absoluteRoot, { file: packageFile }, configFiles);
   const requestedProfile = findProfile(options.requestedProfile);
   const initializedProfile = findProfile(options.initializedProfile);
+  const preservedProfile = findProfile(options.preservedProfile);
   const detectedFramework = identifyDependency(dependencyVersions, FRAMEWORK_DEPENDENCIES);
   const detectedUi = identifyDependency(dependencyVersions, UI_DEPENDENCIES);
   const detectedState = identifyDependency(dependencyVersions, STATE_DEPENDENCIES);
@@ -277,12 +344,14 @@ export function analyzeProject(projectRoot, options = {}) {
   const buildTool = detectBuildTool(dependencyVersions, configFiles);
   const router = detectRouter(dependencyVersions);
   const language = detectLanguage(dependencyVersions, absoluteRoot);
+  const packageManager = detectPackageManager(absoluteRoot, packageData);
   const modules = detectModules(absoluteRoot);
   const entrypoints = detectEntrypoints(absoluteRoot);
 
   const initialized = Boolean(initializedProfile);
-  let mode = existing && !initialized ? 'existing-project' : 'new-frontend-project';
-  let profile = initializedProfile;
+  const standardManaged = initialized || Boolean(preservedProfile);
+  let mode = existing && !standardManaged ? 'existing-project' : 'new-frontend-project';
+  let profile = initializedProfile ?? preservedProfile;
   if (!profile && !existing) profile = requestedProfile ?? STANDARD_PROFILES[DEFAULT_PROFILE_ID];
 
   const stack = existing
@@ -295,6 +364,7 @@ export function analyzeProject(projectRoot, options = {}) {
         state_manager: detectedState.label,
         i18n: detectedI18n.label,
         style_solution: detectedStyle.label,
+        package_manager: packageManager,
       }
     : {
         framework: profile.framework,
@@ -305,6 +375,7 @@ export function analyzeProject(projectRoot, options = {}) {
         state_manager: profile.state_manager,
         i18n: profile.i18n,
         style_solution: profile.style_solution,
+        package_manager: packageManager,
       };
 
   const roots = existing
@@ -347,8 +418,14 @@ export function analyzeProject(projectRoot, options = {}) {
     layers: roots,
     entrypoints,
     modules,
-    validation: detectValidation(packageData, profile),
-    confidence: existing && !initialized ? (detectedFramework.label === 'unknown' ? 'medium' : 'high') : 'high',
+    validation: detectValidation(packageData, profile, packageManager),
+    confidence: existing && !initialized
+      ? (detectedFramework.label === 'unknown'
+          ? 'low'
+          : [roots.shell_root, roots.shared_root, roots.modules_root, entrypoints.app, entrypoints.module_assembler, entrypoints.api_client].some((value) => value === 'unknown')
+            ? 'medium'
+            : 'high')
+      : 'high',
     evidence,
     warnings: [
       ...(existing && !initialized && detectedFramework.label === 'unknown' ? ['已检测到项目文件，但无法可靠识别框架。'] : []),
@@ -372,11 +449,33 @@ function currentDate() {
   return new Date().toISOString().slice(0, 10);
 }
 
+function buildRequiredQuestions(report) {
+  if (report.mode !== 'existing-project') return [];
+  const questions = [];
+  const fields = [
+    ['stack.framework', report.stack.framework, '请确认旧项目使用的前端框架及主版本。'],
+    ['stack.build_tool', report.stack.build_tool, '请确认旧项目的构建工具和主要配置入口。'],
+    ['stack.router', report.stack.router, '请确认路由库及路由装配入口。'],
+    ['layers.shell_root', report.layers.shell_root, '请确认应用 shell 或全局装配层根目录。'],
+    ['layers.shared_root', report.layers.shared_root, '请确认跨业务模块共享层根目录。'],
+    ['layers.modules_root', report.layers.modules_root, '请确认业务模块或业务域的根目录。'],
+    ['entrypoints.app', report.entrypoints.app, '请确认应用启动入口。'],
+    ['entrypoints.module_assembler', report.entrypoints.module_assembler, '请确认业务模块的静态装配入口；若项目没有，请确认后记录为 not-applicable。'],
+    ['entrypoints.api_client', report.entrypoints.api_client, '请确认项目统一 API client 或请求适配层入口。'],
+    ['entrypoints.theme', report.entrypoints.theme, '请确认全局主题变量或样式入口；若项目没有，请确认由 AI 创建。'],
+  ];
+  for (const [field, value, question] of fields) {
+    if (value === 'unknown') questions.push({ field, question });
+  }
+  return questions;
+}
+
 export function buildProjectScheme(report, options = {}) {
   const profile = STANDARD_PROFILES[report.profile] ?? null;
   const projectName = report.package.name || path.basename(report.projectRoot);
-  const schemeVersion = options.schemeVersion ?? '0.3.0';
+  const schemeVersion = options.schemeVersion ?? '0.6.0';
   const modules = report.modules.items ?? [];
+  const requiredQuestions = buildRequiredQuestions(report);
   const lines = [
     'project:',
     `  name: ${yamlScalar(projectName)}`,
@@ -408,6 +507,7 @@ export function buildProjectScheme(report, options = {}) {
       lines.push(`    - name: ${yamlScalar(module.name)}`);
       lines.push(`      root: ${yamlScalar(module.root)}`);
       lines.push(`      manifest: ${yamlScalar(module.manifest)}`);
+      lines.push(`      metadata: ${yamlScalar(module.metadata)}`);
     }
   }
 
@@ -423,7 +523,15 @@ export function buildProjectScheme(report, options = {}) {
     ...yamlList(Object.keys(STANDARD_PROFILES), '    '),
     '  user_override: allowed-before-initialization',
     '',
-    'required_questions: []',
+    ...(requiredQuestions.length
+      ? [
+          'required_questions:',
+          ...requiredQuestions.flatMap((item) => [
+            `  - field: ${yamlScalar(item.field)}`,
+            `    question: ${yamlScalar(item.question)}`,
+          ]),
+        ]
+      : ['required_questions: []']),
     `confidence: ${yamlScalar(report.confidence)}`,
     'evidence:',
     ...yamlList(report.evidence, '  '),
@@ -466,6 +574,44 @@ export function projectHasBusinessFiles(projectRoot) {
   const ignored = new Set(['ai-baseline-kit', '.git', '.github', '.vscode']);
   return fs.readdirSync(projectRoot, { withFileTypes: true })
     .some((entry) => !ignored.has(entry.name));
+}
+
+export function ensureRootEntrypoints(projectRoot, baselineDirName = 'ai-baseline-kit') {
+  const requiredTokens = [
+    `${baselineDirName}/AGENTS.md`,
+    `${baselineDirName}/skills/baseline-structure-skill/SKILL.md`,
+    `${baselineDirName}/skills/baseline-conformance-skill/SKILL.md`,
+  ];
+
+  const block = `本项目使用内嵌 AI 基线规范包。任何代码改动、结构判断、目录调整、模块/路由/API/store/样式/i18n/依赖处理前，先读取：
+
+\`\`\`text
+${baselineDirName}/AGENTS.md
+\`\`\`
+
+涉及实现或改造时，必须按 \`${baselineDirName}/skills/baseline-structure-skill/SKILL.md\` 先明确范围；完成后按 \`${baselineDirName}/skills/baseline-conformance-skill/SKILL.md\` 回归。
+
+除非用户明确要求维护基线包，否则不要修改 \`${baselineDirName}/\`；业务开发按基线包中的 \`baseline_root\` / \`project_root\` 路径约定执行。`;
+
+  const changed = [];
+
+  for (const file of ['AGENTS.md', 'CLAUDE.md']) {
+    const filePath = path.join(projectRoot, file);
+    const exists = fs.existsSync(filePath);
+    const current = exists ? fs.readFileSync(filePath, 'utf8') : '';
+
+    if (requiredTokens.every((token) => current.includes(token))) continue;
+
+    const heading = exists ? '## AI Baseline Kit' : `# ${file}`;
+    const content = exists
+      ? `${current}${current.endsWith('\n') ? '\n' : '\n\n'}${heading}\n\n${block}\n`
+      : `${heading}\n\n${block}\n`;
+
+    fs.writeFileSync(filePath, content, 'utf8');
+    changed.push(file);
+  }
+
+  return changed;
 }
 
 export function parseArgs(argv) {

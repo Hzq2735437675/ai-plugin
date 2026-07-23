@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { RouterLink, RouterView, useRoute } from 'vue-router';
 import { computed } from 'vue';
+import { RouterView, useRoute } from 'vue-router';
 import { modules } from './module-assembler';
 
 const route = useRoute();
@@ -9,29 +9,28 @@ const currentPath = computed(() => route.path);
 </script>
 
 <template>
-  <div class="app-shell">
-    <aside class="sidebar">
-      <div class="brand">AI Baseline</div>
-      <nav class="menu" aria-label="主导航">
-        <RouterLink
-          v-for="menu in menus"
-          :key="menu.key"
-          :to="menu.path"
-          class="menu-link"
-          :class="{ active: currentPath === menu.path }"
-        >
+  <el-container class="app-shell">
+    <el-aside class="app-sidebar" width="240px">
+      <div class="app-brand">AI Baseline</div>
+      <el-menu class="app-menu" :default-active="currentPath" router>
+        <el-menu-item v-for="menu in menus" :key="menu.key" :index="menu.path">
           {{ menu.label }}
-        </RouterLink>
-      </nav>
-    </aside>
-    <main class="main-content">
-      <header class="topbar">
-        <strong>默认 Vue 3 项目模板</strong>
-        <span>Vue 3 · Vite · TypeScript</span>
-      </header>
-      <section class="page-content">
+        </el-menu-item>
+      </el-menu>
+    </el-aside>
+
+    <el-container class="app-main">
+      <el-header class="app-topbar">
+        <strong>Vue 3 标准项目模板</strong>
+        <el-space class="app-topbar__meta" :size="8">
+          <el-tag effect="plain">Element Plus</el-tag>
+          <span>Vue 3 · Vite · TypeScript</span>
+        </el-space>
+      </el-header>
+
+      <el-main class="page-content">
         <RouterView />
-      </section>
-    </main>
-  </div>
+      </el-main>
+    </el-container>
+  </el-container>
 </template>

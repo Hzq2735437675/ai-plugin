@@ -1,8 +1,11 @@
 #!/usr/bin/env node
+import { spawnSync } from 'node:child_process';
+import fs from 'node:fs';
 import path from 'node:path';
 import {
   analyzeProject,
   copyDirectory,
+  ensureRootEntrypoints,
   parseArgs,
   projectHasBusinessFiles,
   profileTemplatePath,
@@ -21,12 +24,22 @@ const requestedProfile = args.stack || initTemplateProfile || args._[0]
 const shouldInitTemplate = Boolean(args['init-template']);
 const profileId = requestedProfile || DEFAULT_PROFILE_ID;
 
+function readPreservedProfile() {
+  const schemeFile = path.join(baselineRoot, 'docs', 'project-scheme.yml');
+  if (!fs.existsSync(schemeFile)) return undefined;
+  const match = fs.readFileSync(schemeFile, 'utf8')
+    .match(/^\s*selected_profile:\s*['"]?([^'"\r\n]+)['"]?\s*$/m);
+  const profile = match?.[1]?.trim();
+  return profile && STANDARD_PROFILES[profile] ? profile : undefined;
+}
+
 try {
   if (requestedProfile && !STANDARD_PROFILES[requestedProfile]) {
     throw new Error(`不支持的标准模板: ${requestedProfile}。可选值: ${Object.keys(STANDARD_PROFILES).join(', ')}`);
   }
 
-  const before = analyzeProject(projectRoot, { requestedProfile });
+  const preservedProfile = readPreservedProfile();
+  const before = analyzeProject(projectRoot, { requestedProfile, preservedProfile });
   if (shouldInitTemplate) {
     if (before.mode === 'existing-project' && !args.force) {
       throw new Error('目标目录已检测到既有项目；初始化模板前请确认目标为空，或显式使用 --force。');
@@ -40,13 +53,33 @@ try {
   const report = analyzeProject(projectRoot, {
     requestedProfile,
     initializedProfile: shouldInitTemplate ? profileId : undefined,
+    preservedProfile: shouldInitTemplate ? undefined : preservedProfile,
   });
+  const entrypointChanges = ensureRootEntrypoints(projectRoot, path.basename(baselineRoot));
   const schemeFile = writeProjectScheme(report, baselineRoot);
+  const legacyBaselineFile = path.join(baselineRoot, 'docs', 'legacy-baseline.json');
+  let legacyBaseline = 'not-applicable';
+  const shouldWriteLegacyBaseline = report.mode === 'existing-project'
+    && !args['no-legacy-baseline']
+    && (!fs.existsSync(legacyBaselineFile) || args['refresh-legacy-baseline']);
+  if (shouldWriteLegacyBaseline) {
+    const snapshot = spawnSync(process.execPath, [
+      path.join(baselineRoot, 'scripts', 'baseline-check.mjs'),
+      '--project-root', projectRoot,
+      '--write-baseline',
+    ], { cwd: projectRoot, encoding: 'utf8' });
+    if (snapshot.status !== 0) throw new Error(`旧项目历史基线生成失败: ${snapshot.stderr || snapshot.stdout}`);
+    legacyBaseline = args['refresh-legacy-baseline'] ? 'refreshed' : 'created';
+  } else if (report.mode === 'existing-project' && fs.existsSync(legacyBaselineFile)) {
+    legacyBaseline = 'preserved';
+  }
   console.log(`project-bootstrap: pass`);
   console.log(`mode: ${report.mode}`);
   console.log(`profile: ${report.profile}`);
   console.log(`scheme: ${path.relative(projectRoot, schemeFile).replaceAll('\\', '/')}`);
   if (shouldInitTemplate) console.log(`template: ${profileId}`);
+  console.log(`ai-entrypoints: ${entrypointChanges.length ? entrypointChanges.join(', ') : 'unchanged'}`);
+  console.log(`legacy-baseline: ${legacyBaseline}`);
   if (args.json) console.log(JSON.stringify(report, null, 2));
 } catch (error) {
   console.error(`project-bootstrap: fail: ${error.message}`);
