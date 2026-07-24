@@ -1,6 +1,6 @@
 ---
 name: intelligent-frontend-assembler
-description: 将自然语言或产品文档路由到零配置前端生成、模块抽离与跨项目装配闭环；自动发现项目、聚合必须确认项，并强制通过 Change Plan、文件白名单、验证门禁和失败回滚执行。
+description: 以 smart-develop 为统一入口，将自然语言或多格式产品文档路由到新项目生成、旧项目增量、受控修复、模块抽离与跨项目装配闭环；自动聚合必须确认项，并强制 Change Plan、文件白名单、验收覆盖、验证门禁和失败回滚。
 ---
 
 # Intelligent Frontend Assembler
@@ -19,22 +19,19 @@ description: 将自然语言或产品文档路由到零配置前端生成、模�
 ## 强制流程
 
 1. 读取 `AGENTS.md`、`docs/baseline-rules.yml`、`docs/project-scheme.yml`。
-2. 自然语言跨项目组合优先运行：
+2. 所有自然语言、产品文档、API 文档、原型导出或 ready Feature Spec 优先进入：
    ```bash
-   node ai-baseline-kit/scripts/smart-compose.mjs --request "<用户原话或文档路径>" --workspace-root "<工作区>"
+   node ai-baseline-kit/scripts/smart-develop.mjs --request "<原话或文档路径>" --project-root "<目标项目>"
    ```
-3. L0/L1/L2 且可机械证明安全的决定自动执行，不询问用户。
-4. L3、业务语义不明确或破坏性风险不可证明时，将所有 blocking questions 一次性聚合后询问；不得一步一问。
-5. 非跨项目组合需求按以下链路执行：
-   ```text
-   requirement-to-feature-spec
-   -> feature-architecture-planner / baseline-structure-skill
-   -> controlled-change-executor
-   -> baseline-conformance-skill
-   ```
-6. 不允许绕过 `frontend-change-plan` 的 `status: ready`、`files.allowedRoots` 和 blocking question 门禁直接修改业务文件。
-7. 实际文件 diff 必须通过范围检查；超出白名单或触碰禁止路径立即失败并回滚。
-8. 成功必须同时满足范围检查和项目验证；失败必须留下 `controlled-execution.json` 或 `smart-compose-run.json` 审计记录。
+3. 文档先标准化；无法可靠读取的图片、扫描 PDF、在线 Figma 或二进制文档必须要求提取器/文本版本，不得猜测内容。
+4. `smart-develop` 自动发现工作区并判断 `create-project`、`modify-feature`、`repair-project` 或 `compose-project`；组合任务由总控委托 `smart-compose`。
+5. L0/L1/L2 且可机械证明安全的决定自动执行。L3、业务语义不明确或破坏风险不可证明时，将 blocking questions 一次性聚合后询问，不得一步一问。
+6. 非 ready Feature Spec、存在 blocking questions、Change Plan 无 `files.allowedRoots` 时禁止写业务文件。
+7. 新项目必须显式使用创建模式；旧项目默认增量模式，不得因为目标路径错误自动创建工程。
+8. 所有写入必须进入 `controlled-change-executor`：目标项目外事务快照、实际 diff 白名单、禁止路径、验证门禁和失败回滚均不可绕过。
+9. 自动修复默认最多 2 次、硬上限 3 次；每轮只能在原 Change Plan 范围内重新生成/修复，并重新执行范围检查和项目验证。
+10. 生成测试时必须同时生成 acceptance coverage 清单；无法可靠推导的业务行为使用 `todo/fixme`，不得伪造自动化断言或测试通过。
+11. 成功必须留下 `smart-develop-run.json` 和 `controlled-execution.json`；失败必须回滚并保留失败原因、验证输出和违规文件。
 
 ## 交互原则
 

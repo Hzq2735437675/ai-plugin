@@ -72,12 +72,16 @@ node ai-baseline-kit/scripts/project-validate.mjs
 
 如果用户在初始化前明确选择其他技术栈，用户选择优先；本包只提供 React 18 + Vite 与 Vue 3 + Vite + Element Plus 两个内置新项目模板，其他技术栈由 AI 按用户选择创建或在旧项目中原地维护。
 
-## 自然语言跨项目组合强制流程
+## 统一智能开发总入口与硬约束
 
-当用户要求从一个或多个项目抽离模块形成新项目时，优先运行 `scripts/project-compose-from-requirement.mjs`。默认先 dry-run；任何 blocking `requiredQuestions` 必须向用户确认。仅允许自动修复模块名、路由前缀和权限命名空间冲突；shared 内容、npm 主版本和业务语义冲突不得猜测。`--apply` 前必须建立目标项目外事务快照，失败回滚，恢复使用 `--resume`。
+用户提供自然语言、详细大白话、产品文档、API 文档、原型导出、ready Feature Spec 或跨项目组合要求时，优先使用 `skills/intelligent-frontend-assembler/SKILL.md` 并运行 `scripts/smart-develop.mjs`。所有输入先标准化；跨项目组合由总控自动委托 `scripts/smart-compose.mjs`，不得要求普通用户手工选择底层 CLI。
 
-## 零配置智能总入口与硬约束
+内置文档标准化支持文本、Markdown、HTML、JSON/OpenAPI、Figma JSON、DOCX 和基础文本型 PDF。图片、扫描 PDF、在线 Figma 或无法可靠读取的二进制文档必须使用外部提取器或向用户索取文本版本；提取为空或不可靠时返回 blocking question，禁止伪造文档内容。
 
-用户提供自然语言、产品文档或跨项目模块组合要求时，优先使用 `skills/intelligent-frontend-assembler/SKILL.md`。跨项目组合先运行 `scripts/smart-compose.mjs`；L0/L1/L2 自动处理，L3 必须确认项一次性聚合。
+L0/L1/L2 且可机械证明安全的内容自动处理；L3、业务语义冲突或破坏风险无法证明时，将必须确认项一次性聚合提问。新项目必须显式进入创建模式；旧项目默认增量模式，目标路径缺少 `package.json` 时不得自动当作新项目创建。
 
-任何 AI 都不得仅凭 Prompt 或 Skill 自认合规后直接写业务代码。执行必须满足：`frontend-change-plan.status=ready`、无 blocking questions、声明 `files.allowedRoots`、实际 diff 未越界、未触碰禁止路径、验证通过。失败必须通过目标项目外事务快照回滚并保留审计记录。旧项目只允许按 Change Plan 白名单增量修改。
+任何 AI 都不得仅凭 Prompt 或 Skill 自认合规后直接写业务代码。执行必须满足：`frontend-change-plan.status=ready`、无 blocking questions、声明 `files.allowedRoots`、实际 diff 未越界、未触碰禁止路径、验证通过。所有写入进入目标项目外事务；失败、越界或验证未通过必须回滚并保留 `smart-develop-run.json` / `controlled-execution.json` 审计记录。
+
+自动修复默认最多 2 次，硬上限 3 次。每轮修复只能在原 Change Plan 白名单内进行，并重新执行实际 diff 检查和完整验证；不得通过扩大范围、刷新 legacy snapshot 或降低检查等级制造“通过”。
+
+每个生成特性必须生成 `*.acceptance-coverage.json`，覆盖 Feature Spec acceptance、页面状态、权限和 API mock 到真实测试文件的映射。无法可靠推导的业务行为保留为 `todo/fixme`，不得伪造自动化断言、OCR 结果或测试通过。

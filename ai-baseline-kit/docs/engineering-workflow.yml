@@ -250,3 +250,69 @@ ast_boundary_workflow:
   before_install: 允许明确降级为 info。
   after_install: ast-boundary-check.mjs --require-parser。
   output: files、edges、parser mode 和 violations 组成可审计依赖图报告。
+
+
+intelligent_development_closed_loop:
+  unified_entry:
+    command: scripts/smart-develop.mjs
+    inputs:
+      - natural-language
+      - product-document
+      - api-document
+      - figma-json
+      - ready-feature-spec
+    routing:
+      create-project: 显式创建模式，在临时模板上规划后进入受控事务。
+      modify-feature: 旧项目增量模式，目标必须存在 package.json。
+      repair-project: 在原项目和原文件边界内修复并验证。
+      compose-project: 自动委托 smart-compose，不要求使用者选择底层命令。
+    gates:
+      - 文档标准化状态必须为 ready。
+      - Feature Spec 和 Change Plan 必须为 ready 且无 blocking questions。
+      - Change Plan 必须固定 files.allowedRoots 和 files.forbidden。
+      - 所有实际写入必须由 controlled-change-executor 执行。
+
+  document_normalization:
+    command: scripts/document-normalize.mjs
+    built_in:
+      - text / markdown / rst / csv / yaml
+      - html text extraction
+      - json / OpenAPI JSON / Figma JSON
+      - DOCX document.xml
+      - basic text-based PDF Tj/TJ streams
+    adapters:
+      cli: --extractor <node-script>
+      environment: AI_BASELINE_DOCUMENT_EXTRACTOR
+    safety:
+      - 图片、扫描 PDF、在线 Figma 和未知二进制格式没有适配器时阻断。
+      - 提取为空、解析失败或内容不可可靠读取时输出 blocking question。
+      - 不把空内容、乱码、推测文本当作产品需求。
+
+  controlled_repair:
+    default_attempts: 2
+    hard_max_attempts: 3
+    rules:
+      - 每轮修复沿用同一 ready Feature Spec 和 Change Plan。
+      - 每轮修复后重新计算实际 diff 并检查白名单和禁止路径。
+      - 修复不得扩大 allowedRoots，不得刷新 legacy snapshot 掩盖新增违规。
+      - 验证通过后提交事务；越界、失败或耗尽次数后回滚。
+    audit:
+      - smart-develop-run.json
+      - controlled-execution.json
+      - target-project/docs/features/<feature>.feature.json
+      - target-project/docs/changes/<feature>.change-plan.json
+
+  acceptance_coverage:
+    command: scripts/acceptance-coverage-check.mjs
+    manifest: modules/<module>/tests/<feature>.acceptance-coverage.json
+    required_types:
+      - acceptance
+      - page-state
+      - permission
+      - api
+    hard_checks:
+      - 每个覆盖项必须有唯一 id、marker 和至少一个真实测试文件。
+      - 引用文件必须位于模块 tests 根内并包含 marker。
+      - Feature Spec provenance 必须位于项目内，且每个来源特性必须存在对应覆盖清单。
+      - summary total、mapped、automated 和百分比必须与实际映射一致。
+      - 无法从需求可靠推导的行为断言必须 todo/fixme，不得计为伪造的行为通过。

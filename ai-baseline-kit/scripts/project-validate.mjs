@@ -56,6 +56,9 @@ if (fs.existsSync(baselineScript)) {
   console.error('project-validate: 缺少 baseline-check.mjs');
 }
 
+const coverageScript = path.join(baselineRoot, 'scripts', 'acceptance-coverage-check.mjs');
+if (!args['skip-acceptance-coverage'] && fs.existsSync(coverageScript)) run('acceptance-coverage-check', process.execPath, [coverageScript, '--project-root', projectRoot]);
+
 const packageData = report.package.manifest !== 'unknown'
   ? JSON.parse(fs.readFileSync(path.join(projectRoot, report.package.manifest), 'utf8'))
   : null;

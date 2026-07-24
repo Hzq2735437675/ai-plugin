@@ -2,7 +2,7 @@
 
 - 产品展示名称：AI 前端模块装配系统
 - 机器包名：`ai-baseline-kit`
-- 当前版本：`0.8.0`
+- 当前版本：`0.9.0`
 - 包元数据：[`plugin.json`](plugin.json)
 - 安装/植入说明：[`INSTALL.md`](INSTALL.md)
 - AI 主入口：[`AGENTS.md`](AGENTS.md)
@@ -39,6 +39,9 @@ React 18 + TypeScript + Vite + Ant Design 5 + Tailwind CSS 3 + React Router 6
 ## 能力概览
 
 - 通过 `AGENTS.md` 建立 AI 开发强入口。
+- 通过 `smart-develop.mjs` 统一接收自然语言、产品文档或 ready Feature Spec，并路由新建、增量修改、修复和跨项目组合。
+- 通过 `document-normalize.mjs` 将多格式输入转换为可审计标准文档；无法可靠提取时生成 blocking question。
+- 通过 `acceptance-coverage-check.mjs` 校验 acceptance、页面状态、权限和 API 到真实测试文件的映射。
 - 通过 `project-scheme-bootstrap` 扫描并维护目标项目地图。
 - 通过 `baseline-structure-skill` 在开发前明确结构边界。
 - 通过 `baseline-conformance-skill` 在开发后执行基线回归。
@@ -56,6 +59,48 @@ React 18 + TypeScript + Vite + Ant Design 5 + Tailwind CSS 3 + React Router 6
 - 通过 `ast-boundary-check.mjs` 使用目标项目 TypeScript/Vue 编译器构建依赖图并检查真实导入边界。
 - 通过 `baseline-check --mode changed` 对旧项目进行增量治理。
 - 通过 `template-build-check.mjs` 在临时目录真实安装依赖，并验证 React/Vue 生成模块后的 typecheck 与 production build。
+
+## 统一智能开发入口（0.9.0）
+
+普通使用者只需要提供原话或文档，不需要手工串联底层命令：
+
+```bash
+# 旧项目增量开发
+node ai-baseline-kit/scripts/smart-develop.mjs \
+  --request "给订单模块增加审核列表、orders.review 权限和 GET /api/orders/review" \
+  --project-root <existing-project>
+
+# 上传/指定产品文档
+node ai-baseline-kit/scripts/smart-develop.mjs \
+  --document docs/product/order-review.docx \
+  --project-root <existing-project>
+
+# 创建新项目必须显式声明 --create，避免把错误路径当作新项目
+node ai-baseline-kit/scripts/smart-develop.mjs \
+  --request "创建订单审核项目" \
+  --target <empty-target> \
+  --create \
+  --stack vue3-vite-ts
+```
+
+总控流程：
+
+```text
+多格式文档标准化
+  -> 工作区发现与意图识别
+  -> 跨项目组合委托 smart-compose，或编译 ready Feature Spec
+  -> Change Plan 与文件白名单
+  -> 将审计版 Feature Spec / Change Plan 固化到目标项目 docs/features 与 docs/changes
+  -> 目标项目外事务快照
+  -> 生成/增量修改
+  -> acceptance coverage + baseline + typecheck + lint + test + build
+  -> 失败时在同一白名单内有界修复
+  -> 成功提交事务，或失败回滚
+```
+
+默认最多自动修复 2 次，任何调用都不能超过 3 次。修复不允许扩大原 Change Plan 的文件范围；每轮验证后都重新检查实际 diff。业务断言无法由需求可靠推导时保留 `todo/fixme`，不伪造已通过测试。
+
+文档标准化内置支持文本、Markdown、RST、CSV、YAML、HTML、JSON、OpenAPI JSON、Figma JSON、DOCX 和基础文本型 PDF。图片、复杂扫描 PDF、在线 Figma 或其他二进制格式通过 `--extractor <node-script>` / `AI_BASELINE_DOCUMENT_EXTRACTOR` 接入；适配器缺失或提取为空时状态为 `needs-confirmation`。
 
 ## 自然语言 / 产品文档到模块代码
 

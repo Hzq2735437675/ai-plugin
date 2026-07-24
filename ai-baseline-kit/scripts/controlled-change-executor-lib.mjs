@@ -13,7 +13,9 @@ export async function executeControlledChange({ projectRoot, workspace, changePl
   const absoluteWorkspace = path.resolve(workspace);
   if (absoluteWorkspace === absoluteProjectRoot || absoluteWorkspace.startsWith(`${absoluteProjectRoot}${path.sep}`)) throw new Error('受控执行工作区必须位于目标项目之外。');
   fs.mkdirSync(absoluteWorkspace, { recursive: true });
-  const executionPolicy = { ...DEFAULT_POLICY, ...policy };
+  const plannedPolicy = changePlan?.executionPolicy ?? {};
+  const requestedRepairs = policy.maxRepairAttempts ?? plannedPolicy.maxRepairAttempts ?? DEFAULT_POLICY.maxRepairAttempts;
+  const executionPolicy = { ...DEFAULT_POLICY, ...plannedPolicy, ...policy, maxRepairAttempts: Math.max(0, Math.min(3, Math.trunc(Number(requestedRepairs) || 0))) };
   const recordFile = path.join(absoluteWorkspace, 'controlled-execution.json');
   const record = createExecutionState({ id: path.basename(absoluteWorkspace), request, policy: executionPolicy });
   record.projectRoot = absoluteProjectRoot; record.changePlan = changePlan; record.recordFile = recordFile; save(recordFile, record);
@@ -48,7 +50,7 @@ export async function executeControlledChange({ projectRoot, workspace, changePl
       if (validation.passed) break;
       if (!repair || attempts >= executionPolicy.maxRepairAttempts) throw new Error(validation.message || '受控执行验证失败。');
       transitionExecutionState(record, 'repairing', { attempt: attempts + 1 }); save(recordFile, record);
-      await repair({ record, projectRoot: absoluteProjectRoot, validation, attempt: attempts + 1 }); attempts += 1;
+      const repairResult = await repair({ record, projectRoot: absoluteProjectRoot, validation, attempt: attempts + 1 }); record.repairs ??= []; record.repairs.push({ attempt: attempts + 1, result: repairResult ?? null }); attempts += 1; save(recordFile, record);
     }
     record.transaction = commitCompositionTransaction(transactionRoot, { executionId: record.id });
     transitionExecutionState(record, 'completed'); save(recordFile, record); return record;

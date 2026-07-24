@@ -2,7 +2,7 @@
 
 使用以下仓库内 skill 文档作为日常工作流入口。标准可移植 skill 使用目录形态。
 
-- `intelligent-frontend-assembler/`: 面向普通使用者的零配置总入口，将自然语言或产品文档路由到受控生成、旧项目增量改造或跨项目模块装配，并强制文件白名单、验证门禁和失败回滚。
+- `intelligent-frontend-assembler/`: 面向普通使用者的零配置总入口，以 `smart-develop` 为统一入口，将自然语言或多格式产品文档路由到受控生成、旧项目增量改造、自动修复或跨项目模块装配，并强制文件白名单、验收覆盖、验证门禁和失败回滚。
 - `baseline-structure-skill/`: 对齐系统 `baseline-structure-planner`，开发前结构化需求或迁移计划，输出所属层级、影响面、依赖和验证计划。
 - `baseline-conformance-skill/`: 对齐系统 `baseline-conformance-checker`，开发后按项目基线回归，输出 pass/fail、违规项、修复项和 rerun/verify 建议。
 - `project-scheme-bootstrap/`: 项目首次接入时自动扫描新旧项目，生成 `ai-baseline-kit/docs/project-scheme.yml`，减少手写 `project-defined`。

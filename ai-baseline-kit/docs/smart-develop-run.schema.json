@@ -1,0 +1,119 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ai-baseline.local/smart-develop-run.schema.json",
+  "title": "AI Baseline Smart Development Run",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "kind",
+    "id",
+    "status",
+    "createdAt",
+    "updatedAt",
+    "workspaceRoot",
+    "runWorkspace",
+    "recordFile",
+    "steps",
+    "requiredQuestions"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "kind": {
+      "const": "ai-baseline-smart-develop-run"
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "enum": [
+        "analyzing",
+        "planned",
+        "completed",
+        "routed",
+        "needs-confirmation",
+        "failed",
+        "rolled-back"
+      ]
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "workspaceRoot": {
+      "type": "string",
+      "minLength": 1
+    },
+    "runWorkspace": {
+      "type": "string",
+      "minLength": 1
+    },
+    "recordFile": {
+      "type": "string",
+      "minLength": 1
+    },
+    "steps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "status",
+          "at"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "passed",
+              "blocked",
+              "failed"
+            ]
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    },
+    "requiredQuestions": {
+      "type": "array"
+    },
+    "normalizedDocument": {
+      "type": "object"
+    },
+    "discovery": {
+      "type": "object"
+    },
+    "intent": {
+      "type": "object"
+    },
+    "target": {
+      "type": "object"
+    },
+    "featureSpec": {
+      "type": "object"
+    },
+    "changePlan": {
+      "type": "object"
+    },
+    "controlledExecution": {
+      "type": "object"
+    },
+    "delegated": {
+      "type": "object"
+    },
+    "error": {
+      "type": "object"
+    }
+  }
+}

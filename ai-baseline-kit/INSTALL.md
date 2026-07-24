@@ -1,10 +1,29 @@
 # AI Baseline Kit 安装与植入说明
 
 - 包名：`ai-baseline-kit`
-- 当前版本：`0.8.0`
+- 当前版本：`0.9.0`
 - 包元数据：[`plugin.json`](plugin.json)
 - 主入口：[`AGENTS.md`](AGENTS.md)
 - 详细说明：[`README.md`](README.md)
+
+## 推荐的日常入口
+
+安装后，普通需求统一交给 `smart-develop.mjs`，无需使用者理解底层 Skill、Schema 或模块 CLI：
+
+```bash
+# 旧项目增量模式
+node ai-baseline-kit/scripts/smart-develop.mjs --document <product-doc> --project-root <project-root>
+
+# 新项目创建模式；目标必须是空目录或不存在目录
+node ai-baseline-kit/scripts/smart-develop.mjs --request "<需求>" --target <new-project> --create --stack vue3-vite-ts
+```
+
+说明：
+
+- 不带 `--create` 时始终按旧项目增量模式处理；目标缺少 `package.json` 会阻断并请求确认，不会悄悄创建项目。
+- 默认自动修复 2 次，可通过 `--max-repair-attempts 0..3` 调整，硬上限为 3。
+- 图片、扫描 PDF、在线 Figma 等需要外部提取器：`--extractor <node-script>` 或环境变量 `AI_BASELINE_DOCUMENT_EXTRACTOR`。
+- 自动修复只能修改 Change Plan 白名单内文件，验证失败、越界或耗尽次数会自动回滚。
 
 ## 适用方式
 

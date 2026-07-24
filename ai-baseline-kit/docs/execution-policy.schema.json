@@ -5,11 +5,39 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
-    "rollbackOnFailure": { "type": "boolean", "default": true },
-    "requireValidation": { "type": "boolean", "default": true },
-    "maxRepairAttempts": { "type": "integer", "minimum": 0, "default": 0 },
-    "allowBaselineMaintenance": { "type": "boolean", "default": false },
-    "additionalAllowedRoots": { "type": "array", "items": { "type": "string", "minLength": 1 }, "default": [] },
-    "forbidden": { "type": "array", "items": { "type": "string", "minLength": 1 }, "default": [] }
+    "rollbackOnFailure": {
+      "type": "boolean",
+      "default": true
+    },
+    "requireValidation": {
+      "type": "boolean",
+      "default": true
+    },
+    "maxRepairAttempts": {
+      "type": "integer",
+      "minimum": 0,
+      "default": 0,
+      "maximum": 3
+    },
+    "allowBaselineMaintenance": {
+      "type": "boolean",
+      "default": false
+    },
+    "additionalAllowedRoots": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "default": []
+    },
+    "forbidden": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "default": []
+    }
   }
 }

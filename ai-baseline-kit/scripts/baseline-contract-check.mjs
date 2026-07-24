@@ -348,6 +348,10 @@ try {
   assertPass(smartComposeContracts, 'smart compose contract check');
   console.log(smartComposeContracts.stdout.trim());
 
+  const intelligentDevelopmentContracts = spawnSync(process.execPath, [path.join(baselineRoot, 'scripts', 'intelligent-development-contract-check.mjs')], { cwd: baselineRoot, encoding: 'utf8' });
+  assertPass(intelligentDevelopmentContracts, 'intelligent development contract check');
+  console.log(intelligentDevelopmentContracts.stdout.trim());
+
   const compositionContracts = spawnSync(process.execPath, [path.join(baselineRoot, 'scripts', 'composition-contract-check.mjs')], { cwd: baselineRoot, encoding: 'utf8' });
   assertPass(compositionContracts, 'composition contract check');
   console.log(compositionContracts.stdout.trim());
@@ -361,6 +365,10 @@ try {
   console.log('module-portability-and-compose: pass');
   console.log('controlled-execution-hard-gates: pass');
   console.log('smart-compose-zero-config: pass');
+  console.log('smart-develop-unified-entry: pass');
+  console.log('document-normalization-multiformat: pass');
+  console.log('controlled-repair-loop: pass');
+  console.log('acceptance-coverage-gate: pass');
   console.log('invalid-fixtures: rejected');
   console.log('legacy-incremental-baseline: pass');
   console.log('legacy-detection: pass');

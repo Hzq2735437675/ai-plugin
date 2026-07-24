@@ -13,7 +13,7 @@
   "packages": [
     {
       "name": "ai-baseline-kit",
-      "version": "0.8.0",
+      "version": "0.9.0",
       "path": "ai-baseline-kit",
       "manifest": "ai-baseline-kit/plugin.json",
       "readme": "ai-baseline-kit/README.md",
@@ -50,7 +50,11 @@
         "ai-baseline-kit/scripts/smart-compose.mjs",
         "ai-baseline-kit/scripts/controlled-change-executor.mjs",
         "ai-baseline-kit/scripts/controlled-execution-contract-check.mjs",
-        "ai-baseline-kit/scripts/smart-compose-contract-check.mjs"
+        "ai-baseline-kit/scripts/smart-compose-contract-check.mjs",
+        "ai-baseline-kit/scripts/document-normalize.mjs",
+        "ai-baseline-kit/scripts/smart-develop.mjs",
+        "ai-baseline-kit/scripts/acceptance-coverage-check.mjs",
+        "ai-baseline-kit/scripts/intelligent-development-contract-check.mjs"
       ]
     }
   ]

@@ -3,21 +3,102 @@
   "$id": "https://ai-baseline.local/controlled-execution.schema.json",
   "title": "AI Baseline Controlled Execution Record",
   "type": "object",
-  "required": ["schemaVersion", "kind", "id", "state", "history", "violations", "validation"],
+  "required": [
+    "schemaVersion",
+    "kind",
+    "id",
+    "state",
+    "history",
+    "violations",
+    "validation"
+  ],
   "properties": {
-    "schemaVersion": { "const": 1 },
-    "kind": { "const": "ai-baseline-controlled-execution" },
-    "id": { "type": "string", "minLength": 1 },
-    "state": { "enum": ["initialized", "analyzing", "awaiting-confirmation", "planned", "executing", "scope-validation", "validating", "repairing", "completed", "failed", "rolled-back"] },
-    "projectRoot": { "type": "string" },
-    "recordFile": { "type": "string" },
-    "changePlan": { "type": "object" },
-    "policy": { "$ref": "./execution-policy.schema.json" },
-    "history": { "type": "array", "items": { "type": "object", "required": ["at", "from", "to"] } },
-    "changes": { "type": "array", "items": { "type": "object", "required": ["path", "type"] } },
-    "violations": { "type": "array" },
-    "validation": { "type": "array" },
-    "transactionRoot": { "type": "string" },
-    "error": { "type": "object" }
+    "schemaVersion": {
+      "const": 1
+    },
+    "kind": {
+      "const": "ai-baseline-controlled-execution"
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "state": {
+      "enum": [
+        "initialized",
+        "analyzing",
+        "awaiting-confirmation",
+        "planned",
+        "executing",
+        "scope-validation",
+        "validating",
+        "repairing",
+        "completed",
+        "failed",
+        "rolled-back"
+      ]
+    },
+    "projectRoot": {
+      "type": "string"
+    },
+    "recordFile": {
+      "type": "string"
+    },
+    "changePlan": {
+      "type": "object"
+    },
+    "policy": {
+      "$ref": "./execution-policy.schema.json"
+    },
+    "history": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "at",
+          "from",
+          "to"
+        ]
+      }
+    },
+    "changes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "path",
+          "type"
+        ]
+      }
+    },
+    "violations": {
+      "type": "array"
+    },
+    "validation": {
+      "type": "array"
+    },
+    "transactionRoot": {
+      "type": "string"
+    },
+    "error": {
+      "type": "object"
+    },
+    "repairs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "attempt"
+        ],
+        "properties": {
+          "attempt": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 3
+          },
+          "result": {}
+        }
+      }
+    }
   }
 }

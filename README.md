@@ -2,7 +2,7 @@
 
 > 机器包名：`ai-baseline-kit`
 
-> 当前版本：`0.8.0`
+> 当前版本：`0.9.0`
 
 AI 前端模块装配系统是一套**由 AI 编排、以工程契约约束、在构建期组合模块**的前端工程能力包。它面向自然语言或产品文档驱动的开发场景，让 AI 不只是生成页面代码，还必须完成需求确认、模块拆解、文件边界控制、自动测试、跨项目模块迁移、项目组合和最终验收。
 
@@ -31,7 +31,7 @@ AI 前端模块装配系统是一套**由 AI 编排、以工程契约约束、�
 
 | 能力 | 当前实现 |
 | --- | --- |
-| 自然语言和产品文档入口 | `smart-compose` 自动发现工作区、解析意图和聚合问题；普通功能继续路由到 Feature Spec / Change Plan 闭环 |
+| 自然语言和产品文档入口 | `smart-develop` 统一处理新建、旧项目增量、修复与跨项目组合；组合请求自动委托 `smart-compose` |
 | 新项目生成 | 默认 React 18 + TypeScript + Vite + Ant Design；明确选择 Vue 时提供 Vue 3 + TypeScript + Vite + Element Plus 模板 |
 | 旧项目接入 | 扫描真实技术栈并建立增量基线，不强制迁移为标准模板 |
 | 模块化生成 | 每个模块具有 `module.meta.json`、manifest、公开入口、路由、权限、验收与测试契约 |
@@ -66,7 +66,7 @@ AI 编码代理读取本包规则后，应按以下流程执行：
 普通使用者只需要提供原话或产品文档：
 
 ```bash
-node ai-baseline-kit/scripts/smart-compose.mjs --request "把项目 A 的客户管理和项目 B 的订单管理组合成项目 C" --workspace-root <workspace>
+node ai-baseline-kit/scripts/smart-develop.mjs --request "把项目 A 的客户管理和项目 B 的订单管理组合成项目 C" --workspace-root <workspace>
 ```
 
 脚本会自动发现 A/B/C、选择同栈模板、聚合必须确认项，并通过受控执行器装配和验证。以下命令仅用于调试或高级集成：
@@ -118,7 +118,7 @@ node ai-baseline-kit/scripts/baseline-check.mjs --project-root <project-c> --fai
 
 | 产品展示名称 | 机器包名 | 版本 | 类型 | AI 主入口 | 安装说明 |
 | --- | --- | --- | --- | --- | --- |
-| AI 前端模块装配系统 | `ai-baseline-kit` | `0.8.0` | 可嵌入 AI 工程能力包 | [`ai-baseline-kit/AGENTS.md`](ai-baseline-kit/AGENTS.md) | [`ai-baseline-kit/INSTALL.md`](ai-baseline-kit/INSTALL.md) |
+| AI 前端模块装配系统 | `ai-baseline-kit` | `0.9.0` | 可嵌入 AI 工程能力包 | [`ai-baseline-kit/AGENTS.md`](ai-baseline-kit/AGENTS.md) | [`ai-baseline-kit/INSTALL.md`](ai-baseline-kit/INSTALL.md) |
 
 完整登记信息见 [`package-registry.json`](package-registry.json)。
 
@@ -220,6 +220,33 @@ node ai-baseline-kit/scripts/template-build-check.mjs --profile vue3-vite-ts
 - `plugin.json.entrypoints.primary` 必须指向包的 AI 主入口。
 - 包之间不得通过隐式相对路径耦合。
 - 新增包需要登记到 `package-registry.json` 并通过 `scripts/package-check.mjs`。
+
+## 0.9.0：统一智能开发与验收修复闭环
+
+- 新增 `smart-develop.mjs` 统一总入口：自然语言、产品文档和 ready Feature Spec 均进入“标准化 → 意图 → Feature Spec → Change Plan → 受控执行 → 验证 → 有界修复”闭环；跨项目组合自动委托 `smart-compose`。
+- 新增 `document-normalize.mjs`：支持文本、Markdown、HTML、JSON/OpenAPI、Figma JSON、DOCX、基础文本型 PDF；图片、扫描 PDF、在线 Figma 等通过可插拔提取器接入，缺少可靠内容时安全阻断而不是伪造。
+- 受控执行器支持默认 2 次、硬上限 3 次自动修复；每轮修复后重新计算实际 diff，越界、失败或耗尽次数立即回滚。
+- 每次受控生成会把审计版 Feature Spec 与 Change Plan 固化到目标项目 `docs/features/`、`docs/changes/`，模块 provenance 不再引用项目外临时文件。
+- 每个生成特性新增 `*.acceptance-coverage.json`，硬检查 Feature Spec acceptance、页面状态、权限和 API mock 到真实测试文件及 marker 的映射；缺失覆盖清单、测试文件或真实来源规格时直接失败，并校验覆盖统计不可伪造。
+- 新项目必须显式使用创建模式；旧项目路径错误不会被误判为新项目，从而避免意外覆盖或在错误目录创建工程。
+
+统一入口示例：
+
+```bash
+# 旧项目增量开发
+node ai-baseline-kit/scripts/smart-develop.mjs \
+  --document docs/product/order-review.docx \
+  --project-root <existing-project>
+
+# 在空目录创建新项目；Vue 3 使用 Element Plus 默认主题
+node ai-baseline-kit/scripts/smart-develop.mjs \
+  --request "创建订单审核前端，包含列表、权限、接口和验收条件" \
+  --target <new-project> \
+  --create \
+  --stack vue3-vite-ts
+```
+
+复杂扫描 PDF、图片 OCR 和在线 Figma 不由内置解析器假装完成；需配置 `--extractor <node-script>` 或 `AI_BASELINE_DOCUMENT_EXTRACTOR`，否则返回 blocking question。
 
 ## 0.8.0：零配置智能入口与硬约束执行内核
 

@@ -1,0 +1,122 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ai-baseline.local/acceptance-coverage.schema.json",
+  "title": "AI Baseline Acceptance Coverage Manifest",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "kind",
+    "feature",
+    "generatedAt",
+    "coverage",
+    "summary"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "kind": {
+      "const": "ai-baseline-acceptance-coverage"
+    },
+    "feature": {
+      "type": "object",
+      "required": [
+        "id",
+        "title"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "module": {
+          "type": "string"
+        }
+      }
+    },
+    "generatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "coverage": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "type",
+          "id",
+          "marker",
+          "automated",
+          "files"
+        ],
+        "properties": {
+          "type": {
+            "enum": [
+              "acceptance",
+              "page-state",
+              "permission",
+              "api"
+            ]
+          },
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "marker": {
+            "type": "string",
+            "minLength": 1
+          },
+          "automated": {
+            "type": "boolean"
+          },
+          "files": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "required": [
+        "total",
+        "mapped",
+        "automated",
+        "structuralCoverage",
+        "automatedCoverage"
+      ],
+      "properties": {
+        "total": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "mapped": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "automated": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "structuralCoverage": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "automatedCoverage": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        }
+      }
+    }
+  }
+}

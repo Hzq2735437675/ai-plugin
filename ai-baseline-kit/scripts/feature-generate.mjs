@@ -30,7 +30,7 @@ function quote(value) {
 
 function writeFile(file, content, options = {}) {
   ensureInside(projectRoot, file);
-  if (fs.existsSync(file) && !options.force) throw new Error(`目标文件已存在，未覆盖: ${normalizePath(path.relative(projectRoot, file))}`);
+  if (fs.existsSync(file) && !options.force && !args.force) throw new Error(`目标文件已存在，未覆盖: ${normalizePath(path.relative(projectRoot, file))}`);
   if (args['dry-run']) {
     changed.push(`create:${normalizePath(path.relative(projectRoot, file))}`);
     return;
