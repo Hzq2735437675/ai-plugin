@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ai-baseline.local/workspace-intent.schema.json",
+  "title": "AI Baseline Workspace Intent",
+  "type": "object",
+  "required": ["schemaVersion", "kind", "task", "status", "confidence", "requiredQuestions"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "kind": { "const": "ai-baseline-workspace-intent" },
+    "task": { "enum": ["compose-project", "create-project", "repair-project", "modify-feature"] },
+    "status": { "enum": ["ready", "needs-confirmation"] },
+    "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+    "text": { "type": "string" },
+    "sources": { "type": "array" },
+    "target": { "type": "object" },
+    "request": { "type": "object" },
+    "requiredQuestions": { "type": "array" },
+    "questionSummary": { "type": "string" }
+  }
+}

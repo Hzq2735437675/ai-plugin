@@ -150,7 +150,7 @@ description: 自动引导新项目或旧项目生成 docs/project-scheme.yml 的
 project:
   name: detected-or-unknown
   purpose: unknown
-  scheme_version: 0.7.0
+  scheme_version: 0.8.0
   map_status: target-project
   updated_at: YYYY-MM-DD
   update_source: project-scheme-bootstrap

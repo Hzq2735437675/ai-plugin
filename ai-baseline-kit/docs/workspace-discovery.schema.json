@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ai-baseline.local/workspace-discovery.schema.json",
+  "title": "AI Baseline Workspace Discovery",
+  "type": "object",
+  "required": ["schemaVersion", "kind", "workspaceRoot", "projects", "summary"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "kind": { "const": "ai-baseline-workspace-discovery" },
+    "workspaceRoot": { "type": "string" },
+    "projects": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "projectRoot", "aliases", "profile", "stack", "roots"],
+        "properties": {
+          "id": { "type": "string" }, "name": { "type": "string" }, "projectRoot": { "type": "string" },
+          "aliases": { "type": "array", "items": { "type": "string" } }, "profile": { "type": "string" },
+          "stack": { "type": "object" }, "roots": { "type": "object" }, "baselineInstalled": { "type": "boolean" }
+        }
+      }
+    },
+    "summary": { "type": "object" }
+  }
+}

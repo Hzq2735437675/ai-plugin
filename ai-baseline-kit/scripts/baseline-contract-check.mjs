@@ -340,6 +340,14 @@ try {
   assert.equal(legacyReport.entrypoints.api_client, 'src/http/client.ts');
   assert.match(legacyScheme, /required_questions:\r?\n\s+- field:/);
 
+  const controlledExecutionContracts = spawnSync(process.execPath, [path.join(baselineRoot, 'scripts', 'controlled-execution-contract-check.mjs')], { cwd: baselineRoot, encoding: 'utf8' });
+  assertPass(controlledExecutionContracts, 'controlled execution contract check');
+  console.log(controlledExecutionContracts.stdout.trim());
+
+  const smartComposeContracts = spawnSync(process.execPath, [path.join(baselineRoot, 'scripts', 'smart-compose-contract-check.mjs')], { cwd: baselineRoot, encoding: 'utf8' });
+  assertPass(smartComposeContracts, 'smart compose contract check');
+  console.log(smartComposeContracts.stdout.trim());
+
   const compositionContracts = spawnSync(process.execPath, [path.join(baselineRoot, 'scripts', 'composition-contract-check.mjs')], { cwd: baselineRoot, encoding: 'utf8' });
   assertPass(compositionContracts, 'composition contract check');
   console.log(compositionContracts.stdout.trim());
@@ -351,6 +359,8 @@ try {
   console.log('theme-entrypoint: pass');
   console.log('acceptance-test-generation: pass');
   console.log('module-portability-and-compose: pass');
+  console.log('controlled-execution-hard-gates: pass');
+  console.log('smart-compose-zero-config: pass');
   console.log('invalid-fixtures: rejected');
   console.log('legacy-incremental-baseline: pass');
   console.log('legacy-detection: pass');

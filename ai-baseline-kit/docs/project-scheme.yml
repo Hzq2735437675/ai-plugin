@@ -2,9 +2,9 @@ project:
   name: ai-plugin
   map_status: package-repository-reference
   purpose: 可植入不同项目、为 AI 开发提供统一规范、工作流、项目地图、诊断、确定性生成和验证能力的多包 AI 能力仓库。
-  scheme_version: 0.7.0
-  updated_at: 2026-07-23
-  update_source: manual-review-after-element-plus-on-demand-import
+  scheme_version: 0.8.0
+  updated_at: 2026-07-24
+  update_source: manual-review-after-controlled-execution-kernel
 
 stack:
   framework: not-applicable-package-repository
@@ -102,7 +102,7 @@ packages:
     dependencies: explicit-in-plugin-json
   items:
     - name: ai-baseline-kit
-      version: 0.7.0
+      version: 0.8.0
       root: ai-baseline-kit
       manifest: ai-baseline-kit/plugin.json
       readme: ai-baseline-kit/README.md
@@ -129,6 +129,11 @@ packages:
         - ai-baseline-kit/scripts/module-compatibility-check.mjs
         - ai-baseline-kit/scripts/module-import.mjs
         - ai-baseline-kit/scripts/module-export.mjs
+        - ai-baseline-kit/scripts/workspace-discover.mjs
+        - ai-baseline-kit/scripts/smart-compose.mjs
+        - ai-baseline-kit/scripts/controlled-change-executor.mjs
+        - ai-baseline-kit/scripts/controlled-execution-contract-check.mjs
+        - ai-baseline-kit/scripts/smart-compose-contract-check.mjs
 
 modules:
   root: not-applicable-package-repository
@@ -158,7 +163,7 @@ evidence:
   - source: ai-baseline-kit/README.md
     finding: ai-baseline-kit 是可完整植入目标项目的 AI 基线规范包，并支持自然语言需求确认、旧项目识别、项目诊断、地图初始化、确定性模块生成和统一验证。
   - source: ai-baseline-kit/plugin.json
-    finding: 当前包版本为 0.7.0，具备需求确认、代码生成、验收测试、模块迁移组合、AST 边界检查、模板构建和分发元数据。
+    finding: 当前包版本为 0.8.0，新增零配置智能装配入口、Change Plan/实际 diff 硬门禁、执行状态机、验证门禁和失败回滚审计。
   - source: package-registry.json
     finding: 根目录注册表登记当前包、两个标准模板和项目工具，并约定未来包目录为 packages/<package-name>/。
   - source: package-manifest.schema.json

@@ -2,7 +2,7 @@
   "$schema": "./package-manifest.schema.json",
   "schemaVersion": 1,
   "name": "ai-baseline-kit",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "type": "embedded-ai-capability-package",
   "description": "AI 前端模块装配系统：可完整植入目标项目，支持需求确认、结构化生成、验收测试、同栈模块迁移组合、AST 边界检查和旧项目增量治理闭环。",
   "entrypoints": {
@@ -41,7 +41,17 @@
     "compositionContractSelfCheck": "scripts/composition-contract-check.mjs",
     "compositionRequestSchema": "docs/composition-request.schema.json",
     "compositionRunSchema": "docs/composition-run.schema.json",
-    "moduleDiscoverySchema": "docs/module-discovery.schema.json"
+    "moduleDiscoverySchema": "docs/module-discovery.schema.json",
+    "smartComposer": "scripts/smart-compose.mjs",
+    "workspaceDiscovery": "scripts/workspace-discover.mjs",
+    "controlledChangeExecutor": "scripts/controlled-change-executor.mjs",
+    "intelligentAssemblerSkill": "skills/intelligent-frontend-assembler/SKILL.md",
+    "executionPolicySchema": "docs/execution-policy.schema.json",
+    "controlledExecutionSchema": "docs/controlled-execution.schema.json",
+    "workspaceDiscoverySchema": "docs/workspace-discovery.schema.json",
+    "workspaceIntentSchema": "docs/workspace-intent.schema.json",
+    "controlledExecutionContractSelfCheck": "scripts/controlled-execution-contract-check.mjs",
+    "smartComposeContractSelfCheck": "scripts/smart-compose-contract-check.mjs"
   },
   "installation": {
     "guide": "INSTALL.md",

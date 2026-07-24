@@ -85,7 +85,11 @@ function rewriteModuleIdentity(moduleRoot, oldName, newName) {
   const next = current.replace(pattern, (_, prefix, quote) => `${prefix}${quote}${newName}${quote}`);
   if (next === current) throw new Error(`无法在 manifest 中安全重写模块 name: ${oldName}`);
   fs.writeFileSync(manifestFile, next, 'utf8');
-  return ['module.meta.json', normalizePath(path.relative(moduleRoot, manifestFile))];
+  const identityFiles = rewriteTextFiles(moduleRoot, (text, file) => {
+    if (path.resolve(file) === path.resolve(metadataFile) || path.resolve(file) === path.resolve(manifestFile)) return text;
+    return replaceQuotedValue(text, oldName, newName);
+  });
+  return [...new Set(['module.meta.json', normalizePath(path.relative(moduleRoot, manifestFile)), ...identityFiles])];
 }
 
 function rewriteRoutes(moduleRoot, routes, prefix) {

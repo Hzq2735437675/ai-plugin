@@ -3,17 +3,87 @@
   "$id": "https://ai-baseline.local/change-plan.schema.json",
   "title": "AI Baseline Frontend Change Plan",
   "type": "object",
-  "required": ["schemaVersion", "kind", "status", "featureSpec", "decision", "ownership", "assembly", "files", "requiredQuestions"],
+  "required": [
+    "schemaVersion",
+    "kind",
+    "status",
+    "featureSpec",
+    "decision",
+    "ownership",
+    "assembly",
+    "files",
+    "requiredQuestions"
+  ],
   "properties": {
-    "schemaVersion": { "const": 1 },
-    "kind": { "const": "frontend-change-plan" },
-    "status": { "enum": ["ready", "needs-confirmation"] },
-    "decision": { "type": "object", "required": ["type", "reason"] },
-    "ownership": { "type": "object", "required": ["layer", "module", "moduleRoot"] },
-    "assembly": { "type": "object" },
-    "dependencies": { "type": "object" },
-    "files": { "type": "object", "required": ["create", "modify", "allowedRoots", "forbidden"] },
-    "moduleContract": { "type": "object" },
-    "requiredQuestions": { "type": "array" }
+    "schemaVersion": {
+      "const": 1
+    },
+    "kind": {
+      "const": "frontend-change-plan"
+    },
+    "status": {
+      "enum": [
+        "ready",
+        "needs-confirmation"
+      ]
+    },
+    "decision": {
+      "type": "object",
+      "required": [
+        "type",
+        "reason"
+      ]
+    },
+    "ownership": {
+      "type": "object",
+      "required": [
+        "layer",
+        "module",
+        "moduleRoot"
+      ]
+    },
+    "assembly": {
+      "type": "object"
+    },
+    "dependencies": {
+      "type": "object"
+    },
+    "files": {
+      "type": "object",
+      "required": [
+        "create",
+        "modify",
+        "allowedRoots",
+        "forbidden"
+      ]
+    },
+    "moduleContract": {
+      "type": "object"
+    },
+    "requiredQuestions": {
+      "type": "array"
+    },
+    "risk": {
+      "type": "object",
+      "properties": {
+        "level": {
+          "enum": [
+            "L0",
+            "L1",
+            "L2",
+            "L3"
+          ]
+        },
+        "reasons": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "executionPolicy": {
+      "$ref": "./execution-policy.schema.json"
+    }
   }
 }

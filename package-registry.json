@@ -13,7 +13,7 @@
   "packages": [
     {
       "name": "ai-baseline-kit",
-      "version": "0.7.0",
+      "version": "0.8.0",
       "path": "ai-baseline-kit",
       "manifest": "ai-baseline-kit/plugin.json",
       "readme": "ai-baseline-kit/README.md",
@@ -45,7 +45,12 @@
         "ai-baseline-kit/scripts/module-discover.mjs",
         "ai-baseline-kit/scripts/module-bundle-repair.mjs",
         "ai-baseline-kit/scripts/project-compose-from-requirement.mjs",
-        "ai-baseline-kit/scripts/composition-contract-check.mjs"
+        "ai-baseline-kit/scripts/composition-contract-check.mjs",
+        "ai-baseline-kit/scripts/workspace-discover.mjs",
+        "ai-baseline-kit/scripts/smart-compose.mjs",
+        "ai-baseline-kit/scripts/controlled-change-executor.mjs",
+        "ai-baseline-kit/scripts/controlled-execution-contract-check.mjs",
+        "ai-baseline-kit/scripts/smart-compose-contract-check.mjs"
       ]
     }
   ]

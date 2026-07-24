@@ -28,6 +28,7 @@ try {
   const hasPackage = fs.existsSync(path.join(projectRoot, 'package.json'));
   if (!hasPackage) {
     if (!args.stack) throw new Error('组合到空目录时必须通过 --stack 指定标准模板。');
+    if (args['dry-run']) throw new Error('空目录组合的 dry-run 请使用 project-compose-from-requirement 或 smart-compose，以保证目标目录零写入。');
     if (!fs.existsSync(targetKit)) copyDirectory(baselineRoot, targetKit, { force: false, projectRoot });
     run(path.join(targetKit, 'scripts', 'project-bootstrap.mjs'), ['--project-root', projectRoot, '--init-template', '--stack', args.stack]);
   }
@@ -38,6 +39,7 @@ try {
 
   const imports = [];
   if (!args['dry-run']) {
+    if (!fs.existsSync(targetKit)) copyDirectory(baselineRoot, targetKit, { force: false, projectRoot });
     for (const bundlePath of bundlePaths) imports.push(importModuleBundle({ bundlePath, projectRoot }));
     const activeKit = fs.existsSync(targetKit) ? targetKit : baselineRoot;
     run(path.join(activeKit, 'scripts', 'project-bootstrap.mjs'), ['--project-root', projectRoot, '--no-legacy-baseline']);

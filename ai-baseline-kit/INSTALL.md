@@ -1,7 +1,7 @@
 # AI Baseline Kit 安装与植入说明
 
 - 包名：`ai-baseline-kit`
-- 当前版本：`0.7.0`
+- 当前版本：`0.8.0`
 - 包元数据：[`plugin.json`](plugin.json)
 - 主入口：[`AGENTS.md`](AGENTS.md)
 - 详细说明：[`README.md`](README.md)
@@ -192,3 +192,13 @@ node ai-baseline-kit/scripts/project-compose-from-requirement.mjs --request <需
 ```
 
 首次命令默认只输出计划和必须确认问题；`--apply` 才修改目标项目。失败默认事务回滚。真实浏览器验收需项目声明 `test:e2e`，并显式传入 `--with-e2e`；浏览器安装也必须显式传入 `--install-playwright`。
+
+## 零配置智能入口
+
+安装后，普通使用者只需让 AI 执行：
+
+```bash
+node ai-baseline-kit/scripts/smart-compose.mjs --request "<自然语言或产品文档路径>" --workspace-root "<工作区>"
+```
+
+默认自动执行可证明安全的 L0/L1/L2 决策；L3 必须确认项一次性返回。跨项目写入通过事务、实际 diff 白名单和验证门禁，失败自动回滚。

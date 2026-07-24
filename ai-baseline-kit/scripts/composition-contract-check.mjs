@@ -31,9 +31,20 @@ try {
   rollbackCompositionTransaction(txRoot); assert.equal(fs.readFileSync(path.join(rollbackTarget, 'original.txt'), 'utf8'), 'before'); assert.equal(fs.existsSync(path.join(rollbackTarget, 'created.txt')), false);
 
   const request = { schemaVersion: 1, kind: 'ai-baseline-composition-request', status: 'ready', request: { text: '组合客户管理和财务结算' }, sources: [{ id: 'a', projectRoot: a }, { id: 'b', projectRoot: b }], target: { projectRoot: c, stack: 'vue3-vite-ts' }, selections: [{ source: 'a', modules: ['home'] }, { source: 'b', modules: ['home'] }], policies: { moduleNameConflict: 'prefix-source', routeConflict: 'prefix-module', permissionConflict: 'prefix-module', sharedConflict: 'ask', dependencyConflict: 'ask', rollbackOnFailure: true, validate: false, e2e: false }, requiredQuestions: [] };
-  const dry = executeComposition({ request, baselineRoot, workspace: path.join(root, 'dry-workspace'), apply: false });
+  const dry = await executeComposition({ request, baselineRoot, workspace: path.join(root, 'dry-workspace'), apply: false });
   assert.equal(dry.status, 'planned'); assert.equal(fs.existsSync(c), false, 'dry-run 不得修改目标项目');
-  const applied = executeComposition({ request, baselineRoot, workspace: path.join(root, 'apply-workspace'), apply: true });
+  const applied = await executeComposition({ request, baselineRoot, workspace: path.join(root, 'apply-workspace'), apply: true });
   assert.equal(applied.status, 'completed', applied.error?.message); assert.ok(fs.existsSync(path.join(c, 'src', 'modules', 'a-home'))); assert.ok(fs.existsSync(path.join(c, 'src', 'modules', 'b-home'))); assert.ok(fs.existsSync(path.join(c, 'docs', 'project-composition.json')));
+  const existing = path.join(root, 'existing-target');
+  copyDirectory(path.join(baselineRoot, 'templates', 'vue3-vite-ts'), existing, { force: false, projectRoot: existing });
+  fs.rmSync(path.join(existing, 'src', 'modules', 'home'), { recursive: true, force: true });
+  fs.writeFileSync(path.join(existing, 'src', 'app', 'module-assembler.ts'), "// ai-baseline:module-imports:start\n// ai-baseline:module-imports:end\n\nexport const modules = [\n  // ai-baseline:module-list:start\n  // ai-baseline:module-list:end\n] as const;\n");
+  const existingRequest = { ...request, target: { projectRoot: existing, stack: 'vue3-vite-ts' }, sources: [{ id: 'a', projectRoot: a }], selections: [{ source: 'a', modules: ['home'] }], policies: { ...request.policies, validate: false } };
+  const existingApplied = await executeComposition({ request: existingRequest, baselineRoot, workspace: path.join(root, 'existing-workspace'), apply: true });
+  assert.equal(existingApplied.status, 'completed', existingApplied.error?.message);
+  assert.ok(fs.existsSync(path.join(existing, 'src', 'modules', 'home')));
+  assert.ok(fs.existsSync(path.join(existing, 'ai-baseline-kit', 'docs', 'project-scheme.yml')));
+  assert.ok(existingApplied.controlledExecution.changes.every((item) => existingApplied.changePlan.files.allowedRoots.some((rootPath) => rootPath === '.' || item.path === rootPath || item.path.startsWith(`${rootPath}/`))));
+
   console.log('composition-contract-check: pass');
 } finally { fs.rmSync(root, { recursive: true, force: true }); }

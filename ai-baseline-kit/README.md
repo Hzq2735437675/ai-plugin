@@ -2,7 +2,7 @@
 
 - 产品展示名称：AI 前端模块装配系统
 - 机器包名：`ai-baseline-kit`
-- 当前版本：`0.7.0`
+- 当前版本：`0.8.0`
 - 包元数据：[`plugin.json`](plugin.json)
 - 安装/植入说明：[`INSTALL.md`](INSTALL.md)
 - AI 主入口：[`AGENTS.md`](AGENTS.md)
@@ -92,6 +92,22 @@ node ai-baseline-kit/scripts/module-create.mjs --name billing --title 计费管�
 - `index.ts`：模块唯一公开入口。
 
 模块不得直接依赖其他模块；多个模块形成新项目时，只通过 shell 静态装配器组合。
+
+## 零配置智能入口与硬约束执行
+
+普通使用者只提供自然语言或产品文档：
+
+```bash
+node ai-baseline-kit/scripts/smart-compose.mjs --request "把项目 A 的客户管理和项目 B 的订单管理组合成项目 C" --workspace-root <workspace>
+```
+
+`smart-compose` 自动发现项目、解析来源/目标、聚合必须确认项并调用组合总控。所有写入必须经过 `frontend-change-plan` ready 门禁、实际 diff 白名单、禁止路径、验证门禁和事务回滚；不允许 Skill 或任意大模型绕过硬约束直接修改业务代码。
+
+底层受控执行入口：
+
+```bash
+node ai-baseline-kit/scripts/controlled-change-executor.mjs --project-root <project> --plan <change-plan.json> --script <node-script> --validate-script <validation-script>
+```
 
 ## 模块迁移、组合与 AST 边界检查
 
@@ -233,6 +249,14 @@ node ai-baseline-kit/scripts/template-build-check.mjs --profile react18-antd-tai
 8. 涉及用户可见文案或 i18n 时，使用 `ai-baseline-kit/skills/project-i18n-localizer/SKILL.md`。
 9. 不自动向 `.gitignore` 追加 `ai-baseline-kit/`，让规范包变化保持 Git 可见。
 10. 可运行 `node ai-baseline-kit/scripts/baseline-check.mjs` 做硬检查。
+
+## 零配置智能装配与硬约束内核（0.8.0）
+
+- `smart-compose.mjs`：自然语言/产品文档零配置入口。
+- `workspace-discover.mjs`：自动识别工作区项目、别名和同栈 profile。
+- `controlled-change-executor.mjs`：Change Plan、状态机、实际 diff、验证和回滚硬门禁。
+- `intelligent-frontend-assembler`：不增加 UI 的 AI 总控 Skill。
+- 新增受控执行与智能装配契约测试。
 
 ## 自然语言模块装配总控（0.7.0）
 

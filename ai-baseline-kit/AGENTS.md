@@ -75,3 +75,9 @@ node ai-baseline-kit/scripts/project-validate.mjs
 ## 自然语言跨项目组合强制流程
 
 当用户要求从一个或多个项目抽离模块形成新项目时，优先运行 `scripts/project-compose-from-requirement.mjs`。默认先 dry-run；任何 blocking `requiredQuestions` 必须向用户确认。仅允许自动修复模块名、路由前缀和权限命名空间冲突；shared 内容、npm 主版本和业务语义冲突不得猜测。`--apply` 前必须建立目标项目外事务快照，失败回滚，恢复使用 `--resume`。
+
+## 零配置智能总入口与硬约束
+
+用户提供自然语言、产品文档或跨项目模块组合要求时，优先使用 `skills/intelligent-frontend-assembler/SKILL.md`。跨项目组合先运行 `scripts/smart-compose.mjs`；L0/L1/L2 自动处理，L3 必须确认项一次性聚合。
+
+任何 AI 都不得仅凭 Prompt 或 Skill 自认合规后直接写业务代码。执行必须满足：`frontend-change-plan.status=ready`、无 blocking questions、声明 `files.allowedRoots`、实际 diff 未越界、未触碰禁止路径、验证通过。失败必须通过目标项目外事务快照回滚并保留审计记录。旧项目只允许按 Change Plan 白名单增量修改。

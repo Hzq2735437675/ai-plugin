@@ -473,7 +473,7 @@ function buildRequiredQuestions(report) {
 export function buildProjectScheme(report, options = {}) {
   const profile = STANDARD_PROFILES[report.profile] ?? null;
   const projectName = report.package.name || path.basename(report.projectRoot);
-  const schemeVersion = options.schemeVersion ?? '0.7.0';
+  const schemeVersion = options.schemeVersion ?? '0.8.0';
   const modules = report.modules.items ?? [];
   const requiredQuestions = buildRequiredQuestions(report);
   const lines = [

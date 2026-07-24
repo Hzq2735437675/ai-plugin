@@ -8,8 +8,8 @@ const { baselineRoot } = resolveRoots(import.meta.url);
 try {
   let result;
   if (args.rollback) result = rollbackCompositionRun(args.rollback);
-  else if (args.resume) result = resumeComposition(args.resume, { baselineRoot, withE2e: Boolean(args['with-e2e']), installPlaywright: Boolean(args['install-playwright']), rollbackOnFailure: !args['no-rollback'] });
-  else result = executeComposition({
+  else if (args.resume) result = await resumeComposition(args.resume, { baselineRoot, withE2e: Boolean(args['with-e2e']), installPlaywright: Boolean(args['install-playwright']), rollbackOnFailure: !args['no-rollback'] });
+  else result = await executeComposition({
     request: args.request || args.text || '', sources: args.sources || '', target: args.target || args['project-root'], stack: args.stack || '', workspace: args.workspace,
     apply: Boolean(args.apply), baselineRoot, withE2e: Boolean(args['with-e2e']), installPlaywright: Boolean(args['install-playwright']), rollbackOnFailure: !args['no-rollback'],
   });

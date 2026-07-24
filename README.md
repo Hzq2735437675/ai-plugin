@@ -2,7 +2,7 @@
 
 > 机器包名：`ai-baseline-kit`
 
-> 当前版本：`0.7.0`
+> 当前版本：`0.8.0`
 
 AI 前端模块装配系统是一套**由 AI 编排、以工程契约约束、在构建期组合模块**的前端工程能力包。它面向自然语言或产品文档驱动的开发场景，让 AI 不只是生成页面代码，还必须完成需求确认、模块拆解、文件边界控制、自动测试、跨项目模块迁移、项目组合和最终验收。
 
@@ -31,7 +31,7 @@ AI 前端模块装配系统是一套**由 AI 编排、以工程契约约束、�
 
 | 能力 | 当前实现 |
 | --- | --- |
-| 自然语言和产品文档入口 | AI 按 skill 转换为 Feature Spec；存在阻断性未知项时必须先向用户确认 |
+| 自然语言和产品文档入口 | `smart-compose` 自动发现工作区、解析意图和聚合问题；普通功能继续路由到 Feature Spec / Change Plan 闭环 |
 | 新项目生成 | 默认 React 18 + TypeScript + Vite + Ant Design；明确选择 Vue 时提供 Vue 3 + TypeScript + Vite + Element Plus 模板 |
 | 旧项目接入 | 扫描真实技术栈并建立增量基线，不强制迁移为标准模板 |
 | 模块化生成 | 每个模块具有 `module.meta.json`、manifest、公开入口、路由、权限、验收与测试契约 |
@@ -40,6 +40,7 @@ AI 前端模块装配系统是一套**由 AI 编排、以工程契约约束、�
 | 项目组合 | 支持将多个同技术栈模块包装配为新项目，并生成 `docs/project-composition.json` |
 | 边界治理 | TypeScript/Vue AST 依赖图检查模块、shared、shell 和 npm/dev 依赖边界 |
 | UI 一致性 | React 保持 Ant Design 默认视觉；Vue 保持 Element Plus 默认视觉；统一通过 `src/theme/theme.css` 修改全局主题 |
+| 硬约束执行 | Change Plan ready 门禁、实际 diff 白名单、禁止路径、状态机、事务快照和失败回滚 |
 | 验证闭环 | 支持 package、contract、baseline、typecheck、test 和 production build 回归 |
 
 ## 典型场景：从项目 A、B 组合项目 C
@@ -62,6 +63,14 @@ AI 编码代理读取本包规则后，应按以下流程执行：
   -> 运行 AST、Vitest、typecheck、build 和 baseline-check
 ```
 
+普通使用者只需要提供原话或产品文档：
+
+```bash
+node ai-baseline-kit/scripts/smart-compose.mjs --request "把项目 A 的客户管理和项目 B 的订单管理组合成项目 C" --workspace-root <workspace>
+```
+
+脚本会自动发现 A/B/C、选择同栈模板、聚合必须确认项，并通过受控执行器装配和验证。以下命令仅用于调试或高级集成：
+
 底层命令示例：
 
 ```bash
@@ -80,7 +89,7 @@ node ai-baseline-kit/scripts/ast-boundary-check.mjs --project-root <project-c> -
 node ai-baseline-kit/scripts/baseline-check.mjs --project-root <project-c> --fail-on-warn
 ```
 
-自然语言由能够读取仓库、修改文件并执行命令的 AI 编码代理理解；脚本负责确定性的结构生成、兼容检查、安全写入和验收阻断。当前不是一个脱离大模型也能独立理解自然语言的单体 CLI。
+自然语言仍由大模型负责深层业务语义理解，但 `smart-compose` 已提供确定性的工作区发现、项目别名解析、任务路由、问题聚合和跨项目装配入口；脚本通过同一状态机、文件边界和回滚机制约束不同大模型的执行结果。
 
 ## 架构方式
 
@@ -109,7 +118,7 @@ node ai-baseline-kit/scripts/baseline-check.mjs --project-root <project-c> --fai
 
 | 产品展示名称 | 机器包名 | 版本 | 类型 | AI 主入口 | 安装说明 |
 | --- | --- | --- | --- | --- | --- |
-| AI 前端模块装配系统 | `ai-baseline-kit` | `0.7.0` | 可嵌入 AI 工程能力包 | [`ai-baseline-kit/AGENTS.md`](ai-baseline-kit/AGENTS.md) | [`ai-baseline-kit/INSTALL.md`](ai-baseline-kit/INSTALL.md) |
+| AI 前端模块装配系统 | `ai-baseline-kit` | `0.8.0` | 可嵌入 AI 工程能力包 | [`ai-baseline-kit/AGENTS.md`](ai-baseline-kit/AGENTS.md) | [`ai-baseline-kit/INSTALL.md`](ai-baseline-kit/INSTALL.md) |
 
 完整登记信息见 [`package-registry.json`](package-registry.json)。
 
@@ -211,6 +220,14 @@ node ai-baseline-kit/scripts/template-build-check.mjs --profile vue3-vite-ts
 - `plugin.json.entrypoints.primary` 必须指向包的 AI 主入口。
 - 包之间不得通过隐式相对路径耦合。
 - 新增包需要登记到 `package-registry.json` 并通过 `scripts/package-check.mjs`。
+
+## 0.8.0：零配置智能入口与硬约束执行内核
+
+- 新增 `smart-compose.mjs`：自然语言/产品文档单入口，自动发现工作区项目、识别来源与目标并默认执行。
+- 新增受控执行状态机和 `controlled-change-executor.mjs`，强制 Change Plan ready、blocking question、文件白名单和禁止路径门禁。
+- 实际文件 diff 越界、验证失败或执行异常时自动回滚，并生成 `controlled-execution.json` 审计记录。
+- 新项目组合可自动安装依赖（禁用 lifecycle scripts）并运行 baseline、typecheck、test 和 build。
+- 新增 `intelligent-frontend-assembler` 总控 Skill，以及工作区发现、意图、执行策略和执行记录 Schema。
 
 ## 0.7.0：自然语言模块装配总控
 
