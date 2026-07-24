@@ -18,7 +18,7 @@ description: 以 smart-develop 为统一入口，将自然语言或多格式产�
 
 ## 强制流程
 
-1. 读取 `AGENTS.md`、`docs/baseline-rules.yml`、`docs/project-scheme.yml`。
+1. 读取包内 `AGENTS.md`、`docs/baseline-rules.yml` 和目标项目 `.ai-frontend-assembler/project-scheme.yml`。
 2. 所有自然语言、产品文档、API 文档、原型导出或 ready Feature Spec 优先进入：
    ```bash
    node ai-baseline-kit/scripts/smart-develop.mjs --request "<原话或文档路径>" --project-root "<目标项目>"

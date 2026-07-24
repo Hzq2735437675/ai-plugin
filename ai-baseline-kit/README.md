@@ -2,7 +2,7 @@
 
 - 产品展示名称：AI 前端模块装配系统
 - 机器包名：`ai-baseline-kit`
-- 当前版本：`0.9.0`
+- 当前版本：`0.10.0`
 - 包元数据：[`plugin.json`](plugin.json)
 - 安装/植入说明：[`INSTALL.md`](INSTALL.md)
 - AI 主入口：[`AGENTS.md`](AGENTS.md)
@@ -59,6 +59,26 @@ React 18 + TypeScript + Vite + Ant Design 5 + Tailwind CSS 3 + React Router 6
 - 通过 `ast-boundary-check.mjs` 使用目标项目 TypeScript/Vue 编译器构建依赖图并检查真实导入边界。
 - 通过 `baseline-check --mode changed` 对旧项目进行增量治理。
 - 通过 `template-build-check.mjs` 在临时目录真实安装依赖，并验证 React/Vue 生成模块后的 typecheck 与 production build。
+
+## 可替换升级与统一 AI 入口（0.10.0）
+
+本版本把目标项目专属状态移出 `ai-baseline-kit/`，统一存放到项目根目录 `.ai-frontend-assembler/`。因此项目完成一次接入后，未来升级可以直接把最新 `ai-baseline-kit/` 整目录复制并替换旧目录，不再备份/恢复项目地图或历史快照。
+
+```bash
+# 首次接入
+node ai-baseline-kit/scripts/ai-run.mjs init
+
+# 自然语言或产品文档开发
+node ai-baseline-kit/scripts/ai-run.mjs develop --document <product-doc>
+
+# 整目录替换包后升级，不重建项目地图、不刷新旧项目快照
+node ai-baseline-kit/scripts/ai-run.mjs upgrade
+
+# CI/交付硬门禁
+node ai-baseline-kit/scripts/ai-run.mjs gate
+```
+
+统一入口支持 `init / develop / compose / repair / validate / gate / doctor / status / upgrade`。目标项目自动发现入口只保留 `AGENTS.md` 与 `CLAUDE.md`，不会生成 Cursor、Copilot 等额外配置。`.ai-frontend-assembler/` 必须提交到版本库且升级时不得删除。
 
 ## 统一智能开发入口（0.9.0）
 
@@ -183,7 +203,7 @@ node ai-baseline-kit/scripts/ast-boundary-check.mjs --project-root <project-root
 
 ## 旧项目增量模式
 
-旧项目首次运行 bootstrap 时会创建 `ai-baseline-kit/docs/legacy-baseline.json`，记录接入前历史违规。之后默认：
+旧项目首次运行 bootstrap 时会创建 `.ai-frontend-assembler/legacy-baseline.json`，记录接入前历史违规。之后默认：
 
 ```bash
 node ai-baseline-kit/scripts/baseline-check.mjs --mode changed --fail-on-warn
@@ -208,14 +228,28 @@ node ai-baseline-kit/scripts/baseline-check.mjs --mode changed --fail-on-warn
 - `project_root`: `ai-baseline-kit/` 的父目录，也就是业务项目根目录
 - 规范文件、skills、模板、脚本都在 `baseline_root`
 - 业务代码、依赖、路由、模块、资源都在 `project_root`
-- `project-scheme.yml` 默认生成在 `baseline_root/docs/project-scheme.yml`
+- 目标项目地图生成在 `project_root/.ai-frontend-assembler/project-scheme.yml`；包内 `docs/project-scheme.yml` 仅是仓库参考地图
+
+## 直接覆盖升级
+
+已使用 `0.10.0+` 完成接入的项目，升级只需直接替换整个 `ai-baseline-kit/`，然后运行：
+
+```bash
+node ai-baseline-kit/scripts/ai-run.mjs upgrade
+node ai-baseline-kit/scripts/ai-run.mjs validate
+```
+
+项目专属的 `.ai-frontend-assembler/`、根 `AGENTS.md`、根 `CLAUDE.md` 和业务代码都位于包目录外，不会因替换包目录丢失。`0.9.x` 及更早项目应在旧项目专属文件仍存在时执行一次迁移；详见 `INSTALL.md`。
 
 ## 文件职责
 
 - `AGENTS.md`: AI 工作入口和硬约束。
 - `docs/baseline-rules.yml`: 通用基线规则，包含分层、模块契约、装配、命名、样式、i18n、迁移和回归规则。
 - `docs/engineering-workflow.yml`: 不同任务的执行流程，例如新功能、旧页模块化、模块迁移和回归闭环。
-- `docs/project-scheme.yml`: 目标项目地图，记录当前项目真实技术栈、目录、入口、模块和迁移边界。
+- `.ai-frontend-assembler/project-scheme.yml`: 目标项目地图，记录真实技术栈、目录、入口、模块和迁移边界。
+- `.ai-frontend-assembler/legacy-baseline.json`: 旧项目接入前历史违规快照。
+- `.ai-frontend-assembler/state.json`: 外置状态版本和可替换升级策略清单。
+- `docs/project-scheme.yml`: 能力包仓库参考地图，不承载目标项目专属状态。
 - `docs/project-scheme.template.yml`: 项目地图模板。
 - `docs/project-scheme.schema.yml`: `project-scheme.yml` 的结构约束。
 - `docs/module-manifest.template.yml`: 新模块 manifest 模板。
@@ -232,7 +266,7 @@ node ai-baseline-kit/scripts/baseline-check.mjs --mode changed --fail-on-warn
 - `scripts/project-tools-check.mjs`: 无第三方依赖的项目诊断/地图工具自测。
 - `scripts/baseline-contract-check.mjs`: 自然语言确认门禁、React/Vue 模块生成/扩展、元数据边界和旧项目增量治理的离线契约回归。
 - `scripts/template-build-check.mjs`: 在系统临时目录创建真实 React/Vue 项目、生成示例模块、安装依赖并运行 typecheck/build。
-- `skills/project-scheme-bootstrap/SKILL.md`: 自动扫描新项目或旧项目并生成 `docs/project-scheme.yml`。
+- `skills/project-scheme-bootstrap/SKILL.md`: 自动扫描新项目或旧项目并生成 `.ai-frontend-assembler/project-scheme.yml`。
 - `skills/requirement-to-feature-spec/SKILL.md`: 将自然语言/产品文档转换为 Feature Spec，并对未知项提问。
 - `skills/feature-architecture-planner/SKILL.md`: 选择创建/扩展模块或共享能力，并生成文件边界计划。
 - `skills/baseline-structure-skill/SKILL.md`: 开发前结构化需求。
@@ -250,7 +284,7 @@ node ai-baseline-kit/scripts/baseline-check.mjs --mode changed --fail-on-warn
 node ai-baseline-kit/scripts/project-doctor.mjs
 node ai-baseline-kit/scripts/project-doctor.mjs --json
 
-# 生成/更新 ai-baseline-kit/docs/project-scheme.yml
+# 生成/更新 .ai-frontend-assembler/project-scheme.yml
 node ai-baseline-kit/scripts/project-bootstrap.mjs
 
 # 空目录初始化标准模板（二选一）
@@ -277,7 +311,7 @@ node ai-baseline-kit/scripts/template-build-check.mjs --profile react18-antd-tai
 
 ```text
 读取 ai-baseline-kit/AGENTS.md。
-如果 ai-baseline-kit/docs/project-scheme.yml 不存在，先运行 ai-baseline-kit/skills/project-scheme-bootstrap/SKILL.md。
+如果 .ai-frontend-assembler/project-scheme.yml 不存在，先运行 ai-baseline-kit/skills/project-scheme-bootstrap/SKILL.md。
 ```
 
 无法可靠判断的字段会写成 `unknown`，并在 `required_questions` 中列出最少确认问题。
@@ -286,8 +320,8 @@ node ai-baseline-kit/scripts/template-build-check.mjs --profile react18-antd-tai
 
 1. 读取 `ai-baseline-kit/AGENTS.md`。
 2. 读取 `ai-baseline-kit/docs/baseline-rules.yml` 和 `ai-baseline-kit/docs/engineering-workflow.yml`。
-3. 如果不存在 `ai-baseline-kit/docs/project-scheme.yml`，先使用 `ai-baseline-kit/skills/project-scheme-bootstrap/SKILL.md` 生成。
-4. 读取或生成 `ai-baseline-kit/docs/project-scheme.yml`。
+3. 如果不存在 `.ai-frontend-assembler/project-scheme.yml`，先使用 `ai-baseline-kit/skills/project-scheme-bootstrap/SKILL.md` 生成。
+4. 读取或生成 `.ai-frontend-assembler/project-scheme.yml`。
 5. 开发前使用 `ai-baseline-kit/skills/baseline-structure-skill/SKILL.md` 明确范围。
 6. 只在规划范围内改业务代码。
 7. 开发后使用 `ai-baseline-kit/skills/baseline-conformance-skill/SKILL.md` 回归。

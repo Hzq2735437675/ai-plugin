@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ai-baseline.local/project-state.schema.json",
+  "title": "AI Frontend Assembler Project State",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "kind", "storage", "packageDirectory", "packageVersion", "createdAt", "updatedAt", "mode", "files", "upgrade"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "kind": { "const": "ai-frontend-assembler-project-state" },
+    "storage": { "const": "project-external" },
+    "packageDirectory": { "type": "string", "minLength": 1 },
+    "packageVersion": { "type": "string", "minLength": 1 },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "updatedAt": { "type": "string", "format": "date-time" },
+    "mode": { "enum": ["target-project", "package-repository-reference"] },
+    "files": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["projectScheme", "legacyBaseline", "adapters"],
+      "properties": {
+        "projectScheme": { "const": ".ai-frontend-assembler/project-scheme.yml" },
+        "legacyBaseline": { "const": ".ai-frontend-assembler/legacy-baseline.json" },
+        "adapters": { "const": ".ai-frontend-assembler/adapters" }
+      }
+    },
+    "upgrade": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["strategy", "packageStateSeparated"],
+      "properties": {
+        "strategy": { "const": "replace-package-directory" },
+        "packageStateSeparated": { "const": true }
+      }
+    }
+  }
+}

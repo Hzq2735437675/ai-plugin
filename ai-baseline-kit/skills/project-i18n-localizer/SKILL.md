@@ -9,7 +9,7 @@ description: 项目感知的国际化配置、文案抽取、翻译和验证 ski
 按照当前项目的真实规则处理用户可见文案和国际化。该 skill 可以在用户明确要求 i18n 时独立使用，也可以作为 `baseline-structure-skill` 或 `baseline-conformance-skill` 发现国际化问题后的专项跟进。
 
 整包植入模式下：
-- 优先读取 `ai-baseline-kit/AGENTS.md`、`ai-baseline-kit/docs/baseline-rules.yml` 和 `ai-baseline-kit/docs/project-scheme.yml`。
+- 优先读取 `ai-baseline-kit/AGENTS.md`、`ai-baseline-kit/docs/baseline-rules.yml` 和 `.ai-frontend-assembler/project-scheme.yml`。
 - 扫描和修改对象是 `ai-baseline-kit/` 的父目录，也就是业务项目根目录。
 - 除非用户明确要求维护规范包，不修改 `ai-baseline-kit/` 内文件。
 
@@ -42,7 +42,7 @@ description: 项目感知的国际化配置、文案抽取、翻译和验证 ski
 
 1. `ai-baseline-kit/AGENTS.md` 或项目根 `AGENTS.md`
 2. `ai-baseline-kit/docs/baseline-rules.yml` 或同等项目规则
-3. `ai-baseline-kit/docs/project-scheme.yml` 或同等项目地图
+3. `.ai-frontend-assembler/project-scheme.yml` 或同等项目地图
 4. 包管理清单和框架入口
 5. 现有 i18n 初始化、语言资源、语言切换器、provider、`t()` 或翻译 API 用法
 6. 附近功能、页面或模块文件，用于推断领域命名和资源归属

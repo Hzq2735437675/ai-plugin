@@ -19,12 +19,16 @@ project_scheme:
   purpose: 项目说明书和项目地图；供 AI 读取当前项目真实结构、装配入口、模块能力和迁移边界。
   path_mode:
     embedded_baseline_root: ai-baseline-kit
-    scheme_location: ai-baseline-kit/docs/project-scheme.yml
+    package_reference_scheme: ai-baseline-kit/docs/project-scheme.yml
+    project_state_root: .ai-frontend-assembler
+    scheme_location: .ai-frontend-assembler/project-scheme.yml
     project_root: ai-baseline-kit 的父目录
   embedded_package_rules:
     - ai-baseline-kit 作为完整规范包植入项目根目录，不把 docs、skills、scripts 抽散到业务项目根目录。
     - 业务改动默认只发生在 project_root，不修改 ai-baseline-kit；只有维护规范包时才改 baseline_root。
     - 项目根 AGENTS.md 和 CLAUDE.md 应包含 ai-baseline 强入口约束；缺失时创建，已有但不完整时追加受控段落，不覆盖原内容。
+    - 多 AI 自动发现入口当前仅限 AGENTS.md 和 CLAUDE.md，不创建 Cursor、Copilot 或其他工具专属文件。
+    - 目标项目专属状态必须写入 .ai-frontend-assembler/，不得写回可替换的 ai-baseline-kit/ 包目录。
     - 不要自动向目标项目 .gitignore 追加 ai-baseline-kit/；规范包变化应允许在 Git 中显示，便于审计、同步和提交。
     - 如果目标项目 .gitignore 已忽略 ai-baseline-kit/，需要显示规范包变化时应由开发者显式移除该忽略规则。
   status:
@@ -32,11 +36,12 @@ project_scheme:
     generation_mode: ai_bootstrap_first_then_manual_review
     automation_mode: requirement_spec_plan_generate_validate_closed_loop
   bootstrap_rules:
-    - 当 ai-baseline-kit/docs/project-scheme.yml 不存在时，先运行 skills/project-scheme-bootstrap/SKILL.md
+    - 当 .ai-frontend-assembler/project-scheme.yml 不存在时，先运行 skills/project-scheme-bootstrap/SKILL.md
     - 新项目优先从用户需求中提取技术栈、目标端、UI 库和业务类型；旧项目优先从 package manifest、框架配置、路由入口、状态入口、i18n 入口、API client、目录结构和已有模块推断
     - 空项目且用户未指定技术栈时，使用 stack-profiles.yml 的 default_new_frontend_profile；只有用户需求与默认方案冲突或关键信息不足时才提出最少确认问题
     - 无法可靠推断的字段保留为 unknown，并在 required_questions 中列出最少问题
     - 不因为缺少 scheme 直接开始业务改动
+    - 完成 0.10.0+ 接入后，升级通过整目录替换 ai-baseline-kit/ 完成；必须保留 .ai-frontend-assembler/。
   required_when_enabled:
     - current tech stack summary
     - shell/shared/modules map
@@ -432,7 +437,7 @@ design_system:
 
 legacy_incremental_governance:
   purpose: 旧项目接入时保留历史问题，只阻断接入后的新增违规。
-  snapshot: docs/legacy-baseline.json
+  snapshot: .ai-frontend-assembler/legacy-baseline.json
   schema: docs/legacy-baseline.schema.json
   commands:
     initialize: node ai-baseline-kit/scripts/baseline-check.mjs --write-baseline

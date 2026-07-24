@@ -43,7 +43,7 @@ try {
   const existingApplied = await executeComposition({ request: existingRequest, baselineRoot, workspace: path.join(root, 'existing-workspace'), apply: true });
   assert.equal(existingApplied.status, 'completed', existingApplied.error?.message);
   assert.ok(fs.existsSync(path.join(existing, 'src', 'modules', 'home')));
-  assert.ok(fs.existsSync(path.join(existing, 'ai-baseline-kit', 'docs', 'project-scheme.yml')));
+  assert.ok(fs.existsSync(path.join(existing, '.ai-frontend-assembler', 'project-scheme.yml')));
   assert.ok(existingApplied.controlledExecution.changes.every((item) => existingApplied.changePlan.files.allowedRoots.some((rootPath) => rootPath === '.' || item.path === rootPath || item.path.startsWith(`${rootPath}/`))));
 
   console.log('composition-contract-check: pass');

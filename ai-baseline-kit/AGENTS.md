@@ -6,15 +6,16 @@
 - `baseline_root`: 当前 `ai-baseline-kit/` 目录。
 - `project_root`: `ai-baseline-kit/` 的父目录，也就是目标业务项目根目录。
 - 本文件中未特别说明的规范路径，都相对于 `baseline_root`。
-- 如果 docs/project-scheme.yml 中 project.map_status 为 package-repository-reference，说明它是随包提供的仓库参考地图；复制到其他项目后必须先重新运行 skills/project-scheme-bootstrap/SKILL.md 覆盖为目标项目地图。
-- 业务代码、依赖、路由、模块、资源扫描，都相对于 `project_root`。
+- `baseline_root/docs/project-scheme.yml` 是随包提供的仓库参考地图，不得在目标项目中覆盖为业务项目地图。
+- 目标项目专属状态统一位于 `project_root/.ai-frontend-assembler/`：项目地图为 `project-scheme.yml`，旧项目历史快照为 `legacy-baseline.json`，状态清单为 `state.json`。
+- 业务代码、依赖、路由、模块、资源扫描，都相对于 `project_root`；`.ai-frontend-assembler/` 必须保留并纳入版本管理。
 
-1. 任何改动前，先读取 `docs/baseline-rules.yml`、`docs/engineering-workflow.yml`，以及 `docs/project-scheme.yml`（若存在）；如果 `docs/project-scheme.yml` 不存在，或其中 `project.map_status` 为 `package-repository-reference`，先用 `skills/project-scheme-bootstrap/SKILL.md` 扫描 `project_root` 并在 `baseline_root/docs/project-scheme.yml` 生成项目地图。自然语言或产品文档需求先按 `skills/requirement-to-feature-spec/SKILL.md` 形成 ready Feature Spec，再按 `skills/feature-architecture-planner/SKILL.md` 和 `skills/baseline-structure-skill/SKILL.md` 固定模块归属与文件范围。
+1. 任何改动前，先读取 `docs/baseline-rules.yml`、`docs/engineering-workflow.yml` 和 `project_root/.ai-frontend-assembler/project-scheme.yml`；如果目标项目地图不存在，先用 `skills/project-scheme-bootstrap/SKILL.md` 扫描 `project_root` 并生成外置项目状态。自然语言或产品文档需求先按 `skills/requirement-to-feature-spec/SKILL.md` 形成 ready Feature Spec，再按 `skills/feature-architecture-planner/SKILL.md` 和 `skills/baseline-structure-skill/SKILL.md` 固定模块归属与文件范围。
 2. 只在目标页面、模块或分层内工作，不碰无关文件；除非用户明确要求维护基线包，否则不要修改 `ai-baseline-kit/`。
 3. 不要自动向 `project_root/.gitignore` 追加 `ai-baseline-kit/`；规范包变化应允许在 Git 中显示，便于审计、同步和提交。
 4. 新增或修改页面、模块、路由、组件、状态、API、文案、样式、资源、配置或依赖时，必须遵守基线：同技术栈、shell/shared/modules（或项目等价层）分层、零交叉依赖、静态装配、命名收敛、文案归属、样式外置、资源随模块走、依赖显式声明。
 5. 模块必须通过统一入口和 manifest 暴露自身能力。跨域复用先进入项目定义的 shared；基础 UI 包装只放在项目定义的基础组件层，不塞具体业务逻辑。
-6. 任何结构变更后，必须同步维护或重新生成 `baseline_root/docs/project-scheme.yml`，并按 `skills/baseline-conformance-skill/SKILL.md` 回归；如结果为 `fail`，只修复违规项，再回归到 `pass`。
+6. 任何结构变更后，必须同步维护或重新生成 `project_root/.ai-frontend-assembler/project-scheme.yml`，并按 `skills/baseline-conformance-skill/SKILL.md` 回归；如结果为 `fail`，只修复违规项，再回归到 `pass`。
 7. 可运行 `node ai-baseline-kit/scripts/baseline-check.mjs` 做硬检查；脚本会读取 `baseline_root` 内规则并检查 `project_root` 业务代码。
 8. 如果目标项目存在 `.claude-baseline-doc.txt`，它只作为长版参考源，不作为日常主入口。
 
@@ -33,7 +34,7 @@ requirement-to-feature-spec
 
 Feature Spec 或 Change Plan 仍有 blocking `requiredQuestions` 时，必须向用户提问，禁止直接生成业务代码。新模块必须同时提供静态 `module.meta.json` 和运行时 `manifest.ts`，模块之间不得直接引用。
 
-旧项目首次 bootstrap 自动记录 `docs/legacy-baseline.json`；后续默认使用 `baseline-check --mode changed`，只阻断新增违规。不得通过自动刷新快照掩盖新问题。
+旧项目首次 bootstrap 自动记录 `project_root/.ai-frontend-assembler/legacy-baseline.json`；后续默认使用 `baseline-check --mode changed`，只阻断新增违规。不得通过自动刷新快照掩盖新问题。
 
 生成器必须将 Feature Spec acceptance 同步生成为模块 `tests/` 下的 Vitest 契约/权限/页面状态/组件测试、API mock 和 Playwright E2E 骨架；不能可靠从自然语言推导的行为断言保留为 `todo/fixme`，不得伪造已完成测试。目标项目安装依赖后必须运行 `ast-boundary-check.mjs --require-parser`。
 

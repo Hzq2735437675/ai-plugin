@@ -3,6 +3,7 @@ import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { analyzeProject, parseArgs, resolveRoots } from './project-tools-lib.mjs';
+import { resolveProjectSchemeFile } from './project-state-lib.mjs';
 
 const args = parseArgs(process.argv.slice(2));
 const { baselineRoot, projectRoot: defaultProjectRoot } = resolveRoots(import.meta.url);
@@ -22,7 +23,7 @@ function run(label, command, commandArgs) {
 }
 
 function schemeScalar(key) {
-  const schemeFile = path.join(baselineRoot, 'docs', 'project-scheme.yml');
+  const schemeFile = resolveProjectSchemeFile(projectRoot, baselineRoot);
   if (!fs.existsSync(schemeFile)) return '';
   const line = fs.readFileSync(schemeFile, 'utf8')
     .split(/\r?\n/)
@@ -31,7 +32,7 @@ function schemeScalar(key) {
 }
 
 function selectedProfile() {
-  const schemeFile = path.join(baselineRoot, 'docs', 'project-scheme.yml');
+  const schemeFile = resolveProjectSchemeFile(projectRoot, baselineRoot);
   if (!fs.existsSync(schemeFile)) return report.profile;
   const match = fs.readFileSync(schemeFile, 'utf8')
     .match(/^\s*selected_profile:\s*['"]?([^'"\r\n]+)['"]?\s*$/m);

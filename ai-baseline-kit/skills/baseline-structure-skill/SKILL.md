@@ -11,7 +11,7 @@ description: 开发前将任意项目的变更需求整理成符合项目基线�
 标准可移植入口为 `skills/baseline-structure-skill/SKILL.md`。
 
 整包植入模式下：
-- `baseline_root`: `ai-baseline-kit/`，本 skill、规则、工作流和 `docs/project-scheme.yml` 均在此目录内。
+- `baseline_root`: `ai-baseline-kit/`，本 skill、规则和工作流位于此目录；包内 `docs/project-scheme.yml` 仅是仓库参考地图。
 - `project_root`: `ai-baseline-kit/` 的父目录，业务代码、依赖、路由、模块和资源均按此目录读取或修改。
 - 读取规则时优先使用 `baseline_root`；规划业务变更时只触碰 `project_root` 中的目标范围。
 
@@ -26,7 +26,7 @@ description: 开发前将任意项目的变更需求整理成符合项目基线�
 - `ai-baseline-kit/AGENTS.md` 或当前仓库的 `AGENTS.md`
 - `ai-baseline-kit/docs/baseline-rules.yml` 或当前仓库的 `docs/baseline-rules.yml`
 - `ai-baseline-kit/docs/engineering-workflow.yml` 或当前仓库的 `docs/engineering-workflow.yml`（若存在）
-- `ai-baseline-kit/docs/project-scheme.yml` 或当前仓库的 `docs/project-scheme.yml`（若存在）
+- `project_root/.ai-frontend-assembler/project-scheme.yml`（目标项目地图；缺失时先 bootstrap）
 - 当前仓库已有的同等基线、架构、目录或开发规范文件
 - 用户需求和已知目标文件
 
@@ -49,7 +49,7 @@ description: 开发前将任意项目的变更需求整理成符合项目基线�
 小改动可以输出压缩版，但必须覆盖范围、影响面和验证点。
 
 ## 工作流
-1. 读取项目入口规则，确认是否有 `ai-baseline-kit/AGENTS.md`、`docs/baseline-rules.yml`、`docs/engineering-workflow.yml`、`docs/project-scheme.yml` 或同等文件。
+1. 读取项目入口规则，确认 `ai-baseline-kit/AGENTS.md`、包内规则/工作流和 `.ai-frontend-assembler/project-scheme.yml` 是否存在。
 2. 判断需求归属：骨架/应用层、共享层、模块/业务域层，或项目自定义分层。
 3. 找到最小安全改动范围，列出会触碰的文件或目录。
 4. 标出新增内容的归属：页面、路由、组件、API、状态、样式、文案、配置、依赖。

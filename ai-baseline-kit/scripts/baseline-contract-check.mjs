@@ -47,7 +47,7 @@ function bootstrap(profile, name) {
   const mainFile = path.join(projectRoot, profile === 'vue3-vite-ts' ? 'src/main.ts' : 'src/main.tsx');
   assert.match(fs.readFileSync(mainFile, 'utf8'), /theme\/theme\.css/);
 
-  const legacySnapshot = path.join(projectRoot, 'ai-baseline-kit', 'docs', 'legacy-baseline.json');
+  const legacySnapshot = path.join(projectRoot, '.ai-frontend-assembler', 'legacy-baseline.json');
   assert.equal(fs.existsSync(legacySnapshot), false, '标准新项目不应创建旧项目历史快照');
   const rerun = run(projectRoot, 'ai-baseline-kit/scripts/project-bootstrap.mjs', ['--project-root', projectRoot]);
   assertPass(rerun, `${name} bootstrap rerun`);
@@ -303,7 +303,7 @@ try {
   );
   const legacyBootstrap = run(legacyProject, 'ai-baseline-kit/scripts/project-bootstrap.mjs', ['--project-root', legacyProject]);
   assertPass(legacyBootstrap, 'legacy bootstrap');
-  const snapshotFile = path.join(legacyProject, 'ai-baseline-kit', 'docs', 'legacy-baseline.json');
+  const snapshotFile = path.join(legacyProject, '.ai-frontend-assembler', 'legacy-baseline.json');
   assert.ok(fs.existsSync(snapshotFile), '旧项目首次接入应写入历史快照');
   const changedBefore = run(legacyProject, 'ai-baseline-kit/scripts/baseline-check.mjs', [
     '--project-root', legacyProject, '--mode', 'changed', '--fail-on-warn',
@@ -355,6 +355,10 @@ try {
   const compositionContracts = spawnSync(process.execPath, [path.join(baselineRoot, 'scripts', 'composition-contract-check.mjs')], { cwd: baselineRoot, encoding: 'utf8' });
   assertPass(compositionContracts, 'composition contract check');
   console.log(compositionContracts.stdout.trim());
+
+  const packageUpgradeContracts = spawnSync(process.execPath, [path.join(baselineRoot, 'scripts', 'package-upgrade-contract-check.mjs')], { cwd: baselineRoot, encoding: 'utf8' });
+  assertPass(packageUpgradeContracts, 'package upgrade contract check');
+  console.log(packageUpgradeContracts.stdout.trim());
 
   console.log('baseline-contract-check: pass');
   console.log('requirement-confirmation-gate: pass');

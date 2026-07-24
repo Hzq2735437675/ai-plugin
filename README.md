@@ -2,7 +2,7 @@
 
 > 机器包名：`ai-baseline-kit`
 
-> 当前版本：`0.9.0`
+> 当前版本：`0.10.0`
 
 AI 前端模块装配系统是一套**由 AI 编排、以工程契约约束、在构建期组合模块**的前端工程能力包。它面向自然语言或产品文档驱动的开发场景，让 AI 不只是生成页面代码，还必须完成需求确认、模块拆解、文件边界控制、自动测试、跨项目模块迁移、项目组合和最终验收。
 
@@ -118,7 +118,7 @@ node ai-baseline-kit/scripts/baseline-check.mjs --project-root <project-c> --fai
 
 | 产品展示名称 | 机器包名 | 版本 | 类型 | AI 主入口 | 安装说明 |
 | --- | --- | --- | --- | --- | --- |
-| AI 前端模块装配系统 | `ai-baseline-kit` | `0.9.0` | 可嵌入 AI 工程能力包 | [`ai-baseline-kit/AGENTS.md`](ai-baseline-kit/AGENTS.md) | [`ai-baseline-kit/INSTALL.md`](ai-baseline-kit/INSTALL.md) |
+| AI 前端模块装配系统 | `ai-baseline-kit` | `0.10.0` | 可嵌入 AI 工程能力包 | [`ai-baseline-kit/AGENTS.md`](ai-baseline-kit/AGENTS.md) | [`ai-baseline-kit/INSTALL.md`](ai-baseline-kit/INSTALL.md) |
 
 完整登记信息见 [`package-registry.json`](package-registry.json)。
 
@@ -220,6 +220,15 @@ node ai-baseline-kit/scripts/template-build-check.mjs --profile vue3-vite-ts
 - `plugin.json.entrypoints.primary` 必须指向包的 AI 主入口。
 - 包之间不得通过隐式相对路径耦合。
 - 新增包需要登记到 `package-registry.json` 并通过 `scripts/package-check.mjs`。
+
+## 0.10.0：外置项目状态与整包替换升级
+
+- 目标项目地图、旧项目历史快照和状态清单统一外置到 `.ai-frontend-assembler/`，与 `ai-baseline-kit/` 包目录彻底分离。
+- 已完成本版本接入后，后续可以直接复制最新 `ai-baseline-kit/` 并替换旧目录，不需要备份、恢复或重建目标项目地图。
+- 新增 `ai-run.mjs` 统一入口，覆盖初始化、开发、组合、修复、验证、CI 门禁、诊断和升级。
+- 新增 `project-upgrade.mjs` 和升级契约测试，验证整包删除后重新复制，项目专属状态仍逐字节保留。
+- 多 AI 自动发现暂时严格限制为根 `AGENTS.md` 与 `CLAUDE.md`，不生成 Cursor、Copilot 等额外入口。
+- 新增 `ci-gate.mjs`，默认要求真实 AST 解析器并执行完整项目验证；旧环境可显式选择 parser fallback，但生产门禁不建议放宽。
 
 ## 0.9.0：统一智能开发与验收修复闭环
 

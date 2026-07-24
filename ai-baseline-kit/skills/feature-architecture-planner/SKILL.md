@@ -9,7 +9,7 @@ description: 将已确认的 Frontend Feature Spec 与目标项目地图转换�
 生成 `docs/plans/<feature-id>.plan.json`，在代码生成前固定模块归属、复用策略、装配点、依赖和允许修改的文件边界。
 
 ## 前置条件
-- 读取 `ai-baseline-kit/AGENTS.md`、基线规则、工程工作流和 `docs/project-scheme.yml`。
+- 读取 `ai-baseline-kit/AGENTS.md`、基线规则、工程工作流和 `.ai-frontend-assembler/project-scheme.yml`。
 - 输入 Feature Spec 必须为 `status: ready`，不存在 blocking `requiredQuestions`。
 - 旧项目优先保留真实技术栈，并使用增量治理；不强迫一次重构历史代码。
 

@@ -1,7 +1,7 @@
 # AI Baseline Kit 安装与植入说明
 
 - 包名：`ai-baseline-kit`
-- 当前版本：`0.9.0`
+- 当前版本：`0.10.0`
 - 包元数据：[`plugin.json`](plugin.json)
 - 主入口：[`AGENTS.md`](AGENTS.md)
 - 详细说明：[`README.md`](README.md)
@@ -63,7 +63,7 @@ ai-baseline-kit/AGENTS.md
 2. 如果项目是前端项目且未指定技术栈，AI 使用 `templates/react18-antd-tailwind-ts/` 作为默认起点。
 3. 如果用户明确选择 Vue 3 + Vite，AI 使用默认集成 Element Plus 的 `templates/vue3-vite-ts/`。
 4. 如果用户已经指定其他技术栈，用户选择优先；本包不自动生成第三方标准模板。
-5. 首次接入前运行诊断并生成或审核 `ai-baseline-kit/docs/project-scheme.yml`。
+5. 首次接入前运行诊断并生成或审核 `.ai-frontend-assembler/project-scheme.yml`。
 6. 先读取结构规划 skill，再开始实现。
 7. 开发后运行基线一致性回归。
 
@@ -96,7 +96,7 @@ node ai-baseline-kit/scripts/project-validate.mjs --baseline-only
 1. 复制 `ai-baseline-kit/` 到目标项目根目录。
 2. AI 扫描 package manifest、lockfile、源码入口、构建配置、路由、状态、i18n 和模块目录。
 3. 保留 Vue、React、Angular 或其他旧技术栈，不自动迁移到默认 React 模板。
-4. 生成或审核 `ai-baseline-kit/docs/project-scheme.yml`，记录真实结构和边界。
+4. 生成或审核 `.ai-frontend-assembler/project-scheme.yml`，记录真实结构和边界。
 5. 只按旧项目现有架构和本包规则开发增量需求。
 6. 回归检查：
 
@@ -111,22 +111,44 @@ node ai-baseline-kit/scripts/project-validate.mjs
 - `baseline_root`：`ai-baseline-kit/`
 - `project_root`：`ai-baseline-kit/` 的父目录，也就是目标项目根目录
 - 规则、skill、模板和检查脚本：位于 `baseline_root`
+- 目标项目专属地图、旧项目快照和状态清单：位于 `project_root/.ai-frontend-assembler/`
 - 业务代码、依赖、路由、模块和资源：位于 `project_root`
 
 ## 升级
 
-升级前先备份目标项目专属的 `ai-baseline-kit/docs/project-scheme.yml`。以包版本为单位替换其余 `ai-baseline-kit/` 内容后，恢复项目地图（或重新运行 bootstrap 生成并人工审核），并保留目标项目根目录已有的 AI 入口文件和业务代码。升级后重新运行：
+从 `0.10.0` 起，目标项目专属状态与能力包目录彻底分离：
 
-```bash
-node ai-baseline-kit/scripts/project-bootstrap.mjs
-node ai-baseline-kit/scripts/project-validate.mjs
+```text
+<target-project>/
+├── ai-baseline-kit/                  # 可直接整目录替换
+├── .ai-frontend-assembler/           # 项目专属状态，升级时保留
+│   ├── project-scheme.yml
+│   ├── legacy-baseline.json
+│   └── state.json
+├── AGENTS.md
+└── CLAUDE.md
 ```
 
-如果目标项目的基线规则或项目地图发生变化，应由 AI 按当前版本重新读取并审核 `docs/project-scheme.yml`。
+已接入本版本后，后续升级只需：
+
+1. 将最新 `ai-baseline-kit/` 复制到旧项目并直接覆盖/替换整个同名目录。
+2. 不删除 `.ai-frontend-assembler/`，不需要手工备份或恢复项目地图。
+3. 让 AI 执行统一升级与验证：
+
+```bash
+node ai-baseline-kit/scripts/ai-run.mjs upgrade
+node ai-baseline-kit/scripts/ai-run.mjs gate --allow-parser-fallback
+```
+
+生产 CI 建议移除 `--allow-parser-fallback`，要求目标项目安装 TypeScript/Vue AST 解析依赖后执行严格门禁。
+
+从 `0.9.x` 或更早版本首次过渡时，如果旧包仍保留项目专属的 `ai-baseline-kit/docs/project-scheme.yml` 或 `legacy-baseline.json`，先用新包运行 `ai-run upgrade`，系统会一次性迁移到 `.ai-frontend-assembler/`。如果在迁移前已经删除旧包内唯一的项目专属状态，则无法自动恢复，应从版本库找回旧文件后再升级。
+
+多 AI 自动发现暂时只维护目标项目根目录的 `AGENTS.md` 与 `CLAUDE.md`；不会创建 Cursor、Copilot 或其他工具专属入口。
 
 ## 卸载
 
-删除目标项目根目录的 `ai-baseline-kit/`。如果曾经在根级 `AGENTS.md` 或 `CLAUDE.md` 中追加入口约束，也一并移除专门为本包添加的段落，但不要删除原有内容。
+删除目标项目根目录的 `ai-baseline-kit/`。如需彻底移除系统，再删除 `.ai-frontend-assembler/`；仅升级时不得删除该目录。如果曾经在根级 `AGENTS.md` 或 `CLAUDE.md` 中追加入口约束，也一并移除专门为本包添加的段落，但不要删除原有内容。
 
 ## 版本规则
 

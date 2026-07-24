@@ -117,7 +117,8 @@ function compositionScope(projectRoot, bundles) {
     report.entrypoints.theme,
     'package.json', 'package-lock.json', 'pnpm-lock.yaml', 'yarn.lock',
     'docs/project-composition.json', 'docs/module-imports',
-    fs.existsSync(path.join(projectRoot, 'ai-baseline-kit')) ? 'ai-baseline-kit/docs/project-scheme.yml' : 'ai-baseline-kit',
+    '.ai-frontend-assembler',
+    ...(!fs.existsSync(path.join(projectRoot, 'ai-baseline-kit')) ? ['ai-baseline-kit'] : []),
     'AGENTS.md', 'CLAUDE.md',
   ].filter((item) => item && item !== 'unknown');
   return { allowedRoots: [...new Set(allowedRoots)], allowBaselineMaintenance: true, targetWasEmpty: false };

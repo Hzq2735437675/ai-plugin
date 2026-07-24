@@ -2,7 +2,7 @@
   "$schema": "./package-manifest.schema.json",
   "schemaVersion": 1,
   "name": "ai-baseline-kit",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "type": "embedded-ai-capability-package",
   "description": "AI 前端模块装配系统：可完整植入目标项目，支持需求确认、结构化生成、验收测试、同栈模块迁移组合、AST 边界检查和旧项目增量治理闭环。",
   "entrypoints": {
@@ -58,7 +58,13 @@
     "intelligentDevelopmentContractSelfCheck": "scripts/intelligent-development-contract-check.mjs",
     "normalizedDocumentSchema": "docs/normalized-document.schema.json",
     "smartDevelopRunSchema": "docs/smart-develop-run.schema.json",
-    "acceptanceCoverageSchema": "docs/acceptance-coverage.schema.json"
+    "acceptanceCoverageSchema": "docs/acceptance-coverage.schema.json",
+    "unifiedRunner": "scripts/ai-run.mjs",
+    "ciGate": "scripts/ci-gate.mjs",
+    "projectUpgrade": "scripts/project-upgrade.mjs",
+    "projectStateLibrary": "scripts/project-state-lib.mjs",
+    "projectStateSchema": "docs/project-state.schema.json",
+    "packageUpgradeContractSelfCheck": "scripts/package-upgrade-contract-check.mjs"
   },
   "installation": {
     "guide": "INSTALL.md",

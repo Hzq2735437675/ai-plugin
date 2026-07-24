@@ -1,7 +1,7 @@
 purpose: 为 AI 和开发者提供可执行工程化工作流；`baseline-rules.yml` 定义规则，本文件定义不同任务如何按规则落地。
 
 path_mode:
-  baseline_root: ai-baseline-kit 目录；本文件、baseline-rules.yml、skills、scripts 和 project-scheme.yml 均位于此目录内。
+  baseline_root: ai-baseline-kit 目录；规则、skills、scripts 和包参考地图位于此目录内。
   project_root: ai-baseline-kit 的父目录；业务代码、依赖、路由、模块和资源均按此目录扫描或修改。
   embedded_usage: 整包植入项目时，不把 docs/skills/scripts 抽到业务项目根目录；AI 应先读取 ai-baseline-kit/AGENTS.md。
 
@@ -17,7 +17,7 @@ required_entrypoints:
     - ai-baseline-kit/AGENTS.md 或项目根 AGENTS.md 薄入口
     - ai-baseline-kit/docs/baseline-rules.yml
     - ai-baseline-kit/docs/engineering-workflow.yml
-    - ai-baseline-kit/docs/project-scheme.yml (if present)
+    - .ai-frontend-assembler/project-scheme.yml (target project map, if present)
     - ai-baseline-kit/skills/project-scheme-bootstrap/SKILL.md (if project-scheme.yml missing)
     - ai-baseline-kit/skills/baseline-structure-skill/SKILL.md
   after_work:
@@ -29,11 +29,11 @@ workflows:
     steps:
       - 读取 AGENTS.md、baseline-rules.yml 和 engineering-workflow.yml。
       - 使用 project-scheme-bootstrap 扫描 package manifest、框架配置、构建配置、路由、状态、i18n、API client、目录结构、已有模块和验证脚本。
-      - 生成 baseline_root/docs/project-scheme.yml，能确定的字段写入 detected 值，不能确定的字段写 unknown 并列入 required_questions。
+      - 生成 project_root/.ai-frontend-assembler/project-scheme.yml，能确定的字段写入 detected 值，不能确定的字段写 unknown 并列入 required_questions。
       - 不移动旧代码，不做结构重构，只建立项目地图和接入边界。
       - 使用 baseline-conformance-skill 对 scheme 自身做轻量回归。
     output:
-      - docs/project-scheme.yml
+      - .ai-frontend-assembler/project-scheme.yml
       - detected stack/layers/entrypoints/modules
       - unknown 字段和最少确认问题
       - 后续改造建议
@@ -46,11 +46,11 @@ workflows:
       - 如果用户明确选择 Vue 3 + Vite，使用默认集成 Element Plus 的内置 `vue3-vite-ts` 模板；如果用户明确选择其他技术栈或其他 Vue UI 框架，按用户选择创建，不套用该默认组合。
       - 如果用户没有说明技术栈且仓库为空，使用内置 `react18-antd-tailwind-ts` 作为默认新前端模板。
       - 如果项目已有依赖或配置，优先从文件推断，并按旧项目模式保留真实技术栈。
-      - 使用 project-scheme-bootstrap 生成 baseline_root/docs/project-scheme.yml 初版。
+      - 使用 project-scheme-bootstrap 生成 project_root/.ai-frontend-assembler/project-scheme.yml 初版。
       - 在 scheme 中记录 shell/shared/modules、基础组件层、API client、路由、状态、i18n、样式方案和验证命令。
       - 后续新增页面或模块必须先经过 baseline-structure-skill。
     output:
-      - docs/project-scheme.yml
+      - .ai-frontend-assembler/project-scheme.yml
       - 新项目基线落点
       - 缺失决策的最少问题
 
@@ -58,7 +58,7 @@ workflows:
     goal: 在新项目或已基线化项目中新增功能。
     steps:
       - 读取 baseline-rules.yml 和本 workflow。
-      - 如果 docs/project-scheme.yml 不存在，先运行 bootstrap_existing_project 或 bootstrap_new_project。
+      - 如果 .ai-frontend-assembler/project-scheme.yml 不存在，先运行 bootstrap_existing_project 或 bootstrap_new_project。
       - 使用 baseline-structure-skill 输出目标层级、模块、页面、路由、组件、API、状态、文案、样式、资源、manifest、依赖和验证计划。
       - 只在目标模块或目标共享层内新增文件。
       - 为模块补齐 manifest、routes、menus、access、locales、stores、assets 和 dependencies。
@@ -72,7 +72,7 @@ workflows:
   refactor_existing_page:
     goal: 在不改变业务行为的前提下，把已有页面整理到基线结构。
     steps:
-      - 如果 docs/project-scheme.yml 不存在，先运行 bootstrap_existing_project。
+      - 如果 .ai-frontend-assembler/project-scheme.yml 不存在，先运行 bootstrap_existing_project。
       - 明确只改一个页面或一个小模块。
       - 盘点页面依赖的组件、API、状态、文案、样式、资源和路由。
       - 区分页面私有内容、模块内容、shared 内容和基础组件内容。
@@ -88,7 +88,7 @@ workflows:
   modularize_legacy_page:
     goal: 将旧项目中的单个页面整理成可移植模块资产。
     steps:
-      - 如果 docs/project-scheme.yml 不存在，先运行 bootstrap_existing_project。
+      - 如果 .ai-frontend-assembler/project-scheme.yml 不存在，先运行 bootstrap_existing_project。
       - 锁定页面入口、路由、菜单和业务边界。
       - 追踪页面直接依赖和必要间接依赖。
       - 将页面、子组件、API、types、stores、locales、styles、assets 归入模块目录。
@@ -130,7 +130,7 @@ workflows:
       - 将完整 ai-baseline-kit/ 放入项目根目录；不要把 docs、skills、scripts 抽散到业务项目根目录。
       - 如需自动发现规范包，可在项目根目录放置分发目录同级的 AGENTS.md 和 CLAUDE.md 薄入口。
       - 不自动修改项目根 .gitignore；保留 ai-baseline-kit/ 的 Git 可见性，便于审计和同步规范包变化。
-      - 使用 project-scheme-bootstrap 生成 baseline_root/docs/project-scheme.yml 初版；可由 AI 辅助维护，待基线稳定后再接入自动生成脚本。
+      - 使用 project-scheme-bootstrap 生成 project_root/.ai-frontend-assembler/project-scheme.yml 初版。
       - 建立统一 API client、权限上下文、模块装配器、文案装配器、状态装配器。
       - 生成示例模块，验证 manifest 和装配链路。
       - 跑 baseline-conformance-skill 和项目基础构建。
@@ -142,7 +142,7 @@ workflows:
   regression:
     goal: 对任意实现或迁移结果做基线回归。
     steps:
-      - 如果 baseline_root/docs/project-scheme.yml 不存在，先运行 project-scheme-bootstrap 并生成项目地图。
+      - 如果 project_root/.ai-frontend-assembler/project-scheme.yml 不存在，先运行 project-scheme-bootstrap 并生成项目地图。
       - 使用 baseline-conformance-skill 检查层级、边界、manifest、API、状态、资源、文案、样式、命名和依赖。
       - 运行项目要求的构建、类型检查、单测或等价验证。
       - 输出 pass/fail、violations、required_fixes、rerun、verify。
@@ -196,7 +196,7 @@ workflows:
     goal: 旧项目接入基线后只阻断新增违规。
     steps:
       - 运行 project-bootstrap 识别真实技术栈和边界。
-      - 首次接入创建 docs/legacy-baseline.json；之后默认保留快照。
+      - 首次接入创建 .ai-frontend-assembler/legacy-baseline.json；之后默认保留快照。
       - 日常验证使用 baseline-check --mode changed。
       - 新增或修改模块仍必须满足完整模块契约。
       - 历史治理按模块逐步清理，清理后人工刷新快照。
@@ -205,11 +205,22 @@ workflows:
       - 历史违规快照
       - 新增违规阻断结果
 
+  replace_package_upgrade:
+    goal: 在不丢失目标项目状态的前提下直接替换 ai-baseline-kit/。
+    steps:
+      - 保留 project_root/.ai-frontend-assembler/、AGENTS.md、CLAUDE.md 和业务代码。
+      - 用最新 ai-baseline-kit/ 整目录替换旧目录。
+      - 运行 node ai-baseline-kit/scripts/ai-run.mjs upgrade，只迁移/校验状态和入口，不重建项目地图、不刷新旧项目快照。
+      - 运行 ai-run gate 或 project-validate 完成升级回归。
+    compatibility:
+      - 0.10.0+ 已接入项目可直接替换。
+      - 0.9.x 及更早项目必须在删除旧包内项目专属文件前完成一次迁移。
+
 ai_readability:
   required_artifacts:
     - baseline-rules.yml 用于机器读取规则。
     - engineering-workflow.yml 用于机器选择任务流程。
-    - project-scheme.yml 用于机器读取当前项目地图。
+    - .ai-frontend-assembler/project-scheme.yml 用于机器读取当前项目地图。
     - module manifest 用于机器识别模块能力和依赖。
     - conformance report 用于机器进入修复到验证闭环。
   design_intent:

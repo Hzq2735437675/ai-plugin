@@ -11,7 +11,7 @@ description: 开发后检查任意项目的新增或修改内容是否符合当�
 标准可移植入口为 `skills/baseline-conformance-skill/SKILL.md`。
 
 整包植入模式下：
-- `baseline_root`: `ai-baseline-kit/`，本 skill、规则、工作流、脚本和 `docs/project-scheme.yml` 均在此目录内。
+- `baseline_root`: `ai-baseline-kit/`，本 skill、规则、工作流和脚本位于此目录；包内 `docs/project-scheme.yml` 仅是仓库参考地图。
 - `project_root`: `ai-baseline-kit/` 的父目录，业务代码、依赖、路由、模块和资源均按此目录检查。
 - 回归时优先读取 `baseline_root` 中的规则；违规修复只修改 `project_root` 的目标业务范围，除非用户明确要求维护规范包。
 
@@ -20,7 +20,7 @@ description: 开发后检查任意项目的新增或修改内容是否符合当�
 - `ai-baseline-kit/AGENTS.md` 或当前仓库的 `AGENTS.md`
 - `ai-baseline-kit/docs/baseline-rules.yml` 或当前仓库的 `docs/baseline-rules.yml`
 - `ai-baseline-kit/docs/engineering-workflow.yml` 或当前仓库的 `docs/engineering-workflow.yml`（若存在）
-- `ai-baseline-kit/docs/project-scheme.yml` 或当前仓库的 `docs/project-scheme.yml`（若存在）
+- `project_root/.ai-frontend-assembler/project-scheme.yml`（目标项目地图）
 - 当前仓库已有的同等基线、架构、目录或开发规范文件
 - 本轮变更文件
 - 开发前结构化方案
@@ -54,7 +54,7 @@ description: 开发后检查任意项目的新增或修改内容是否符合当�
 ## 新项目与旧项目验证模式
 
 - 标准新项目：`baseline-check --mode full --fail-on-warn`。
-- 已建立 `docs/legacy-baseline.json` 的旧项目：`baseline-check --mode changed --fail-on-warn`，历史违规不阻断，但任何新增违规都必须修复。
+- 已建立 `.ai-frontend-assembler/legacy-baseline.json` 的旧项目：`baseline-check --mode changed --fail-on-warn`，历史违规不阻断，但任何新增违规都必须修复。
 - 新增模块即使位于旧项目，也必须完整拥有 `module.meta.json`、manifest、acceptance、契约目录和公开入口。
 - 不得通过刷新 legacy snapshot 绕过本轮新增违规。
 

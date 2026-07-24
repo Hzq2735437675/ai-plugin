@@ -2,6 +2,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { analyzeProject, parseArgs, resolveRoots } from './project-tools-lib.mjs';
+import { resolveProjectSchemeFile } from './project-state-lib.mjs';
 import {
   blockingQuestions,
   normalizePath,
@@ -19,7 +20,7 @@ const projectRoot = path.resolve(args['project-root'] || defaultProjectRoot);
 const specFile = path.resolve(args.spec || args._[0] || '');
 
 function preservedProfile() {
-  const schemeFile = path.join(baselineRoot, 'docs', 'project-scheme.yml');
+  const schemeFile = resolveProjectSchemeFile(projectRoot, baselineRoot);
   if (!fs.existsSync(schemeFile)) return undefined;
   const match = fs.readFileSync(schemeFile, 'utf8').match(/^\s*selected_profile:\s*['"]?([^'"\r\n]+)['"]?\s*$/m);
   const profile = match?.[1]?.trim();

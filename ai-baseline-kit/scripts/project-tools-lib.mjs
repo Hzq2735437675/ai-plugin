@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { PROJECT_STATE_DIRECTORY, getProjectStatePaths } from './project-state-lib.mjs';
 
 export const STANDARD_PROFILES = Object.freeze({
   'react18-antd-tailwind-ts': {
@@ -541,7 +542,8 @@ export function buildProjectScheme(report, options = {}) {
 }
 
 export function writeProjectScheme(report, baselineRoot, options = {}) {
-  const file = path.join(baselineRoot, 'docs', 'project-scheme.yml');
+  const file = options.file
+    || (options.projectRoot ? getProjectStatePaths(options.projectRoot, baselineRoot).schemeFile : path.join(baselineRoot, 'docs', 'project-scheme.yml'));
   fs.mkdirSync(path.dirname(file), { recursive: true });
   fs.writeFileSync(file, buildProjectScheme(report, options), 'utf8');
   return file;
@@ -571,7 +573,7 @@ export function copyDirectory(source, destination, options = {}) {
 
 export function projectHasBusinessFiles(projectRoot) {
   if (!fs.existsSync(projectRoot)) return false;
-  const ignored = new Set(['ai-baseline-kit', '.git', '.github', '.vscode']);
+  const ignored = new Set(['ai-baseline-kit', PROJECT_STATE_DIRECTORY, '.git', '.github', '.vscode']);
   return fs.readdirSync(projectRoot, { withFileTypes: true })
     .some((entry) => !ignored.has(entry.name));
 }

@@ -4,6 +4,7 @@ import path from 'node:path';
 import { builtinModules } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { analyzeAstBoundaries } from './ast-boundary-lib.mjs';
+import { PROJECT_STATE_DIRECTORY, migrateLegacyProjectState, resolveLegacyBaselineFile, resolveProjectSchemeFile } from './project-state-lib.mjs';
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const baselineRoot = path.resolve(scriptDir, '..');
@@ -23,10 +24,13 @@ const fixEntrypoints = process.argv.includes('--fix-entrypoints') || process.arg
 const modeIndex = process.argv.indexOf('--mode');
 const checkMode = modeIndex >= 0 ? process.argv[modeIndex + 1] : 'full';
 const writeLegacyBaseline = process.argv.includes('--write-baseline') || process.argv.includes('--write-legacy-baseline');
+const stateMigration = migrateLegacyProjectState({ projectRoot: root, baselineRoot });
+const projectSchemeFile = resolveProjectSchemeFile(root, baselineRoot);
+const projectSchemeDisplay = normalize(path.relative(root, projectSchemeFile));
 const baselineFileIndex = process.argv.indexOf('--baseline-file');
 const legacyBaselineFile = path.resolve(baselineFileIndex >= 0
-  ? process.argv[baselineFileIndex + 1] || path.join(baselineRoot, 'docs', 'legacy-baseline.json')
-  : path.join(baselineRoot, 'docs', 'legacy-baseline.json'));
+  ? process.argv[baselineFileIndex + 1] || resolveLegacyBaselineFile(root, baselineRoot)
+  : resolveLegacyBaselineFile(root, baselineRoot));
 
 if (!['full', 'changed'].includes(checkMode)) {
   console.error(`baseline-check: 不支持 --mode ${checkMode}；可选值为 full 或 changed。`);
@@ -62,7 +66,7 @@ function walk(dir, acc = []) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
     const full = path.join(dir, entry.name);
     if (entry.isDirectory()) {
-      if (['node_modules', '.git', 'dist', 'build', '.next', '.nuxt', 'coverage', baselineDirName].includes(entry.name)) continue;
+      if (['node_modules', '.git', 'dist', 'build', '.next', '.nuxt', 'coverage', baselineDirName, PROJECT_STATE_DIRECTORY].includes(entry.name)) continue;
       walk(full, acc);
     } else {
       acc.push(full);
@@ -200,6 +204,7 @@ function checkGitignoreAllowsBaselineKitChanges() {
   const text = fs.existsSync(gitignorePath) ? fs.readFileSync(gitignorePath, 'utf8') : '';
   if (fixGitignore) record('info', 'fix_gitignore_deprecated', '--fix-gitignore 已废弃；脚本不会自动修改 .gitignore。', '.gitignore');
   if (gitignoreHidesBaselineKit(text)) record('warn', 'baseline_kit_gitignored', `目标项目 .gitignore 隐藏 ${baselineDirName}/；请显式移除该规则。`, '.gitignore');
+  if (text.split(/\r?\n/).some((line) => ['.ai-frontend-assembler', '.ai-frontend-assembler/'].includes(line.trim()))) record('warn', 'project_state_gitignored', `目标项目 .gitignore 隐藏 ${PROJECT_STATE_DIRECTORY}/；项目地图和旧项目基线必须保持可追踪。`, '.gitignore');
 }
 
 function checkRequiredFiles() {
@@ -219,6 +224,7 @@ function checkRequiredFiles() {
     'docs/change-plan.template.json',
     'docs/module-meta.schema.json',
     'docs/legacy-baseline.schema.json',
+    'docs/project-state.schema.json',
     'docs/design-system.yml',
     'skills/project-scheme-bootstrap/SKILL.md',
     'skills/baseline-structure-skill/SKILL.md',
@@ -226,6 +232,11 @@ function checkRequiredFiles() {
     'skills/requirement-to-feature-spec/SKILL.md',
     'skills/feature-architecture-planner/SKILL.md',
     'scripts/baseline-check.mjs',
+    'scripts/project-state-lib.mjs',
+    'scripts/ai-run.mjs',
+    'scripts/ci-gate.mjs',
+    'scripts/project-upgrade.mjs',
+    'scripts/package-upgrade-contract-check.mjs',
     'scripts/project-doctor.mjs',
     'scripts/project-bootstrap.mjs',
     'scripts/project-validate.mjs',
@@ -242,11 +253,16 @@ function checkRequiredFiles() {
   for (const rel of required) {
     if (!baselineExists(rel)) record('error', 'missing_required_file', `缺少基线包文件: ${baselineDirName}/${rel}`, rel);
   }
-  if (!baselineExists('docs/project-scheme.yml')) record('error', 'missing_project_scheme', `缺少 ${baselineDirName}/docs/project-scheme.yml；首次接入时必须先运行 project-bootstrap。`, `${baselineDirName}/docs/project-scheme.yml`);
+  if (!baselineExists('docs/project-scheme.yml')) record('error', 'missing_package_reference_scheme', `缺少 ${baselineDirName}/docs/project-scheme.yml 包参考地图。`, projectSchemeDisplay);
 }
 
 function projectSchemeText() {
-  return baselineExists('docs/project-scheme.yml') ? readBaseline('docs/project-scheme.yml') : '';
+  return fs.existsSync(projectSchemeFile) ? fs.readFileSync(projectSchemeFile, 'utf8') : '';
+}
+
+function isPackageRepositoryRoot() {
+  const registry = path.join(root, 'package-registry.json');
+  return fs.existsSync(registry) && fs.readFileSync(registry, 'utf8').includes('ai-baseline-kit');
 }
 
 function isPackageRepositoryReference() {
@@ -257,20 +273,24 @@ function isPackageRepositoryReference() {
 function checkProjectScheme() {
   const text = projectSchemeText();
   if (!text) return;
+  if (isPackageRepositoryReference() && !isPackageRepositoryRoot()) {
+    record('error', 'project_state_not_initialized', `目标项目尚未初始化专属状态；请先运行 project-bootstrap，状态将写入 ${PROJECT_STATE_DIRECTORY}/。`, `${PROJECT_STATE_DIRECTORY}/project-scheme.yml`);
+    return;
+  }
   const top = ['project', 'stack', 'layers', 'entrypoints', 'modules', 'validation', 'required_questions', 'confidence', 'evidence'];
   for (const key of top) {
-    if (!hasYamlKey(text, key)) record('error', 'project_scheme_missing_key', `project-scheme 缺少字段: ${key}`, `${baselineDirName}/docs/project-scheme.yml`);
+    if (!hasYamlKey(text, key)) record('error', 'project_scheme_missing_key', `project-scheme 缺少字段: ${key}`, projectSchemeDisplay);
   }
   const requiredScalars = ['stack.framework', 'stack.build_tool', 'stack.router', 'stack.package_manager', 'layers.modules_root', 'entrypoints.app', 'entrypoints.api_client', 'entrypoints.theme', 'modules.root', 'validation.build'];
   const unknownKeys = [];
   for (const key of requiredScalars) {
     const value = getYamlScalar(text, key);
-    if (!value) record('error', 'project_scheme_empty_value', `project-scheme 字段为空或无法识别: ${key}`, `${baselineDirName}/docs/project-scheme.yml`);
+    if (!value) record('error', 'project_scheme_empty_value', `project-scheme 字段为空或无法识别: ${key}`, projectSchemeDisplay);
     if (value === 'unknown') unknownKeys.push(key);
   }
   if (!isPackageRepositoryReference() && unknownKeys.length) {
     const questionsEmpty = /required_questions:\s*\[\s*\]/.test(text);
-    record(questionsEmpty ? 'error' : 'warn', 'project_scheme_unresolved_boundaries', `project-scheme 仍有未解析关键字段: ${unknownKeys.join(', ')}`, `${baselineDirName}/docs/project-scheme.yml`);
+    record(questionsEmpty ? 'error' : 'warn', 'project_scheme_unresolved_boundaries', `project-scheme 仍有未解析关键字段: ${unknownKeys.join(', ')}`, projectSchemeDisplay);
   }
 }
 
@@ -506,6 +526,7 @@ function checkI18nHints() {
   }
 }
 
+if (stateMigration.migrations.length) record('info', 'project_state_migrated', `已将 ${stateMigration.migrations.length} 个旧版项目状态文件迁移到 ${PROJECT_STATE_DIRECTORY}/。`, PROJECT_STATE_DIRECTORY);
 checkRequiredFiles();
 checkGitignoreAllowsBaselineKitChanges();
 ensureAiEntrypoints();

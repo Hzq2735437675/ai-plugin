@@ -11,7 +11,7 @@ description: 将任意人员的自然语言需求、详细大白话、产品文�
 ## 必读
 1. `ai-baseline-kit/AGENTS.md`
 2. `docs/baseline-rules.yml`
-3. `docs/project-scheme.yml`；缺失或为参考地图时先运行 project bootstrap
+3. `project_root/.ai-frontend-assembler/project-scheme.yml`；缺失时先运行 project bootstrap
 4. `docs/feature-spec.schema.json` 与 `docs/feature-spec.template.json`
 5. 用户消息、上传文档、API 文档、原型说明和已有项目代码
 

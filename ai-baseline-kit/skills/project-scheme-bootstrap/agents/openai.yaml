@@ -1,4 +1,4 @@
 interface:
   display_name: "项目地图初始化"
   short_description: "自动引导新旧项目生成 project-scheme.yml。"
-  default_prompt: "使用 $project-scheme-bootstrap 根据用户需求和当前仓库状态生成 ai-baseline-kit/docs/project-scheme.yml：旧项目扫描依赖、配置、目录、入口、模块和验证命令；新项目从用户需求提取技术栈，提取不到时只问最少关键问题。"
+  default_prompt: "使用 $project-scheme-bootstrap 根据用户需求和当前仓库状态生成 .ai-frontend-assembler/project-scheme.yml：旧项目扫描依赖、配置、目录、入口、模块和验证命令；新项目从用户需求提取技术栈，提取不到时只问最少关键问题。"

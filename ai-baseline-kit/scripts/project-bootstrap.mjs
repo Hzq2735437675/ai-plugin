@@ -14,6 +14,7 @@ import {
   DEFAULT_PROFILE_ID,
   resolveRoots,
 } from './project-tools-lib.mjs';
+import { isPackageRepositoryReferenceFile, migrateLegacyProjectState, projectStateRelative, resolveProjectSchemeFile, resolveLegacyBaselineFile, writeProjectStateManifest } from './project-state-lib.mjs';
 
 const args = parseArgs(process.argv.slice(2));
 const { baselineRoot, projectRoot: defaultProjectRoot } = resolveRoots(import.meta.url);
@@ -25,7 +26,7 @@ const shouldInitTemplate = Boolean(args['init-template']);
 const profileId = requestedProfile || DEFAULT_PROFILE_ID;
 
 function readPreservedProfile() {
-  const schemeFile = path.join(baselineRoot, 'docs', 'project-scheme.yml');
+  const schemeFile = resolveProjectSchemeFile(projectRoot, baselineRoot);
   if (!fs.existsSync(schemeFile)) return undefined;
   const match = fs.readFileSync(schemeFile, 'utf8')
     .match(/^\s*selected_profile:\s*['"]?([^'"\r\n]+)['"]?\s*$/m);
@@ -38,6 +39,7 @@ try {
     throw new Error(`不支持的标准模板: ${requestedProfile}。可选值: ${Object.keys(STANDARD_PROFILES).join(', ')}`);
   }
 
+  const stateMigration = migrateLegacyProjectState({ projectRoot, baselineRoot, create: true });
   const preservedProfile = readPreservedProfile();
   const before = analyzeProject(projectRoot, { requestedProfile, preservedProfile });
   if (shouldInitTemplate) {
@@ -56,8 +58,9 @@ try {
     preservedProfile: shouldInitTemplate ? undefined : preservedProfile,
   });
   const entrypointChanges = ensureRootEntrypoints(projectRoot, path.basename(baselineRoot));
-  const schemeFile = writeProjectScheme(report, baselineRoot);
-  const legacyBaselineFile = path.join(baselineRoot, 'docs', 'legacy-baseline.json');
+  const schemeFile = writeProjectScheme(report, baselineRoot, { projectRoot });
+  writeProjectStateManifest({ projectRoot, baselineRoot, mode: isPackageRepositoryReferenceFile(schemeFile) ? 'package-repository-reference' : 'target-project' });
+  const legacyBaselineFile = resolveLegacyBaselineFile(projectRoot, baselineRoot);
   let legacyBaseline = 'not-applicable';
   const shouldWriteLegacyBaseline = report.mode === 'existing-project'
     && !args['no-legacy-baseline']
@@ -76,7 +79,8 @@ try {
   console.log(`project-bootstrap: pass`);
   console.log(`mode: ${report.mode}`);
   console.log(`profile: ${report.profile}`);
-  console.log(`scheme: ${path.relative(projectRoot, schemeFile).replaceAll('\\', '/')}`);
+  console.log(`scheme: ${projectStateRelative(projectRoot, schemeFile)}`);
+  if (stateMigration.migrations.length) console.log(`project-state-migration: ${stateMigration.migrations.length}`);
   if (shouldInitTemplate) console.log(`template: ${profileId}`);
   console.log(`ai-entrypoints: ${entrypointChanges.length ? entrypointChanges.join(', ') : 'unchanged'}`);
   console.log(`legacy-baseline: ${legacyBaseline}`);

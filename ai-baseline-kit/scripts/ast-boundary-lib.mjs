@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { builtinModules, createRequire } from 'node:module';
+import { resolveProjectSchemeFile } from './project-state-lib.mjs';
 
 const SOURCE_EXTENSIONS = new Set(['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs', '.vue']);
 const RESOLVE_EXTENSIONS = ['', '.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs', '.vue', '.json'];
@@ -195,7 +196,7 @@ function makeViolation(id, message, edge) {
 export function analyzeAstBoundaries({ projectRoot, baselineRoot } = {}) {
   const resolvedProjectRoot = path.resolve(projectRoot || process.cwd());
   const resolvedBaselineRoot = findBaselineRoot(resolvedProjectRoot, baselineRoot);
-  const schemeFile = path.join(resolvedBaselineRoot, 'docs', 'project-scheme.yml');
+  const schemeFile = resolveProjectSchemeFile(resolvedProjectRoot, resolvedBaselineRoot);
   const scheme = fs.existsSync(schemeFile) ? fs.readFileSync(schemeFile, 'utf8') : '';
   const modulesRootRel = readYamlScalar(scheme, 'modules.root') || readYamlScalar(scheme, 'layers.modules_root') || 'src/modules';
   const sharedRootRel = readYamlScalar(scheme, 'layers.shared_root') || 'src/shared';

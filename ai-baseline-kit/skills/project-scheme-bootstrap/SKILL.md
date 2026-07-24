@@ -1,16 +1,16 @@
 ---
 name: project-scheme-bootstrap
-description: 自动引导新项目或旧项目生成 docs/project-scheme.yml 的 bootstrap skill。适用于项目首次接入基线规则、缺少 project-scheme.yml、空目录从零建项目、用户已指定技术栈的新项目、用户只给业务需求但未指定技术栈的新项目、旧项目中途纳入基线，或需要自动识别技术栈、目录分层、路由、状态、i18n、API client、模块和验证命令时；优先从用户需求和仓库文件推断，无法可靠判断时只提出最少确认问题。
+description: 自动引导新项目或旧项目生成 .ai-frontend-assembler/project-scheme.yml 的 bootstrap skill。适用于项目首次接入基线规则、缺少 project-scheme.yml、空目录从零建项目、用户已指定技术栈的新项目、用户只给业务需求但未指定技术栈的新项目、旧项目中途纳入基线，或需要自动识别技术栈、目录分层、路由、状态、i18n、API client、模块和验证命令时；优先从用户需求和仓库文件推断，无法可靠判断时只提出最少确认问题。
 ---
 
 # Project Scheme Bootstrap
 
 ## 目标
-在不要求用户手写 `project-defined` 的前提下，为新项目或旧项目生成 `docs/project-scheme.yml`。在整包植入模式下，该文件位于 `ai-baseline-kit/docs/project-scheme.yml`，扫描对象是 `ai-baseline-kit` 的父目录。该 skill 负责先把项目地图和边界立起来，让后续开发可以按基线从容推进。
+在不要求用户手写 `project-defined` 的前提下，为新项目或旧项目生成 `.ai-frontend-assembler/project-scheme.yml`。该目录位于目标项目根目录、独立于 `ai-baseline-kit/`，因此未来可以整目录替换能力包而不丢失项目地图。扫描对象是 `ai-baseline-kit` 的父目录。
 
 ## 触发场景
-- `docs/project-scheme.yml` 不存在。
-- `docs/project-scheme.yml` 存在但 `project.map_status` 为 `package-repository-reference`，表示它是随包复制的仓库参考地图，必须覆盖为目标项目地图。
+- `project_root/.ai-frontend-assembler/project-scheme.yml` 不存在。
+- 目标项目只有 `baseline_root/docs/project-scheme.yml` 的 `package-repository-reference` 参考地图，尚未建立外置项目状态。
 - 新项目刚复制基线包，还没有项目地图。
 - 空目录或近似空目录中，用户已经说明要使用的技术栈。
 - 空目录或近似空目录中，用户只说明业务需求，没有说明技术栈。
@@ -31,7 +31,7 @@ description: 自动引导新项目或旧项目生成 docs/project-scheme.yml 的
 路径约定：
 - `baseline_root`: `ai-baseline-kit/`。
 - `project_root`: `ai-baseline-kit/` 的父目录。
-- 生成文件写入 `baseline_root/docs/project-scheme.yml`。
+- 生成文件写入 `project_root/.ai-frontend-assembler/project-scheme.yml`，并维护同目录 `state.json`。
 - 扫描依赖、源码、路由、模块和资源时使用 `project_root`。
 
 ## 场景判断
@@ -59,7 +59,7 @@ description: 自动引导新项目或旧项目生成 docs/project-scheme.yml 的
    - package_manager
    - app_type 或 target
 2. 如果某些字段未明说，但能由技术栈常识稳定推断，可以写入推断值，并在 `evidence` 中标记来自用户需求或常见搭配。
-3. 生成 `baseline_root/docs/project-scheme.yml` 初版。
+3. 生成 `project_root/.ai-frontend-assembler/project-scheme.yml` 初版。
 4. 允许后续初始化项目骨架，但骨架创建必须由 `baseline-structure-skill` 先规划范围。
 
 ### 新项目未指定技术栈
@@ -90,7 +90,7 @@ description: 自动引导新项目或旧项目生成 docs/project-scheme.yml 的
 旧项目中途接入时：
 
 1. 优先从仓库文件推断真实技术栈和目录结构。
-2. 只生成或更新 `docs/project-scheme.yml`。
+2. 只生成或更新 `.ai-frontend-assembler/project-scheme.yml` 和状态清单，不覆盖包内参考地图。
 3. 不移动旧代码，不做结构重构，不创建新模块。
 4. 对不符合基线的旧结构，只记录现状和风险，后续改造必须另走结构化规划。
 
@@ -132,7 +132,7 @@ description: 自动引导新项目或旧项目生成 docs/project-scheme.yml 的
    - build
 
 ## 写入规则
-生成或更新 `baseline_root/docs/project-scheme.yml`：
+生成或更新 `project_root/.ai-frontend-assembler/project-scheme.yml`：
 
 - 能可靠推断的字段写入具体值。
 - 不能可靠推断的字段写 `unknown`。
@@ -144,7 +144,7 @@ description: 自动引导新项目或旧项目生成 docs/project-scheme.yml 的
 - 旧项目接入时，不移动旧文件，不创建模块结构，不改变路由或构建配置。
 
 ## 输出结构
-`baseline_root/docs/project-scheme.yml` 至少包含：
+`project_root/.ai-frontend-assembler/project-scheme.yml` 至少包含：
 
 ```yaml
 project:
