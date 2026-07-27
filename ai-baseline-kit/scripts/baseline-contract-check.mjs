@@ -43,6 +43,10 @@ function bootstrap(profile, name) {
   assertPass(result, `${name} bootstrap`);
   assert.ok(fs.existsSync(path.join(projectRoot, 'AGENTS.md')));
   assert.ok(fs.existsSync(path.join(projectRoot, 'CLAUDE.md')));
+  assert.match(fs.readFileSync(path.join(projectRoot, 'AGENTS.md'), 'utf8'), /AI 前端模块装配系统/);
+  assert.match(fs.readFileSync(path.join(projectRoot, 'AGENTS.md'), 'utf8'), /有效交付回执/);
+  assert.match(fs.readFileSync(path.join(projectRoot, 'CLAUDE.md'), 'utf8'), /AI 前端模块装配系统/);
+  assert.match(fs.readFileSync(path.join(projectRoot, 'CLAUDE.md'), 'utf8'), /有效交付回执/);
   assert.ok(fs.existsSync(path.join(projectRoot, 'src', 'theme', 'theme.css')));
   const mainFile = path.join(projectRoot, profile === 'vue3-vite-ts' ? 'src/main.ts' : 'src/main.tsx');
   assert.match(fs.readFileSync(mainFile, 'utf8'), /theme\/theme\.css/);
@@ -356,6 +360,10 @@ try {
   assertPass(compositionContracts, 'composition contract check');
   console.log(compositionContracts.stdout.trim());
 
+  const deliveryClosureContracts = spawnSync(process.execPath, [path.join(baselineRoot, 'scripts', 'delivery-closure-contract-check.mjs')], { cwd: baselineRoot, encoding: 'utf8' });
+  assertPass(deliveryClosureContracts, 'delivery closure contract check');
+  console.log(deliveryClosureContracts.stdout.trim());
+
   const packageUpgradeContracts = spawnSync(process.execPath, [path.join(baselineRoot, 'scripts', 'package-upgrade-contract-check.mjs')], { cwd: baselineRoot, encoding: 'utf8' });
   assertPass(packageUpgradeContracts, 'package upgrade contract check');
   console.log(packageUpgradeContracts.stdout.trim());
@@ -368,6 +376,7 @@ try {
   console.log('acceptance-test-generation: pass');
   console.log('module-portability-and-compose: pass');
   console.log('controlled-execution-hard-gates: pass');
+  console.log('delivery-closure-hard-gate: pass');
   console.log('smart-compose-zero-config: pass');
   console.log('smart-develop-unified-entry: pass');
   console.log('document-normalization-multiformat: pass');

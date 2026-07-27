@@ -2,7 +2,7 @@
 
 > 机器包名：`ai-baseline-kit`
 
-> 当前版本：`0.10.0`
+> 当前版本：`0.11.0`
 
 AI 前端模块装配系统是一套**由 AI 编排、以工程契约约束、在构建期组合模块**的前端工程能力包。它面向自然语言或产品文档驱动的开发场景，让 AI 不只是生成页面代码，还必须完成需求确认、模块拆解、文件边界控制、自动测试、跨项目模块迁移、项目组合和最终验收。
 
@@ -27,6 +27,33 @@ AI 前端模块装配系统是一套**由 AI 编排、以工程契约约束、�
   -> typecheck / test / build / baseline 验收
 ```
 
+## 极简使用
+
+复制后，如果项目根入口尚未接入，首次只需说：
+
+```text
+请接入并使用项目根目录 ai-baseline-kit 的 AI 前端模块装配系统处理本次需求：<需求或产品文档路径>
+```
+
+系统会创建或安全追加根 `AGENTS.md` / `CLAUDE.md`。完成首次接入后，使用者不需要背 Prompt、Skill 或脚本，直接说目标即可：
+
+```text
+帮我实现：新增客户列表页，支持名称和状态筛选。
+按这个产品文档开发：docs/product/customer.md
+把项目 A 的客户模块和项目 B 的授权模块组合成项目 C。
+检查并修复当前项目。
+```
+
+AI 从项目根目录 `AGENTS.md` 或 `CLAUDE.md` 自动进入装配闭环。只有真正阻塞实施的问题才会一次性向用户确认；Feature Spec、Change Plan、文件白名单、测试、AST、validate、gate 和失败修复均由系统内部完成。只有最终 Gate 通过并生成可复核的 delivery receipt，系统才允许声明完成。
+
+## 公司推广与资产资料
+
+- [使用指南](ai-baseline-kit/docs/使用指南.md)
+- [系统说明书与资产验收建议](ai-baseline-kit/docs/system-specification.md)
+- [Skill 独立抽离与使用指南](ai-baseline-kit/docs/skill-standalone-guide.md)
+- [系统说明图（PNG）](ai-baseline-kit/docs/assets/ai-frontend-module-assembler-overview.png)
+- [系统说明图（可编辑 SVG）](ai-baseline-kit/docs/assets/ai-frontend-module-assembler-overview.svg)
+
 ## 核心能力
 
 | 能力 | 当前实现 |
@@ -47,7 +74,7 @@ AI 前端模块装配系统是一套**由 AI 编排、以工程契约约束、�
 
 当项目 A、B 使用同一技术栈且已经按照模块边界开发时，可以直接向 AI 描述：
 
-> 从项目 A 抽离客户管理和订单管理，从项目 B 抽离财务结算和消息通知，组成项目 C。保留路由、权限、接口、状态和国际化；有冲突或不确定项先询问，完成后运行测试、类型检查、构建和基线检查。
+> 把项目 A 的客户管理和订单管理模块，与项目 B 的财务结算和消息通知模块，组合成项目 C。
 
 AI 编码代理读取本包规则后，应按以下流程执行：
 
@@ -118,7 +145,7 @@ node ai-baseline-kit/scripts/baseline-check.mjs --project-root <project-c> --fai
 
 | 产品展示名称 | 机器包名 | 版本 | 类型 | AI 主入口 | 安装说明 |
 | --- | --- | --- | --- | --- | --- |
-| AI 前端模块装配系统 | `ai-baseline-kit` | `0.10.0` | 可嵌入 AI 工程能力包 | [`ai-baseline-kit/AGENTS.md`](ai-baseline-kit/AGENTS.md) | [`ai-baseline-kit/INSTALL.md`](ai-baseline-kit/INSTALL.md) |
+| AI 前端模块装配系统 | `ai-baseline-kit` | `0.11.0` | 可嵌入 AI 工程能力包 | [`ai-baseline-kit/AGENTS.md`](ai-baseline-kit/AGENTS.md) | [`ai-baseline-kit/INSTALL.md`](ai-baseline-kit/INSTALL.md) |
 
 完整登记信息见 [`package-registry.json`](package-registry.json)。
 
@@ -220,6 +247,14 @@ node ai-baseline-kit/scripts/template-build-check.mjs --profile vue3-vite-ts
 - `plugin.json.entrypoints.primary` 必须指向包的 AI 主入口。
 - 包之间不得通过隐式相对路径耦合。
 - 新增包需要登记到 `package-registry.json` 并通过 `scripts/package-check.mjs`。
+
+## 0.11.0：根入口自动接入与首轮交付硬闭环
+
+- 首次使用不再依赖目标项目预先存在 `AGENTS.md` / `CLAUDE.md`：缺失时自动创建，已有自定义内容时原样保留并追加受控入口，重复执行保持幂等。
+- 根入口统一引导后续 AI 先读取 `ai-baseline-kit/AGENTS.md`，再执行 Feature Spec、blocking question、Change Plan、文件白名单、实现和验证闭环。
+- 新增 `implementation-completeness-check.mjs`，默认拒绝 TODO/FIXME、todo/skip 测试、显式占位实现和未实现异常。
+- 新增 `delivery-gate.mjs` 与可校验 delivery receipt；回执绑定当前 request ID、变更文件清单和 SHA-256，文件被二次修改后回执自动失效。
+- `smart-develop` 只有在受控执行完成且当前交付回执有效时才允许返回 `completed`，避免 AI 首轮漏做检查却直接宣称完成。
 
 ## 0.10.0：外置项目状态与整包替换升级
 

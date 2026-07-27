@@ -5,6 +5,7 @@ import { builtinModules } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { analyzeAstBoundaries } from './ast-boundary-lib.mjs';
 import { PROJECT_STATE_DIRECTORY, migrateLegacyProjectState, resolveLegacyBaselineFile, resolveProjectSchemeFile } from './project-state-lib.mjs';
+import { ensureRootEntrypoints, hasStrongRootEntrypoint } from './project-tools-lib.mjs';
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const baselineRoot = path.resolve(scriptDir, '..');
@@ -167,35 +168,23 @@ function gitignoreHidesBaselineKit(text) {
     .some((line) => accepted.includes(line));
 }
 
-function strongEntrypointText(title) {
-  return `${title}\n\n本项目使用内嵌 AI 基线规范包。任何代码改动、结构判断、目录调整、模块/路由/API/store/样式/i18n/依赖处理前，先读取：\n\n\`\`\`text\n${baselineDirName}/AGENTS.md\n\`\`\`\n\n涉及实现或改造时，必须按 \`${baselineDirName}/skills/baseline-structure-skill/SKILL.md\` 先明确范围；完成后按 \`${baselineDirName}/skills/baseline-conformance-skill/SKILL.md\` 回归。\n\n除非用户明确要求维护基线包，否则不要修改 \`${baselineDirName}/\`；业务开发按基线包中的 \`baseline_root\` / \`project_root\` 路径约定执行。`;
-}
-
-function hasStrongEntrypoint(text) {
-  return [
-    `${baselineDirName}/AGENTS.md`,
-    `${baselineDirName}/skills/baseline-structure-skill/SKILL.md`,
-    `${baselineDirName}/skills/baseline-conformance-skill/SKILL.md`,
-    '任何代码改动',
-    '结构判断',
-  ].every((token) => text.includes(token));
-}
-
 function ensureAiEntrypoints() {
-  for (const file of ['AGENTS.md', 'CLAUDE.md']) {
-    const filePath = path.join(root, file);
-    const existsEntrypoint = fs.existsSync(filePath);
-    const text = existsEntrypoint ? fs.readFileSync(filePath, 'utf8') : '';
-    if (existsEntrypoint && hasStrongEntrypoint(text)) continue;
-    if (!fixEntrypoints) {
+  const files = ['AGENTS.md', 'CLAUDE.md'];
+  if (!fixEntrypoints) {
+    for (const file of files) {
+      const filePath = path.join(root, file);
+      const existsEntrypoint = fs.existsSync(filePath);
+      const text = existsEntrypoint ? fs.readFileSync(filePath, 'utf8') : '';
+      if (existsEntrypoint && hasStrongRootEntrypoint(text, baselineDirName)) continue;
       record('warn', existsEntrypoint ? 'weak_ai_entrypoint' : 'missing_ai_entrypoint', `${file} 缺少 ai-baseline-kit 强入口约束；运行 baseline-check.mjs --fix-entrypoints 可自动补齐。`, file);
-      continue;
     }
-    const content = existsEntrypoint
-      ? `${text}${text.endsWith('\n') ? '\n' : '\n\n'}${strongEntrypointText('## AI Baseline Kit')}\n`
-      : `${strongEntrypointText(`# ${file}`)}\n`;
-    fs.writeFileSync(filePath, content, 'utf8');
-    record('info', existsEntrypoint ? 'ai_entrypoint_strengthened' : 'ai_entrypoint_created', `已补齐 ${file} 的 ai-baseline-kit 强入口约束。`, file);
+    return;
+  }
+
+  const existed = new Map(files.map((file) => [file, fs.existsSync(path.join(root, file))]));
+  const changed = new Set(ensureRootEntrypoints(root, baselineDirName));
+  for (const file of files) {
+    if (changed.has(file)) record('info', existed.get(file) ? 'ai_entrypoint_strengthened' : 'ai_entrypoint_created', `已补齐 ${file} 的 ai-baseline-kit 强入口约束。`, file);
   }
 }
 

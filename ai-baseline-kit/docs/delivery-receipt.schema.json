@@ -1,0 +1,125 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:ai-frontend-module-assembler:schema:delivery-receipt:1",
+  "title": "AI Frontend Delivery Receipt",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "kind",
+    "status",
+    "requestId",
+    "createdAt",
+    "projectRoot",
+    "changedFilesHash",
+    "changedFiles",
+    "checks",
+    "remainingRisks"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "kind": {
+      "const": "ai-frontend-delivery-receipt"
+    },
+    "status": {
+      "const": "passed"
+    },
+    "requestId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "projectRoot": {
+      "type": "string",
+      "minLength": 1
+    },
+    "featureSpec": {
+      "type": "string"
+    },
+    "changePlan": {
+      "type": "string"
+    },
+    "changedFilesHash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "changedFiles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "path",
+          "type",
+          "sha256"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "type": {
+            "type": "string",
+            "minLength": 1
+          },
+          "sha256": {
+            "oneOf": [
+              {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "checks": {
+      "type": "object",
+      "required": [
+        "implementationCompleteness",
+        "astBoundary",
+        "projectValidation",
+        "finalGate"
+      ],
+      "properties": {
+        "implementationCompleteness": {
+          "const": "passed"
+        },
+        "astBoundary": {
+          "enum": [
+            "passed",
+            "passed-with-fallback-allowed",
+            "not-run"
+          ]
+        },
+        "projectValidation": {
+          "const": "passed"
+        },
+        "finalGate": {
+          "const": "passed"
+        }
+      },
+      "additionalProperties": false
+    },
+    "gateOutput": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "remainingRisks": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": false
+}

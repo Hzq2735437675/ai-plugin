@@ -18,7 +18,7 @@ description: 以 smart-develop 为统一入口，将自然语言或多格式产�
 
 ## 强制流程
 
-1. 读取包内 `AGENTS.md`、`docs/baseline-rules.yml` 和目标项目 `.ai-frontend-assembler/project-scheme.yml`。
+1. 先检查目标项目根 `AGENTS.md`、`CLAUDE.md`；缺失就创建，存在但未指向 `ai-baseline-kit` 就保留原文并幂等追加入口，然后读取包内 `AGENTS.md`、`docs/baseline-rules.yml` 和目标项目 `.ai-frontend-assembler/project-scheme.yml`。
 2. 所有自然语言、产品文档、API 文档、原型导出或 ready Feature Spec 优先进入：
    ```bash
    node ai-baseline-kit/scripts/smart-develop.mjs --request "<原话或文档路径>" --project-root "<目标项目>"
@@ -30,8 +30,9 @@ description: 以 smart-develop 为统一入口，将自然语言或多格式产�
 7. 新项目必须显式使用创建模式；旧项目默认增量模式，不得因为目标路径错误自动创建工程。
 8. 所有写入必须进入 `controlled-change-executor`：目标项目外事务快照、实际 diff 白名单、禁止路径、验证门禁和失败回滚均不可绕过。
 9. 自动修复默认最多 2 次、硬上限 3 次；每轮只能在原 Change Plan 范围内重新生成/修复，并重新执行范围检查和项目验证。
-10. 生成测试时必须同时生成 acceptance coverage 清单；无法可靠推导的业务行为使用 `todo/fixme`，不得伪造自动化断言或测试通过。
-11. 成功必须留下 `smart-develop-run.json` 和 `controlled-execution.json`；失败必须回滚并保留失败原因、验证输出和违规文件。
+10. 生成测试时必须同时生成 acceptance coverage 清单；无法可靠推导的行为必须先形成 blocking question。只有用户明确接受延期时，才允许使用单行 `ai-baseline:approved-incomplete`，并在交付风险中列明；默认禁止 `TODO/FIXME/todo/skip` 和页面占位文案进入交付。
+11. 受控执行完成前必须运行 `delivery-gate`，它包含实现完整性、AST 边界、项目验证和最终 Gate；只有生成并复核当前请求的 delivery receipt 才能返回 `completed`。
+12. 成功必须留下 `smart-develop-run.json`、`controlled-execution.json` 和 `.ai-frontend-assembler/deliveries/<request-id>.delivery.json`；失败必须回滚并保留失败原因、验证输出和违规文件。
 
 ## 交互原则
 
@@ -50,7 +51,7 @@ description: 以 smart-develop 为统一入口，将自然语言或多格式产�
 ## 完成输出
 
 ```text
-status: completed | planned | needs-confirmation | rolled-back | failed
+status: completed（必须附有效 delivery receipt） | planned | needs-confirmation | rolled-back | failed
 scope: 实际 create / modify / delete 文件
 validation: 已执行检查及结果
 questions: 一次性必须确认项（如有）

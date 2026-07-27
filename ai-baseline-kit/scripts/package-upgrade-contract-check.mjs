@@ -48,6 +48,10 @@ try {
   assert.ok(fs.existsSync(legacyFile));
   assert.ok(fs.existsSync(path.join(project, 'AGENTS.md')));
   assert.ok(fs.existsSync(path.join(project, 'CLAUDE.md')));
+  assert.match(fs.readFileSync(path.join(project, 'AGENTS.md'), 'utf8'), /AI 前端模块装配系统/);
+  assert.match(fs.readFileSync(path.join(project, 'AGENTS.md'), 'utf8'), /有效交付回执/);
+  assert.match(fs.readFileSync(path.join(project, 'CLAUDE.md'), 'utf8'), /AI 前端模块装配系统/);
+  assert.match(fs.readFileSync(path.join(project, 'CLAUDE.md'), 'utf8'), /有效交付回执/);
   assert.ok(!fs.existsSync(path.join(project, '.cursor')));
   assert.ok(!fs.existsSync(path.join(project, '.github', 'copilot-instructions.md')));
   const schemeBefore = fs.readFileSync(schemeFile, 'utf8');

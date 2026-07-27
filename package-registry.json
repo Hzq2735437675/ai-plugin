@@ -13,7 +13,7 @@
   "packages": [
     {
       "name": "ai-baseline-kit",
-      "version": "0.10.0",
+      "version": "0.11.0",
       "path": "ai-baseline-kit",
       "manifest": "ai-baseline-kit/plugin.json",
       "readme": "ai-baseline-kit/README.md",
@@ -57,10 +57,22 @@
         "ai-baseline-kit/scripts/intelligent-development-contract-check.mjs",
         "ai-baseline-kit/scripts/ai-run.mjs",
         "ai-baseline-kit/scripts/ci-gate.mjs",
+        "ai-baseline-kit/scripts/delivery-gate.mjs",
+        "ai-baseline-kit/scripts/implementation-completeness-check.mjs",
+        "ai-baseline-kit/scripts/delivery-receipt-lib.mjs",
         "ai-baseline-kit/scripts/project-upgrade.mjs",
         "ai-baseline-kit/scripts/project-state-lib.mjs",
+        "ai-baseline-kit/scripts/delivery-closure-contract-check.mjs",
         "ai-baseline-kit/scripts/package-upgrade-contract-check.mjs"
-      ]
+      ],
+      "companyDocumentation": {
+        "systemSpecification": "ai-baseline-kit/docs/system-specification.md",
+        "skillStandaloneGuide": "ai-baseline-kit/docs/skill-standalone-guide.md",
+        "overviewDiagram": "ai-baseline-kit/docs/assets/ai-frontend-module-assembler-overview.svg",
+        "overviewDiagramPng": "ai-baseline-kit/docs/assets/ai-frontend-module-assembler-overview.png",
+        "usageGuide": "ai-baseline-kit/docs/使用指南.md",
+        "deliveryReceiptSchema": "ai-baseline-kit/docs/delivery-receipt.schema.json"
+      }
     }
   ]
 }

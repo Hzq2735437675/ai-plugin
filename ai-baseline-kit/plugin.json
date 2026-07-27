@@ -2,7 +2,7 @@
   "$schema": "./package-manifest.schema.json",
   "schemaVersion": 1,
   "name": "ai-baseline-kit",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "type": "embedded-ai-capability-package",
   "description": "AI 前端模块装配系统：可完整植入目标项目，支持需求确认、结构化生成、验收测试、同栈模块迁移组合、AST 边界检查和旧项目增量治理闭环。",
   "entrypoints": {
@@ -64,7 +64,17 @@
     "projectUpgrade": "scripts/project-upgrade.mjs",
     "projectStateLibrary": "scripts/project-state-lib.mjs",
     "projectStateSchema": "docs/project-state.schema.json",
-    "packageUpgradeContractSelfCheck": "scripts/package-upgrade-contract-check.mjs"
+    "packageUpgradeContractSelfCheck": "scripts/package-upgrade-contract-check.mjs",
+    "systemSpecification": "docs/system-specification.md",
+    "skillStandaloneGuide": "docs/skill-standalone-guide.md",
+    "systemOverviewDiagram": "docs/assets/ai-frontend-module-assembler-overview.svg",
+    "systemOverviewDiagramPng": "docs/assets/ai-frontend-module-assembler-overview.png",
+    "usageGuide": "docs/使用指南.md",
+    "deliveryGate": "scripts/delivery-gate.mjs",
+    "implementationCompletenessCheck": "scripts/implementation-completeness-check.mjs",
+    "deliveryReceiptLibrary": "scripts/delivery-receipt-lib.mjs",
+    "deliveryReceiptSchema": "docs/delivery-receipt.schema.json",
+    "deliveryClosureContractSelfCheck": "scripts/delivery-closure-contract-check.mjs"
   },
   "installation": {
     "guide": "INSTALL.md",

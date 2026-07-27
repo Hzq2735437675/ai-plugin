@@ -2,9 +2,9 @@ project:
   name: ai-plugin
   map_status: package-repository-reference
   purpose: 可植入不同项目、为 AI 开发提供统一规范、工作流、项目地图、诊断、确定性生成和验证能力的多包 AI 能力仓库。
-  scheme_version: 0.10.0
-  updated_at: 2026-07-24
-  update_source: manual-review-after-external-project-state-upgrade
+  scheme_version: 0.11.0
+  updated_at: 2026-07-27
+  update_source: manual-review-after-root-entrypoint-and-delivery-closure-upgrade
 
 stack:
   framework: not-applicable-package-repository
@@ -49,6 +49,9 @@ entrypoints:
   smart_developer: ai-baseline-kit/scripts/smart-develop.mjs
   document_normalizer: ai-baseline-kit/scripts/document-normalize.mjs
   acceptance_coverage_check: ai-baseline-kit/scripts/acceptance-coverage-check.mjs
+  implementation_completeness_check: ai-baseline-kit/scripts/implementation-completeness-check.mjs
+  delivery_gate: ai-baseline-kit/scripts/delivery-gate.mjs
+  delivery_receipt_schema: ai-baseline-kit/docs/delivery-receipt.schema.json
   module_creator: ai-baseline-kit/scripts/module-create.mjs
 
 i18n:
@@ -79,6 +82,10 @@ shared:
     - ai-baseline-kit/scripts/smart-develop.mjs
     - ai-baseline-kit/scripts/document-normalize.mjs
     - ai-baseline-kit/scripts/acceptance-coverage-check.mjs
+    - ai-baseline-kit/scripts/implementation-completeness-check.mjs
+    - ai-baseline-kit/scripts/delivery-gate.mjs
+    - ai-baseline-kit/scripts/delivery-receipt-lib.mjs
+    - ai-baseline-kit/docs/delivery-receipt.schema.json
   shared_core: ai-baseline-kit/docs
 
 stack_selection:
@@ -108,7 +115,7 @@ packages:
     dependencies: explicit-in-plugin-json
   items:
     - name: ai-baseline-kit
-      version: 0.10.0
+      version: 0.11.0
       root: ai-baseline-kit
       manifest: ai-baseline-kit/plugin.json
       readme: ai-baseline-kit/README.md
@@ -146,6 +153,10 @@ packages:
         - ai-baseline-kit/scripts/intelligent-development-contract-check.mjs
         - ai-baseline-kit/scripts/ai-run.mjs
         - ai-baseline-kit/scripts/ci-gate.mjs
+        - ai-baseline-kit/scripts/implementation-completeness-check.mjs
+        - ai-baseline-kit/scripts/delivery-gate.mjs
+        - ai-baseline-kit/scripts/delivery-receipt-lib.mjs
+        - ai-baseline-kit/scripts/delivery-closure-contract-check.mjs
         - ai-baseline-kit/scripts/project-upgrade.mjs
         - ai-baseline-kit/scripts/project-state-lib.mjs
         - ai-baseline-kit/scripts/package-upgrade-contract-check.mjs
@@ -169,7 +180,7 @@ portability:
 validation:
   typecheck: not-applicable-package-repository
   lint: not-applicable-package-repository
-  test: node scripts/package-check.mjs && node ai-baseline-kit/scripts/project-tools-check.mjs && node ai-baseline-kit/scripts/package-upgrade-contract-check.mjs && node ai-baseline-kit/scripts/baseline-contract-check.mjs && node ai-baseline-kit/scripts/baseline-check.mjs --fail-on-warn
+  test: node scripts/package-check.mjs && node ai-baseline-kit/scripts/project-tools-check.mjs && node ai-baseline-kit/scripts/package-upgrade-contract-check.mjs && node ai-baseline-kit/scripts/delivery-closure-contract-check.mjs && node ai-baseline-kit/scripts/baseline-contract-check.mjs && node ai-baseline-kit/scripts/baseline-check.mjs --fail-on-warn
   build: node ai-baseline-kit/scripts/template-build-check.mjs
 
 required_questions: []
@@ -178,7 +189,7 @@ evidence:
   - source: ai-baseline-kit/README.md
     finding: ai-baseline-kit 是可完整植入目标项目的 AI 基线规范包，并支持自然语言需求确认、旧项目识别、项目诊断、地图初始化、确定性模块生成和统一验证。
   - source: ai-baseline-kit/plugin.json
-    finding: 当前包版本为 0.10.0，目标项目状态已外置，支持整目录替换 ai-baseline-kit 后直接升级，并仅维护 AGENTS.md 与 CLAUDE.md 两类 AI 入口。
+    finding: 当前包版本为 0.11.0；目标项目状态已外置，支持整目录替换升级；根 AGENTS.md 与 CLAUDE.md 缺失时创建、已有时安全追加并保持幂等。
   - source: package-registry.json
     finding: 根目录注册表登记当前包、两个标准模板和项目工具，并约定未来包目录为 packages/<package-name>/。
   - source: package-manifest.schema.json
@@ -207,6 +218,10 @@ evidence:
     finding: 自动修复默认受策略约束且硬上限为三轮，每轮重新计算实际差异，越出文件白名单或允许根目录立即失败并回滚。
   - source: ai-baseline-kit/scripts/acceptance-coverage-check.mjs
     finding: 对 acceptance、页面状态、权限和 API 建立可追踪覆盖清单，并校验项目内 Feature Spec provenance、覆盖清单完整性、测试文件、marker、统计摘要和自动化断言真实性。
+  - source: ai-baseline-kit/scripts/delivery-gate.mjs
+    finding: 最终 Gate 在实现完整性、AST、项目验证全部通过后生成绑定 request ID 与变更文件哈希的交付回执，失败时不会保留成功回执。
+  - source: ai-baseline-kit/scripts/project-tools-lib.mjs
+    finding: 统一创建或安全追加根 AGENTS.md 与 CLAUDE.md 的受控入口块，保留项目原规则并保证重复激活幂等。
   - source: ai-baseline-kit/scripts/project-bootstrap.mjs
     finding: 支持生成目标项目地图，并在空目录按指定 profile 初始化 React 或 Vue 标准模板。
   - source: ai-baseline-kit/scripts/project-validate.mjs

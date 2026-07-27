@@ -2,16 +2,39 @@
 
 - 产品展示名称：AI 前端模块装配系统
 - 机器包名：`ai-baseline-kit`
-- 当前版本：`0.10.0`
+- 当前版本：`0.11.0`
 - 包元数据：[`plugin.json`](plugin.json)
 - 安装/植入说明：[`INSTALL.md`](INSTALL.md)
 - AI 主入口：[`AGENTS.md`](AGENTS.md)
+- 使用指南：[`docs/使用指南.md`](docs/使用指南.md)
+- 系统说明书：[`docs/system-specification.md`](docs/system-specification.md)
+- Skill 独立使用指南：[`docs/skill-standalone-guide.md`](docs/skill-standalone-guide.md)
+- 系统说明图：[`PNG`](docs/assets/ai-frontend-module-assembler-overview.png) / [`SVG`](docs/assets/ai-frontend-module-assembler-overview.svg) / [`Mermaid`](docs/assets/ai-frontend-module-assembler-overview.mmd)
 
 这是一套可以整体植入任意项目根目录的、由 AI 编排并受工程契约约束的前端模块装配能力包。它将自然语言或产品文档转换为结构化规格，驱动 React/Vue 模块生成、验收测试、模块边界检查、跨项目迁移和构建期项目组合。
 
 最小用法是：**只复制整个 `ai-baseline-kit/` 文件夹**，不需要复制本仓库其他目录，也不依赖本仓库的 Git 历史。为保持既有项目的安装路径和 `baseline_root` 兼容，产品展示名称变更后仍保留 `ai-baseline-kit` 作为机器包名和目录名。
 
 > 一句话定位：让 AI 按契约生产、迁移和组合前端模块。
+
+## 一句话使用
+
+首次接入：
+
+```text
+请接入并使用项目根目录 ai-baseline-kit 的 AI 前端模块装配系统处理本次需求：接入并检查当前项目。
+```
+
+日常开发或组合：
+
+```text
+帮我实现：<需求>
+按这个产品文档开发：<路径>
+把项目 A 的 <模块> 和项目 B 的 <模块> 组合成项目 C。
+检查并修复当前项目。
+```
+
+用户不需要写固定长提示词，也不需要知道内部 Skill、Feature Spec、Change Plan、AST 或脚本命令。若根入口尚未接入，首次只需说“请接入并使用项目根目录 ai-baseline-kit 的 AI 前端模块装配系统处理本次需求：<需求>”；系统会创建或安全追加根 `AGENTS.md` / `CLAUDE.md`。之后 AI 从根入口自动展开完整流程，只在存在 blocking question 时一次性提问。
 
 ## 技术栈选择模式
 
@@ -51,6 +74,7 @@ React 18 + TypeScript + Vite + Ant Design 5 + Tailwind CSS 3 + React Router 6
 - 通过 `project-doctor.mjs` 自动诊断旧项目技术栈和边界。
 - 通过 `project-bootstrap.mjs` 生成目标项目地图，或在空目录初始化 React/Vue 标准模板。
 - 通过 `project-validate.mjs` 统一执行基线检查、类型检查、lint、测试和构建。
+- 通过 `delivery-gate.mjs` 拒绝占位实现并生成带变更文件哈希的交付回执；没有当前有效回执不得返回 `completed`。
 - 通过 `requirement-to-feature-spec` 与 `requirement-compile.mjs` 建立自然语言/产品文档的确认式规格。
 - 通过 `feature-architecture-planner`、`feature-plan.mjs` 和 `feature-generate.mjs` 生成受文件白名单约束的模块代码。
 - 通过 `module.meta.json` 支持同技术栈模块的拆解、组合和迁移审计。
@@ -60,13 +84,19 @@ React 18 + TypeScript + Vite + Ant Design 5 + Tailwind CSS 3 + React Router 6
 - 通过 `baseline-check --mode changed` 对旧项目进行增量治理。
 - 通过 `template-build-check.mjs` 在临时目录真实安装依赖，并验证 React/Vue 生成模块后的 typecheck 与 production build。
 
+## 根入口自动接入与交付回执（0.11.0）
+
+首次调用装配系统时会自动检查目标项目根目录：缺少 `AGENTS.md` / `CLAUDE.md` 就创建；已有文件但未接入本包时保留原文并追加带标记的受控段落；再次运行只更新该段落，不重复追加。这样后续支持这些入口的 AI 可以从项目根目录自动发现本系统。
+
+最终交付由 `delivery-gate.mjs` 执行。它在原 CI Gate 前增加实现完整性检查，并在全部通过后生成 `.ai-frontend-assembler/deliveries/<request-id>.delivery.json`。回执记录 Feature Spec、Change Plan、变更文件及其 SHA-256；没有当前请求的有效回执，`smart-develop` 不得返回 `completed`，AI 也不得声明“已完成”或“全部通过”。
+
 ## 可替换升级与统一 AI 入口（0.10.0）
 
 本版本把目标项目专属状态移出 `ai-baseline-kit/`，统一存放到项目根目录 `.ai-frontend-assembler/`。因此项目完成一次接入后，未来升级可以直接把最新 `ai-baseline-kit/` 整目录复制并替换旧目录，不再备份/恢复项目地图或历史快照。
 
 ```bash
 # 首次接入
-node ai-baseline-kit/scripts/ai-run.mjs init
+node ai-baseline-kit/scripts/ai-run.mjs activate
 
 # 自然语言或产品文档开发
 node ai-baseline-kit/scripts/ai-run.mjs develop --document <product-doc>
@@ -78,7 +108,7 @@ node ai-baseline-kit/scripts/ai-run.mjs upgrade
 node ai-baseline-kit/scripts/ai-run.mjs gate
 ```
 
-统一入口支持 `init / develop / compose / repair / validate / gate / doctor / status / upgrade`。目标项目自动发现入口只保留 `AGENTS.md` 与 `CLAUDE.md`，不会生成 Cursor、Copilot 等额外配置。`.ai-frontend-assembler/` 必须提交到版本库且升级时不得删除。
+统一入口支持 `init / activate / develop / compose / repair / validate / gate / doctor / upgrade`。目标项目自动发现入口只保留 `AGENTS.md` 与 `CLAUDE.md`，不会生成 Cursor、Copilot 等额外配置。`.ai-frontend-assembler/` 必须提交到版本库且升级时不得删除。
 
 ## 统一智能开发入口（0.9.0）
 
@@ -220,7 +250,7 @@ node ai-baseline-kit/scripts/baseline-check.mjs --mode changed --fail-on-warn
 └── ai-baseline-kit/
 ```
 
-复制后先运行 `project-bootstrap.mjs`。它会生成或安全追加项目根 `AGENTS.md`、`CLAUDE.md` 强入口，并生成目标项目地图；已有根文件不会被覆盖。
+复制后首次让 AI 执行 `ai-run activate`（或使用使用指南中的默认安全入口 Prompt）。它会生成或安全追加项目根 `AGENTS.md`、`CLAUDE.md` 强入口，并生成目标项目地图；已有根文件不会被覆盖，重复执行不会重复追加。
 
 ### 路径约定
 

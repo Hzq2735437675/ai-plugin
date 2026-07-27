@@ -578,41 +578,64 @@ export function projectHasBusinessFiles(projectRoot) {
     .some((entry) => !ignored.has(entry.name));
 }
 
-export function ensureRootEntrypoints(projectRoot, baselineDirName = 'ai-baseline-kit') {
-  const requiredTokens = [
-    `${baselineDirName}/AGENTS.md`,
-    `${baselineDirName}/skills/baseline-structure-skill/SKILL.md`,
-    `${baselineDirName}/skills/baseline-conformance-skill/SKILL.md`,
-  ];
+export const AI_ENTRYPOINT_START = '<!-- ai-baseline-kit:entrypoint:start -->';
+export const AI_ENTRYPOINT_END = '<!-- ai-baseline-kit:entrypoint:end -->';
 
-  const block = `本项目使用内嵌 AI 基线规范包。任何代码改动、结构判断、目录调整、模块/路由/API/store/样式/i18n/依赖处理前，先读取：
+export function rootEntrypointBlock(baselineDirName = 'ai-baseline-kit') {
+  return `${AI_ENTRYPOINT_START}
+本项目已接入 **AI 前端模块装配系统**。任何代码改动、结构判断、目录调整、模块/路由/API/store/样式/i18n/依赖处理前，必须先读取：
 
 \`\`\`text
 ${baselineDirName}/AGENTS.md
 \`\`\`
 
-涉及实现或改造时，必须按 \`${baselineDirName}/skills/baseline-structure-skill/SKILL.md\` 先明确范围；完成后按 \`${baselineDirName}/skills/baseline-conformance-skill/SKILL.md\` 回归。
+处理自然语言需求或产品文档时，必须使用 ${baselineDirName} 的统一装配入口完成需求分析、blocking question、Change Plan、白名单实现、测试与验证闭环；不要要求用户复述内部 Skill 或脚本步骤。
 
-除非用户明确要求维护基线包，否则不要修改 \`${baselineDirName}/\`；业务开发按基线包中的 \`baseline_root\` / \`project_root\` 路径约定执行。`;
+- 开发前：按 \`${baselineDirName}/skills/baseline-structure-skill/SKILL.md\` 明确范围。
+- 开发后：按 \`${baselineDirName}/skills/baseline-conformance-skill/SKILL.md\` 回归。
+- 首次接入或入口缺失：运行 \`node ${baselineDirName}/scripts/ai-run.mjs activate --project-root .\` 自动创建或增强根入口，不覆盖已有项目规则。
+- 完成声明：只有最终 Gate 通过并生成当前请求对应的有效交付回执后，才可以向用户声明“已完成”“全部通过”或“可以交付”。
 
+除非用户明确要求维护基线包，否则不要修改 \`${baselineDirName}/\`；业务开发按包内 \`baseline_root\` / \`project_root\` 路径约定执行。
+${AI_ENTRYPOINT_END}`;
+}
+
+export function hasStrongRootEntrypoint(text, baselineDirName = 'ai-baseline-kit') {
+  const value = String(text || '');
+  return value.includes(AI_ENTRYPOINT_START)
+    && value.includes(AI_ENTRYPOINT_END)
+    && [
+      `${baselineDirName}/AGENTS.md`,
+      `${baselineDirName}/skills/baseline-structure-skill/SKILL.md`,
+      `${baselineDirName}/skills/baseline-conformance-skill/SKILL.md`,
+      '有效交付回执',
+    ].every((token) => value.includes(token));
+}
+
+function mergeRootEntrypoint(current, baselineDirName) {
+  const block = rootEntrypointBlock(baselineDirName);
+  const start = current.indexOf(AI_ENTRYPOINT_START);
+  const end = current.indexOf(AI_ENTRYPOINT_END);
+  if (start >= 0 && end >= start) {
+    const after = end + AI_ENTRYPOINT_END.length;
+    return `${current.slice(0, start)}${block}${current.slice(after)}`;
+  }
+  return current
+    ? `${current}${current.endsWith('\n') ? '\n' : '\n\n'}## AI 前端模块装配系统\n\n${block}\n`
+    : `${block}\n`;
+}
+
+export function ensureRootEntrypoints(projectRoot, baselineDirName = 'ai-baseline-kit') {
+  fs.mkdirSync(projectRoot, { recursive: true });
   const changed = [];
-
   for (const file of ['AGENTS.md', 'CLAUDE.md']) {
     const filePath = path.join(projectRoot, file);
-    const exists = fs.existsSync(filePath);
-    const current = exists ? fs.readFileSync(filePath, 'utf8') : '';
-
-    if (requiredTokens.every((token) => current.includes(token))) continue;
-
-    const heading = exists ? '## AI Baseline Kit' : `# ${file}`;
-    const content = exists
-      ? `${current}${current.endsWith('\n') ? '\n' : '\n\n'}${heading}\n\n${block}\n`
-      : `${heading}\n\n${block}\n`;
-
+    const current = fs.existsSync(filePath) ? fs.readFileSync(filePath, 'utf8') : '';
+    const content = mergeRootEntrypoint(current, baselineDirName);
+    if (content === current) continue;
     fs.writeFileSync(filePath, content, 'utf8');
     changed.push(file);
   }
-
   return changed;
 }
 

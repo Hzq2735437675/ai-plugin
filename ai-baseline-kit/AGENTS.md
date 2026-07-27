@@ -73,6 +73,42 @@ node ai-baseline-kit/scripts/project-validate.mjs
 
 如果用户在初始化前明确选择其他技术栈，用户选择优先；本包只提供 React 18 + Vite 与 Vue 3 + Vite + Element Plus 两个内置新项目模板，其他技术栈由 AI 按用户选择创建或在旧项目中原地维护。
 
+## 面向用户的极简自然语言入口
+
+用户不需要复述内部工作流、Skill 名称、Schema 名称或脚本命令。只要用户表达以下意图，AI 必须自动读取本文件并选择统一入口展开完整闭环：
+
+- `接入装配系统并检查当前项目`：自动执行初始化、项目识别、入口补齐、诊断和首次门禁。
+- `帮我实现：<需求>`：按旧项目增量或新项目创建模式完成需求分析、必要确认、受控开发、测试和验证。
+- `按这个产品文档开发：<路径>`：读取并标准化文档；无法可靠提取时只提出必要的 blocking question。
+- `把项目 A 的 <模块> 和项目 B 的 <模块> 组合成项目 C`：自动执行项目发现、模块发现、导出、兼容性检查、事务化组合、冲突确认和完整门禁。
+- `检查并修复当前项目`：自动执行 validate、gate 和白名单内的有限修复。
+- `升级装配系统并验证项目`：保留 `.ai-frontend-assembler/`，执行升级迁移、doctor 和 gate。
+
+用户使用其他自然语言表达同等意图时同样处理，禁止要求用户改写成固定 Prompt。除非存在真正阻塞实施且无法从用户输入、产品文档或项目现状可靠推断的问题，否则不要把 Feature Spec、Change Plan、AST、validate、gate、CLI 参数或内部步骤转嫁给用户。对用户默认只输出两类信息：
+
+1. 一次性聚合的 blocking questions；
+2. 最终修改文件、验证结果、组合/迁移清单和剩余风险摘要。
+
+内部仍必须完整执行需求规格、变更计划、文件白名单、模块边界、i18n、验收测试、事务写入、验证门禁和失败修复/回滚，不得因为用户提示词简短而降级流程。
+
+## 根目录 AI 入口自动接入与完成声明锁
+
+目标项目不要求预先存在 `AGENTS.md` 或 `CLAUDE.md`。首次使用装配系统时，必须先执行入口接入：
+
+- 缺少根 `AGENTS.md` / `CLAUDE.md`：创建两个薄入口；
+- 已存在但没有指向 `ai-baseline-kit`：保留原文并追加受控装配入口；
+- 已存在且已接入：不得重复追加；
+- 自动追加必须可幂等，不能覆盖或改写原有项目规则；
+- 后续任何需求都从根入口发现本包，再进入 `smart-develop` 或 `smart-compose`，不得只读取嵌套包文件后绕过统一入口。
+
+开发输出只有在当前请求对应的 `.ai-frontend-assembler/deliveries/<request-id>.delivery.json` 同时满足以下条件时，才能声明“已完成”“全部通过”或“可以交付”：
+
+- `status: passed`；
+- `checks.finalGate: passed`；
+- `changedFilesHash` 存在且能与当前文件哈希复核一致。
+
+Gate 失败、回执缺失、回执过期或只完成了页面骨架时，必须报告 `needs-confirmation` / `failed`，不能用自然语言包装成完成。
+
 ## 统一智能开发总入口与硬约束
 
 用户提供自然语言、详细大白话、产品文档、API 文档、原型导出、ready Feature Spec 或跨项目组合要求时，优先使用 `skills/intelligent-frontend-assembler/SKILL.md` 并运行 `scripts/smart-develop.mjs`。所有输入先标准化；跨项目组合由总控自动委托 `scripts/smart-compose.mjs`，不得要求普通用户手工选择底层 CLI。

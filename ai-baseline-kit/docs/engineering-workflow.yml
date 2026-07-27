@@ -3,7 +3,7 @@ purpose: 为 AI 和开发者提供可执行工程化工作流；`baseline-rules.
 path_mode:
   baseline_root: ai-baseline-kit 目录；规则、skills、scripts 和包参考地图位于此目录内。
   project_root: ai-baseline-kit 的父目录；业务代码、依赖、路由、模块和资源均按此目录扫描或修改。
-  embedded_usage: 整包植入项目时，不把 docs/skills/scripts 抽到业务项目根目录；AI 应先读取 ai-baseline-kit/AGENTS.md。
+  embedded_usage: 整包植入项目时，不把 docs/skills/scripts 抽到业务项目根目录；AI 首次接入先补齐项目根 AGENTS.md / CLAUDE.md，再读取 ai-baseline-kit/AGENTS.md。
 
 principles:
   - 先读规则，再做计划，再实施，再回归。
@@ -14,7 +14,8 @@ principles:
 
 required_entrypoints:
   before_work:
-    - ai-baseline-kit/AGENTS.md 或项目根 AGENTS.md 薄入口
+    - 项目根 AGENTS.md 和 CLAUDE.md（缺失时由 activate 自动创建）
+    - ai-baseline-kit/AGENTS.md 或项目根薄入口
     - ai-baseline-kit/docs/baseline-rules.yml
     - ai-baseline-kit/docs/engineering-workflow.yml
     - .ai-frontend-assembler/project-scheme.yml (target project map, if present)
@@ -251,11 +252,27 @@ acceptance_test_workflow:
     - permission coverage
     - generated page ready state
   deferred_assertions:
-    - 无法从自然语言确定实现细节的业务行为标记 todo/fixme。
+    - 无法从自然语言确定实现细节的业务行为转为 blocking question；未经用户确认不得进入交付。
+    - 仅在用户明确接受延期时允许 `ai-baseline:approved-incomplete`，并记录剩余风险。
   validation:
     - npm run test
     - npm run typecheck
     - Playwright 配置和 E2E 文件进入类型检查；浏览器执行按项目 CI 环境启用。
+
+delivery_closure:
+  command: scripts/delivery-gate.mjs
+  required: true
+  checks:
+    - implementation-completeness-check.mjs
+    - ast-boundary-check.mjs --require-parser（除非显式记录 allow-parser-fallback）
+    - project-validate.mjs
+    - ci-gate.mjs
+  receipt: .ai-frontend-assembler/deliveries/<request-id>.delivery.json
+  completion_lock:
+    - status 必须为 passed
+    - checks.finalGate 必须为 passed
+    - changedFilesHash 必须存在且能复核当前文件
+    - 无有效回执时 AI 不得声明已完成或可交付
 
 ast_boundary_workflow:
   before_install: 允许明确降级为 info。

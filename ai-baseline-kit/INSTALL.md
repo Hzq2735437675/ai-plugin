@@ -1,14 +1,27 @@
 # AI Baseline Kit 安装与植入说明
 
 - 包名：`ai-baseline-kit`
-- 当前版本：`0.10.0`
+- 当前版本：`0.11.0`
 - 包元数据：[`plugin.json`](plugin.json)
 - 主入口：[`AGENTS.md`](AGENTS.md)
 - 详细说明：[`README.md`](README.md)
+- 使用指南：[`docs/使用指南.md`](docs/使用指南.md)
+- 系统说明书：[`docs/system-specification.md`](docs/system-specification.md)
+- Skill 独立使用：[`docs/skill-standalone-guide.md`](docs/skill-standalone-guide.md)
 
 ## 推荐的日常入口
 
-安装后，普通需求统一交给 `smart-develop.mjs`，无需使用者理解底层 Skill、Schema 或模块 CLI：
+安装后，普通使用者只需要自然语言，不需要理解底层 Skill、Schema 或模块 CLI：
+
+```text
+请接入并使用项目根目录 ai-baseline-kit 的 AI 前端模块装配系统处理本次需求：接入并检查当前项目。
+帮我实现：<需求>
+按这个产品文档开发：<路径>
+把项目 A 的 <模块> 和项目 B 的 <模块> 组合成项目 C。
+检查并修复当前项目。
+```
+
+AI 会自动选择 `smart-develop`、`smart-compose`、`validate`、`gate` 或升级流程。以下命令只用于 AI、CI 或排障人员直接调用：
 
 ```bash
 # 旧项目增量模式
@@ -38,11 +51,13 @@ node ai-baseline-kit/scripts/smart-develop.mjs --request "<需求>" --target <ne
 └── ai-baseline-kit/
 ```
 
-复制后，向 AI 说明“本项目已植入 `ai-baseline-kit`”，并要求先读取：
+复制后，在目标项目根目录对 AI 说：
 
 ```text
-ai-baseline-kit/AGENTS.md
+请接入并使用项目根目录 ai-baseline-kit 的 AI 前端模块装配系统处理本次需求：接入并检查当前项目。
 ```
+
+这条首次接入 Prompt 不依赖项目原先存在 `AGENTS.md` / `CLAUDE.md`。AI 会先读取 `ai-baseline-kit/AGENTS.md`，缺少根入口时创建，已有但未指向本包时保留原内容并追加，重复执行保持幂等。
 
 `ai-baseline-kit/` 内已经包含规则、skills、项目地图模板、默认新项目模板、入口文档、包元数据和无第三方依赖的检查脚本，不依赖本仓库的 Git 历史或根目录文件。
 
@@ -55,7 +70,7 @@ ai-baseline-kit/AGENTS.md
 ai-baseline-kit/AGENTS.md
 ```
 
-运行 `project-bootstrap.mjs` 后会自动完成此步骤：目标项目已有 `AGENTS.md` 或 `CLAUDE.md` 时只追加受控段落，不覆盖原内容；缺失时自动创建。根级入口是 AI 自动发现和强制执行基线的必要激活层。
+运行 `ai-run.mjs activate` / `project-bootstrap.mjs` 后会自动完成此步骤：目标项目已有 `AGENTS.md` 或 `CLAUDE.md` 时只追加受控段落，不覆盖原内容；缺失时自动创建；再次运行不会重复追加。根级入口是 AI 自动发现和强制执行基线的必要激活层。
 
 ## 新项目植入
 

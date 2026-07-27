@@ -69,7 +69,7 @@ function pageDefinitions(spec, framework) {
 }
 
 function renderReactPage(page) {
-  return `import '../../styles/index.css';\n\nexport function ${page.component}() {\n  return (\n    <section className="module-page">\n      <header className="module-page__header">\n        <h1>${page.name}</h1>\n        <p>该页面由功能规格生成，请按验收条件补充业务实现。</p>\n      </header>\n      <div className="module-page__content" data-page-state="ready">\n        <p>路由：${page.route}</p>\n      </div>\n    </section>\n  );\n}\n`;
+  return `import '../../styles/index.css';\n\nexport function ${page.component}() {\n  return (\n    <section className="module-page">\n      <header className="module-page__header">\n        <h1>${page.name}</h1>\n        <p>功能页面</p>\n      </header>\n      <div className="module-page__content" data-page-state="ready">\n        <p>路由：${page.route}</p>\n      </div>\n    </section>\n  );\n}\n`;
 }
 
 function usesElementPlus(uiLibrary) {
@@ -84,10 +84,10 @@ function defaultNpmDependencies(framework, uiLibrary) {
 
 function renderVuePage(page, uiLibrary) {
   if (!usesElementPlus(uiLibrary)) {
-    return `<script setup lang="ts">\nimport '../../styles/index.css';\n</script>\n\n<template>\n  <section class="module-page">\n    <header class="module-page__header">\n      <h1>${page.name}</h1>\n      <p>该页面由功能规格生成，请按验收条件补充业务实现。</p>\n    </header>\n    <div class="module-page__content" data-page-state="ready">\n      <p>路由：${page.route}</p>\n    </div>\n  </section>\n</template>\n`;
+    return `<script setup lang="ts">\nimport '../../styles/index.css';\n</script>\n\n<template>\n  <section class="module-page">\n    <header class="module-page__header">\n      <h1>${page.name}</h1>\n      <p>功能页面</p>\n    </header>\n    <div class="module-page__content" data-page-state="ready">\n      <p>路由：${page.route}</p>\n    </div>\n  </section>\n</template>\n`;
   }
 
-  return `<script setup lang="ts">\nimport '../../styles/index.css';\n</script>\n\n<template>\n  <section class="module-page">\n    <header class="module-page__header">\n      <h1>${page.name}</h1>\n      <p>该页面由功能规格生成，请按验收条件补充业务实现。</p>\n    </header>\n    <el-alert title="页面结构已生成" type="info" :closable="false" show-icon />\n    <el-card class="module-page__content" shadow="never" data-page-state="ready">\n      <p>路由：${page.route}</p>\n    </el-card>\n  </section>\n</template>\n`;
+  return `<script setup lang="ts">\nimport '../../styles/index.css';\n</script>\n\n<template>\n  <section class="module-page">\n    <header class="module-page__header">\n      <h1>${page.name}</h1>\n      <p>功能页面</p>\n    </header>\n    <el-card class="module-page__content" shadow="never" data-page-state="ready">\n      <p>路由：${page.route}</p>\n    </el-card>\n  </section>\n</template>\n`;
 }
 
 function renderRoutes(moduleVar, pages, framework) {

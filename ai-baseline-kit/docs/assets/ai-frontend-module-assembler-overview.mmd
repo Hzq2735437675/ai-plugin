@@ -1,0 +1,26 @@
+flowchart LR
+  U["需求输入\n自然语言 · 产品文档 · Feature Spec"] --> E["AI 接入\n创建/追加 AGENTS.md · CLAUDE.md · ai-run"]
+  E --> R["需求编译\n文档标准化 · Feature Spec"]
+  R --> Q{"存在 blocking\n不确定项？"}
+  Q -- 是 --> C["向用户确认\n权限 · API · 路由 · 验收"]
+  C --> R
+  Q -- 否 --> P["架构计划\n模块归属 · Change Plan · 文件白名单"]
+  P --> X["受控执行\n模块契约 · 代码生成 · 事务回滚"]
+  X --> T["自动验收\nVitest · Playwright · API Mock"]
+  T --> G["工程门禁\n完整性 · AST · Baseline · Typecheck · Test · Build"]
+  G -- 失败 --> F["限定范围修复\n失败自动回滚"]
+  F --> T
+  G -- 通过 --> DLV["Delivery Gate\n生成并校验交付回执"]
+  DLV --> O["结构化项目\nshell · shared · modules · theme · i18n"]
+
+  A["项目 A 模块"] --> D["Discover / Export"]
+  B["项目 B 模块"] --> D
+  D --> K["Compatibility Check\n技术栈 · shared · 依赖 · 主题 · 权限"]
+  K --> M["Import / Compose"]
+  M --> O
+
+  S["基础契约层\nbaseline rules · project scheme · schemas · .ai-frontend-assembler"]
+  S -.-> R
+  S -.-> P
+  S -.-> X
+  S -.-> G

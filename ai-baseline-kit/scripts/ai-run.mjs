@@ -38,7 +38,7 @@ function run(script, argv) {
 try {
   const passthrough = withoutCommand(raw);
   let status;
-  if (command === 'init') {
+  if (command === 'init' || command === 'activate') {
     const bootstrapArgs = ensureProjectRoot(passthrough.filter((item) => item !== '--plan-only'));
     status = run('project-bootstrap.mjs', bootstrapArgs);
   } else if (command === 'upgrade') {
@@ -50,9 +50,9 @@ try {
   } else if (command === 'validate') {
     status = run('project-validate.mjs', ensureProjectRoot(passthrough));
   } else if (command === 'gate') {
-    status = run('ci-gate.mjs', ensureProjectRoot(passthrough));
+    status = run('delivery-gate.mjs', ensureProjectRoot(passthrough));
   } else {
-    throw new Error(`不支持的统一入口命令: ${command}。可选值: init, develop, compose, repair, validate, gate, doctor, upgrade。`);
+    throw new Error(`不支持的统一入口命令: ${command}。可选值: init, activate, develop, compose, repair, validate, gate, doctor, upgrade。`);
   }
   process.exit(status);
 } catch (error) {

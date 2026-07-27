@@ -40,6 +40,10 @@ try {
   record('AGENTS entrypoint', checkEntrypoint('AGENTS.md'), 'AGENTS.md');
   record('CLAUDE entrypoint', checkEntrypoint('CLAUDE.md'), 'CLAUDE.md');
 
+  const completenessArgs = ['--project-root', projectRoot];
+  if (args['changed-files']) completenessArgs.push('--changed-files', path.resolve(args['changed-files']));
+  run('implementation completeness', 'implementation-completeness-check.mjs', completenessArgs);
+
   if (!args['allow-parser-fallback'] && !args['baseline-only']) {
     run('AST parser hard gate', 'ast-boundary-check.mjs', ['--project-root', projectRoot, '--require-parser']);
   }

@@ -7,6 +7,7 @@ import {
   analyzeProject,
   buildProjectScheme,
   copyDirectory,
+  ensureRootEntrypoints,
   STANDARD_PROFILES,
   resolveRoots,
 } from './project-tools-lib.mjs';
@@ -17,6 +18,43 @@ const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'ai-baseline-tools-'));
 try {
   const emptyProject = path.join(tempRoot, 'empty');
   fs.mkdirSync(emptyProject, { recursive: true });
+  const entrypointProject = path.join(tempRoot, 'entrypoints');
+  fs.mkdirSync(entrypointProject, { recursive: true });
+  assert.deepEqual(ensureRootEntrypoints(entrypointProject), ['AGENTS.md', 'CLAUDE.md']);
+  for (const file of ['AGENTS.md', 'CLAUDE.md']) {
+    const text = fs.readFileSync(path.join(entrypointProject, file), 'utf8');
+    assert.match(text, /ai-baseline-kit\/AGENTS\.md/);
+    assert.match(text, /有效交付回执/);
+  }
+  assert.deepEqual(ensureRootEntrypoints(entrypointProject), []);
+
+  const customEntrypointProject = path.join(tempRoot, 'custom-entrypoints');
+  fs.mkdirSync(customEntrypointProject, { recursive: true });
+  fs.writeFileSync(path.join(customEntrypointProject, 'AGENTS.md'), '# 原项目规则\n\n不要修改 legacy/。\n');
+  fs.writeFileSync(path.join(customEntrypointProject, 'CLAUDE.md'), '# Claude 原规则\n\n使用 pnpm。\n');
+  assert.deepEqual(ensureRootEntrypoints(customEntrypointProject), ['AGENTS.md', 'CLAUDE.md']);
+  const customAgents = fs.readFileSync(path.join(customEntrypointProject, 'AGENTS.md'), 'utf8');
+  const customClaude = fs.readFileSync(path.join(customEntrypointProject, 'CLAUDE.md'), 'utf8');
+  assert.match(customAgents, /不要修改 legacy\//);
+  assert.match(customClaude, /使用 pnpm/);
+  assert.equal((customAgents.match(/ai-baseline-kit:entrypoint:start/g) || []).length, 1);
+  assert.equal((customClaude.match(/ai-baseline-kit:entrypoint:start/g) || []).length, 1);
+  assert.deepEqual(ensureRootEntrypoints(customEntrypointProject), []);
+
+  const legacyEntrypointProject = path.join(tempRoot, 'legacy-entrypoints');
+  fs.mkdirSync(legacyEntrypointProject, { recursive: true });
+  const legacyRules = '# 旧版项目规则\n\n读取 ai-baseline-kit/AGENTS.md。\n按 ai-baseline-kit/skills/baseline-structure-skill/SKILL.md 与 ai-baseline-kit/skills/baseline-conformance-skill/SKILL.md 执行。\n';
+  fs.writeFileSync(path.join(legacyEntrypointProject, 'AGENTS.md'), legacyRules);
+  fs.writeFileSync(path.join(legacyEntrypointProject, 'CLAUDE.md'), legacyRules);
+  assert.deepEqual(ensureRootEntrypoints(legacyEntrypointProject), ['AGENTS.md', 'CLAUDE.md']);
+  for (const file of ['AGENTS.md', 'CLAUDE.md']) {
+    const upgraded = fs.readFileSync(path.join(legacyEntrypointProject, file), 'utf8');
+    assert.match(upgraded, /# 旧版项目规则/);
+    assert.equal((upgraded.match(/ai-baseline-kit:entrypoint:start/g) || []).length, 1);
+    assert.match(upgraded, /有效交付回执/);
+  }
+  assert.deepEqual(ensureRootEntrypoints(legacyEntrypointProject), []);
+
   const emptyReport = analyzeProject(emptyProject);
   assert.equal(emptyReport.mode, 'new-frontend-project');
   assert.equal(emptyReport.profile, 'react18-antd-tailwind-ts');

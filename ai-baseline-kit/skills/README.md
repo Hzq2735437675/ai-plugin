@@ -21,3 +21,7 @@
 - 新增或带引用资料的 skill 使用目录形态：`skill-name/SKILL.md`、`skill-name/references/`、`skill-name/agents/`。
 
 长版参考源仍然是 `.claude-baseline-doc.txt`；本索引不替代它。
+
+## 独立抽离说明
+
+各 Skill 可以按职责单独调用，但当前并非全部物理自包含。结构规划、基线审查和国际化 Skill 更适合独立使用；统一智能装配、项目地图生成和架构计划仍依赖整包的规则、Schema、脚本与项目状态。抽离前请阅读 [`../docs/skill-standalone-guide.md`](../docs/skill-standalone-guide.md)，不要只复制总控 `SKILL.md` 后宣称具备完整工程闭环。
