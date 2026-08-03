@@ -97,6 +97,9 @@
     "intent": {
       "type": "object"
     },
+    "capabilityRoute": {
+      "type": "object"
+    },
     "target": {
       "type": "object"
     },

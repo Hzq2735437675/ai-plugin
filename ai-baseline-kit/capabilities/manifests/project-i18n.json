@@ -1,0 +1,15 @@
+{
+  "$schema": "../../docs/capability-manifest.schema.json",
+  "schemaVersion": 1,
+  "kind": "ai-baseline-capability-manifest",
+  "id": "project-i18n",
+  "loadPhase": "specialized",
+  "skillFiles": [
+    "skills/project-i18n-localizer/SKILL.md"
+  ],
+  "contextFiles": [],
+  "scripts": [],
+  "requires": [
+    "delivery-conformance"
+  ]
+}

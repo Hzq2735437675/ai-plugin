@@ -1,0 +1,25 @@
+{
+  "$schema": "../../docs/capability-manifest.schema.json",
+  "schemaVersion": 1,
+  "kind": "ai-baseline-capability-manifest",
+  "id": "project-composition",
+  "loadPhase": "planning",
+  "skillFiles": [
+    "skills/intelligent-frontend-assembler/SKILL.md",
+    "skills/feature-architecture-planner/SKILL.md",
+    "skills/baseline-structure-skill/SKILL.md"
+  ],
+  "contextFiles": [
+    "docs/module-bundle.schema.json",
+    "docs/composition-request.schema.json"
+  ],
+  "scripts": [
+    "scripts/smart-compose.mjs",
+    "scripts/module-export.mjs",
+    "scripts/module-import.mjs",
+    "scripts/module-compatibility-check.mjs"
+  ],
+  "requires": [
+    "delivery-conformance"
+  ]
+}

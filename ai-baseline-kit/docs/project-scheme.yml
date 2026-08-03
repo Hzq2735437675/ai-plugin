@@ -2,9 +2,9 @@ project:
   name: ai-plugin
   map_status: package-repository-reference
   purpose: 可植入不同项目、为 AI 开发提供统一规范、工作流、项目地图、诊断、确定性生成和验证能力的多包 AI 能力仓库。
-  scheme_version: 0.12.1
-  updated_at: 2026-07-31
-  update_source: manual-review-after-build-isolation-upgrade
+  scheme_version: 0.15.0
+  updated_at: 2026-08-03
+  update_source: manual-review-after-capability-registry-upgrade
 
 stack:
   framework: not-applicable-package-repository
@@ -117,7 +117,7 @@ packages:
     dependencies: explicit-in-plugin-json
   items:
     - name: ai-baseline-kit
-      version: 0.12.1
+      version: 0.15.0
       root: ai-baseline-kit
       manifest: ai-baseline-kit/plugin.json
       readme: ai-baseline-kit/README.md
@@ -128,7 +128,14 @@ packages:
       standard_templates:
         - ai-baseline-kit/templates/react18-antd-tailwind-ts
         - ai-baseline-kit/templates/vue3-vite-ts
+      capability_registry: ai-baseline-kit/capabilities/index.json
+      capability_manifests: ai-baseline-kit/capabilities/manifests/*.json
+      capability_manifest_schema: ai-baseline-kit/docs/capability-manifest.schema.json
+      capability_route_schema: ai-baseline-kit/docs/capability-route.schema.json
       tools:
+        - ai-baseline-kit/scripts/capability-route.mjs
+        - ai-baseline-kit/scripts/capability-registry-lib.mjs
+        - ai-baseline-kit/scripts/capability-registry-contract-check.mjs
         - ai-baseline-kit/scripts/project-doctor.mjs
         - ai-baseline-kit/scripts/project-bootstrap.mjs
         - ai-baseline-kit/scripts/project-validate.mjs
@@ -184,7 +191,7 @@ portability:
 validation:
   typecheck: not-applicable-package-repository
   lint: not-applicable-package-repository
-  test: node scripts/package-check.mjs && node ai-baseline-kit/scripts/build-isolation-contract-check.mjs && node ai-baseline-kit/scripts/project-tools-check.mjs && node ai-baseline-kit/scripts/package-upgrade-contract-check.mjs && node ai-baseline-kit/scripts/delivery-closure-contract-check.mjs && node ai-baseline-kit/scripts/baseline-contract-check.mjs && node ai-baseline-kit/scripts/baseline-check.mjs --fail-on-warn
+  test: node scripts/package-check.mjs && node ai-baseline-kit/scripts/capability-registry-contract-check.mjs && node ai-baseline-kit/scripts/build-isolation-contract-check.mjs && node ai-baseline-kit/scripts/project-tools-check.mjs && node ai-baseline-kit/scripts/package-upgrade-contract-check.mjs && node ai-baseline-kit/scripts/delivery-closure-contract-check.mjs && node ai-baseline-kit/scripts/baseline-contract-check.mjs && node ai-baseline-kit/scripts/baseline-check.mjs --fail-on-warn
   build: node ai-baseline-kit/scripts/template-build-check.mjs
 
 required_questions: []
@@ -193,13 +200,17 @@ evidence:
   - source: ai-baseline-kit/README.md
     finding: ai-baseline-kit 是可完整植入目标项目的 AI 基线规范包，并支持自然语言需求确认、旧项目识别、项目诊断、地图初始化、确定性模块生成和统一验证。
   - source: ai-baseline-kit/plugin.json
-    finding: 当前包版本为 0.12.1；目标项目状态已外置，支持整目录替换升级；首次接入会自动建立构建/部署隔离，能力包继续纳入 Git 审计但不会进入前端产物。
+    finding: 当前包版本为 0.15.0；两级显式能力注册通过轻量索引、按需 manifest、依赖拓扑、有界缓存和分阶段加载计划处理自然语言需求；目标项目状态已外置，支持整目录替换升级；首次接入会自动建立构建/部署隔离，能力包继续纳入 Git 审计但不会进入前端产物。
   - source: package-registry.json
     finding: 根目录注册表登记当前包、两个标准模板和项目工具，并约定未来包目录为 packages/<package-name>/。
   - source: package-manifest.schema.json
     finding: 所有包的元数据契约要求独立 README、入口和安装说明。
   - source: scripts/package-check.mjs
     finding: 仓库提供无第三方依赖的包结构与元数据检查。
+  - source: ai-baseline-kit/capabilities/index.json
+    finding: 使用显式 JSON 注册能力摘要、触发条件、Skill、上下文、脚本和依赖，不使用隐式目录扫描。
+  - source: ai-baseline-kit/scripts/capability-registry-lib.mjs
+    finding: 根据自然语言和 intent 从轻量索引选择能力，只解析命中的 manifest 和显式依赖，生成分阶段加载计划，并通过有界缓存、置信度、兜底与歧义诊断写入智能开发记录。
   - source: ai-baseline-kit/scripts/project-doctor.mjs
     finding: 支持识别 Vue、React、Angular、Svelte 等旧项目的框架、构建工具、UI、路由、状态、i18n、样式、模块和验证脚本。
   - source: ai-baseline-kit/scripts/requirement-compile.mjs

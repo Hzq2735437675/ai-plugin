@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ai-baseline.local/capability-registry.schema.json",
+  "title": "AI Baseline Capability Registry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "kind", "routing", "bootstrapContext", "projectContext", "capabilities"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "schemaVersion": { "const": 2 },
+    "kind": { "const": "ai-baseline-capability-registry" },
+    "routing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "strategy", "defaultCapability", "maxPrimaryCapabilities", "routeCacheSize"],
+      "properties": {
+        "mode": { "const": "explicit-progressive" },
+        "strategy": { "const": "two-stage-manifest" },
+        "defaultCapability": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+        "maxPrimaryCapabilities": { "type": "integer", "minimum": 1, "maximum": 8 },
+        "routeCacheSize": { "type": "integer", "minimum": 0, "maximum": 1024 }
+      }
+    },
+    "bootstrapContext": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/safePath" }
+    },
+    "projectContext": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/safePath" }
+    },
+    "capabilities": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/capabilityIndexEntry" }
+    }
+  },
+  "$defs": {
+    "safePath": {
+      "type": "string",
+      "minLength": 1,
+      "not": { "pattern": "(^[A-Za-z]:|^/|(^|[\\\\/])\\.\\.([\\\\/]|$))" }
+    },
+    "stringList": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "capabilityIndexEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "summary", "priority", "intents", "triggers", "manifest"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+        "summary": { "type": "string", "minLength": 1 },
+        "priority": { "type": "integer", "minimum": 0, "maximum": 1000 },
+        "intents": { "$ref": "#/$defs/stringList" },
+        "triggers": { "$ref": "#/$defs/stringList" },
+        "manifest": { "$ref": "#/$defs/safePath" }
+      }
+    }
+  }
+}

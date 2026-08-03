@@ -11,6 +11,7 @@
 - 用户复制或覆盖新版 `ai-baseline-kit/` 后，统一运行 `ai-run activate`：不存在外置状态时首次 bootstrap，存在外置状态时自动 upgrade；升级路径必须保留项目地图和历史快照，并按 `upgrade-manifest.json` 安全清理旧版残留文件。
 - `project-bootstrap` 默认不得覆盖已有项目地图；只有用户明确要求重新扫描项目结构时才允许传入 `--refresh-project-scheme`。
 - 业务代码、依赖、路由、模块、资源扫描，都相对于 `project_root`；`.ai-frontend-assembler/` 必须保留并纳入版本管理。
+- 能力发现采用 Hermes 式两级显式注册和渐进加载：先读取 `capabilities/index.json` 的轻量摘要与触发条件，路由器只解析命中的 `capabilities/manifests/*.json`，AI 按返回的 `load.stages` 顺序读取存在的文件；`load.baselineFiles` 仅作为兼容扁平清单。禁止为了保险加载全部 manifest/Skill，也禁止要求用户选择 Skill 或内部命令。
 
 1. 任何改动前，先读取 `docs/baseline-rules.yml`、`docs/engineering-workflow.yml` 和 `project_root/.ai-frontend-assembler/project-scheme.yml`；如果目标项目地图不存在，先用 `skills/project-scheme-bootstrap/SKILL.md` 扫描 `project_root` 并生成外置项目状态。自然语言或产品文档需求先按 `skills/requirement-to-feature-spec/SKILL.md` 形成 ready Feature Spec，再按 `skills/feature-architecture-planner/SKILL.md` 和 `skills/baseline-structure-skill/SKILL.md` 固定模块归属与文件范围。
 2. 只在目标页面、模块或分层内工作，不碰无关文件；除非用户明确要求维护基线包，否则不要修改 `ai-baseline-kit/`。
@@ -23,16 +24,22 @@
 
 ## 产品需求到代码的强制入口
 
-收到自然语言、详细大白话、产品文档、API 文档或原型说明时，按以下顺序执行：
+收到自然语言、详细大白话、产品文档、API 文档或原型说明时，先按显式能力注册表自动路由，再执行路由选中的完整闭环：
 
 ```text
-requirement-to-feature-spec
+capabilities/index.json（只读轻量摘要）
+  -> capability-route（仅解析命中的 manifest，AI 内部自动执行）
+  -> 按 route.load.stages 渐进加载存在文件
+  -> route.load.baselineFiles（兼容扁平清单）
+  -> requirement-to-feature-spec
   -> 用户确认 requiredQuestions
   -> feature-architecture-planner
   -> feature-generate 或 AI 按文件白名单实现
   -> baseline-conformance
   -> project-validate
 ```
+
+`capability-route` 只负责选择能力、解析显式 manifest 和生成确定性加载计划，不执行注册表中的脚本，不允许从目录扫描并自动加载未知能力。路由包含有界缓存、依赖拓扑、置信度和兜底诊断；普通功能开发仍必须包含结构规划和交付回归，国际化、跨项目组合、接入升级等专项能力仅在命中 intent/trigger 时增量加载。
 
 Feature Spec 或 Change Plan 仍有 blocking `requiredQuestions` 时，必须向用户提问，禁止直接生成业务代码。新模块必须同时提供静态 `module.meta.json` 和运行时 `manifest.ts`，模块之间不得直接引用。
 

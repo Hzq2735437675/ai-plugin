@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ai-baseline.local/capability-manifest.schema.json",
+  "title": "AI Baseline Capability Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "kind", "id", "loadPhase", "skillFiles", "contextFiles", "scripts", "requires"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "schemaVersion": { "const": 1 },
+    "kind": { "const": "ai-baseline-capability-manifest" },
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" },
+    "loadPhase": { "enum": ["lifecycle", "planning", "specialized", "validation"] },
+    "skillFiles": { "$ref": "#/$defs/pathList" },
+    "contextFiles": { "$ref": "#/$defs/pathList" },
+    "scripts": { "$ref": "#/$defs/pathList" },
+    "requires": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$" }
+    }
+  },
+  "$defs": {
+    "safePath": {
+      "type": "string",
+      "minLength": 1,
+      "not": { "pattern": "(^[A-Za-z]:|^/|(^|[\\\\/])\\.\\.([\\\\/]|$))" }
+    },
+    "pathList": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/safePath" }
+    }
+  }
+}

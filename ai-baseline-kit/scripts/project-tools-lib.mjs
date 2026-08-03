@@ -598,8 +598,9 @@ ${baselineDirName}/AGENTS.md
 
 处理自然语言需求或产品文档时，必须使用 ${baselineDirName} 的统一装配入口完成需求分析、blocking question、Change Plan、白名单实现、测试与验证闭环；不要要求用户复述内部 Skill 或脚本步骤。
 
-- 开发前：按 \`${baselineDirName}/skills/baseline-structure-skill/SKILL.md\` 明确范围。
-- 开发后：按 \`${baselineDirName}/skills/baseline-conformance-skill/SKILL.md\` 回归。
+- 自动能力路由：先读取 \`${baselineDirName}/capabilities/index.json\`，由 AI 内部调用 \`${baselineDirName}/scripts/capability-route.mjs\`；路由器只解析命中的能力 manifest，AI 按 \`load.stages\` 顺序加载存在的文件，并兼容 \`load.baselineFiles\`；禁止要求用户选择 Skill。
+- 开发前：按路由结果中的 \`${baselineDirName}/skills/baseline-structure-skill/SKILL.md\` 明确范围。
+- 开发后：按路由结果中的 \`${baselineDirName}/skills/baseline-conformance-skill/SKILL.md\` 回归。
 - 统一接入与更新：复制或覆盖 \`${baselineDirName}/\` 后运行 \`node ${baselineDirName}/scripts/ai-run.mjs activate --project-root .\`；首次使用自动初始化，检测到已有 \`.ai-frontend-assembler/\` 状态时自动进入安全升级，保留项目地图和历史快照。
 - 项目地图保护：已有 \`.ai-frontend-assembler/project-scheme.yml\` 时禁止通过 bootstrap 重写；只有用户明确要求重新扫描时才允许使用 \`--refresh-project-scheme\`。
 - 完成声明：只有最终 Gate 通过并生成当前请求对应的有效交付回执后，才可以向用户声明“已完成”“全部通过”或“可以交付”。
@@ -614,6 +615,9 @@ export function hasStrongRootEntrypoint(text, baselineDirName = 'ai-baseline-kit
     && value.includes(AI_ENTRYPOINT_END)
     && [
       `${baselineDirName}/AGENTS.md`,
+      `${baselineDirName}/capabilities/index.json`,
+      `${baselineDirName}/scripts/capability-route.mjs`,
+      'load.stages',
       `${baselineDirName}/skills/baseline-structure-skill/SKILL.md`,
       `${baselineDirName}/skills/baseline-conformance-skill/SKILL.md`,
       '有效交付回执',

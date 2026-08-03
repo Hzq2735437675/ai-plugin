@@ -1,7 +1,7 @@
 # AI Baseline Kit 安装与植入说明
 
 - 包名：`ai-baseline-kit`
-- 当前版本：`0.12.1`
+- 当前版本：`0.15.0`
 - 运行环境：Node.js 20 或以上版本（推荐使用公司统一的当前 LTS 版本）
 - 包元数据：[`plugin.json`](plugin.json)
 - 主入口：[`AGENTS.md`](AGENTS.md)
@@ -9,6 +9,14 @@
 - 使用指南：[`docs/使用指南.md`](docs/使用指南.md)
 - 系统说明书：[`docs/system-specification.md`](docs/system-specification.md)
 - Skill 独立使用：[`docs/skill-standalone-guide.md`](docs/skill-standalone-guide.md)
+
+## 0.15.0 两级能力路由说明
+
+复制覆盖方式不变。AI 会先读取轻量 `capabilities/index.json`，内部调用 `capability-route.mjs`，再只解析命中的 `capabilities/manifests/*.json`，并按 `load.stages` 渐进读取 Skill 和上下文。用户不需要选择能力、manifest、Skill 或脚本。
+
+## 0.13.0 能力路由说明
+
+安装和升级步骤没有增加。AI 会先读取轻量的 `capabilities/index.json`，再自动按需求加载必要 Skill；普通用户不要手工选择 Skill，也不需要执行 `capability-route.mjs`。该脚本属于 AI 内部路由和维护者诊断入口。
 
 ## 推荐的日常入口
 

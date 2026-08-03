@@ -13,7 +13,7 @@
   "packages": [
     {
       "name": "ai-baseline-kit",
-      "version": "0.12.1",
+      "version": "0.15.0",
       "path": "ai-baseline-kit",
       "manifest": "ai-baseline-kit/plugin.json",
       "readme": "ai-baseline-kit/README.md",
@@ -27,6 +27,9 @@
         "ai-baseline-kit/templates/vue3-vite-ts/README.md"
       ],
       "tools": [
+        "ai-baseline-kit/scripts/capability-registry-contract-check.mjs",
+        "ai-baseline-kit/scripts/capability-registry-lib.mjs",
+        "ai-baseline-kit/scripts/capability-route.mjs",
         "ai-baseline-kit/scripts/project-doctor.mjs",
         "ai-baseline-kit/scripts/project-bootstrap.mjs",
         "ai-baseline-kit/scripts/project-validate.mjs",
@@ -74,7 +77,11 @@
         "overviewDiagramPng": "ai-baseline-kit/docs/assets/ai-frontend-module-assembler-overview.png",
         "usageGuide": "ai-baseline-kit/docs/使用指南.md",
         "deliveryReceiptSchema": "ai-baseline-kit/docs/delivery-receipt.schema.json"
-      }
+      },
+      "capabilityRegistry": "ai-baseline-kit/capabilities/index.json",
+      "capabilityManifests": "ai-baseline-kit/capabilities/manifests/*.json",
+      "capabilityManifestSchema": "ai-baseline-kit/docs/capability-manifest.schema.json",
+      "capabilityRouteSchema": "ai-baseline-kit/docs/capability-route.schema.json"
     }
   ]
 }

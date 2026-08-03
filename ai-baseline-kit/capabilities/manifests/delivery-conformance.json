@@ -1,0 +1,20 @@
+{
+  "$schema": "../../docs/capability-manifest.schema.json",
+  "schemaVersion": 1,
+  "kind": "ai-baseline-capability-manifest",
+  "id": "delivery-conformance",
+  "loadPhase": "validation",
+  "skillFiles": [
+    "skills/baseline-conformance-skill/SKILL.md"
+  ],
+  "contextFiles": [
+    "docs/baseline-rules.yml",
+    "docs/engineering-workflow.yml"
+  ],
+  "scripts": [
+    "scripts/project-validate.mjs",
+    "scripts/delivery-gate.mjs",
+    "scripts/build-artifact-guard.mjs"
+  ],
+  "requires": []
+}

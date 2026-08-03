@@ -1,0 +1,156 @@
+{
+  "$schema": "../docs/capability-registry.schema.json",
+  "schemaVersion": 2,
+  "kind": "ai-baseline-capability-registry",
+  "routing": {
+    "mode": "explicit-progressive",
+    "strategy": "two-stage-manifest",
+    "defaultCapability": "feature-development",
+    "maxPrimaryCapabilities": 3,
+    "routeCacheSize": 64
+  },
+  "bootstrapContext": [
+    "AGENTS.md",
+    "capabilities/index.json"
+  ],
+  "projectContext": [
+    ".ai-frontend-assembler/project-scheme.yml"
+  ],
+  "capabilities": [
+    {
+      "id": "project-lifecycle",
+      "summary": "处理装配包首次接入、复制覆盖、升级、项目地图初始化和入口增强。",
+      "priority": 100,
+      "intents": [
+        "activate-project",
+        "upgrade-project"
+      ],
+      "triggers": [
+        "复制",
+        "粘贴",
+        "覆盖",
+        "替换",
+        "接入",
+        "安装",
+        "初始化",
+        "激活",
+        "升级",
+        "更新装配包",
+        "activate",
+        "upgrade",
+        "install",
+        "bootstrap"
+      ],
+      "manifest": "capabilities/manifests/project-lifecycle.json"
+    },
+    {
+      "id": "project-composition",
+      "summary": "处理模块抽离、跨项目迁移、组合和可移植性验证。",
+      "priority": 90,
+      "intents": [
+        "compose-project"
+      ],
+      "triggers": [
+        "组合",
+        "模块装配",
+        "项目装配",
+        "装配模块",
+        "装配项目",
+        "抽离",
+        "抽取",
+        "迁移",
+        "合并项目",
+        "跨项目",
+        "compose",
+        "extract",
+        "migrate"
+      ],
+      "manifest": "capabilities/manifests/project-composition.json"
+    },
+    {
+      "id": "project-i18n",
+      "summary": "处理国际化识别、文案抽取、翻译和多语言覆盖验证。",
+      "priority": 80,
+      "intents": [
+        "localize-project"
+      ],
+      "triggers": [
+        "国际化",
+        "多语言",
+        "中英文",
+        "英文文案",
+        "翻译",
+        "文案抽取",
+        "i18n",
+        "locale",
+        "localize",
+        "translation"
+      ],
+      "manifest": "capabilities/manifests/project-i18n.json"
+    },
+    {
+      "id": "delivery-conformance",
+      "summary": "处理基线回归、测试、构建、产物隔离、Gate 和交付回执。",
+      "priority": 70,
+      "intents": [
+        "validate-project",
+        "deliver-project"
+      ],
+      "triggers": [
+        "检查",
+        "验证",
+        "测试",
+        "构建",
+        "打包",
+        "产物",
+        "交付",
+        "回执",
+        "门禁",
+        "validate",
+        "test",
+        "build",
+        "gate",
+        "delivery"
+      ],
+      "manifest": "capabilities/manifests/delivery-conformance.json"
+    },
+    {
+      "id": "feature-development",
+      "summary": "处理新建或修改页面、模块、路由、API、store、样式、配置和依赖。",
+      "priority": 60,
+      "intents": [
+        "create-project",
+        "modify-feature",
+        "repair-project"
+      ],
+      "triggers": [
+        "新增",
+        "新建",
+        "创建",
+        "修改",
+        "开发",
+        "实现",
+        "页面",
+        "模块",
+        "路由",
+        "接口",
+        "组件",
+        "状态",
+        "样式",
+        "重构",
+        "修复",
+        "治理",
+        "feature",
+        "page",
+        "module",
+        "route",
+        "api",
+        "store",
+        "component",
+        "refactor",
+        "repair"
+      ],
+      "manifest": "capabilities/manifests/feature-development.json"
+    }
+  ]
+}

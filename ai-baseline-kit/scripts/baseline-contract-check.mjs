@@ -344,6 +344,10 @@ try {
   assert.equal(legacyReport.entrypoints.api_client, 'src/http/client.ts');
   assert.match(legacyScheme, /required_questions:\r?\n\s+- field:/);
 
+  const capabilityRegistryContracts = spawnSync(process.execPath, [path.join(baselineRoot, 'scripts', 'capability-registry-contract-check.mjs')], { cwd: baselineRoot, encoding: 'utf8' });
+  assertPass(capabilityRegistryContracts, 'capability registry contract check');
+  console.log(capabilityRegistryContracts.stdout.trim());
+
   const controlledExecutionContracts = spawnSync(process.execPath, [path.join(baselineRoot, 'scripts', 'controlled-execution-contract-check.mjs')], { cwd: baselineRoot, encoding: 'utf8' });
   assertPass(controlledExecutionContracts, 'controlled execution contract check');
   console.log(controlledExecutionContracts.stdout.trim());
@@ -379,6 +383,7 @@ try {
   console.log('theme-entrypoint: pass');
   console.log('acceptance-test-generation: pass');
   console.log('module-portability-and-compose: pass');
+  console.log('capability-registry-progressive-routing: pass');
   console.log('controlled-execution-hard-gates: pass');
   console.log('delivery-closure-hard-gate: pass');
   console.log('build-artifact-isolation: pass');

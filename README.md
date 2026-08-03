@@ -2,7 +2,7 @@
 
 > 机器包名：`ai-baseline-kit`
 
-> 当前版本：`0.12.1`
+> 当前版本：`0.15.0`
 
 AI 前端模块装配系统是一套**由 AI 编排、以工程契约约束、在构建期组合模块**的前端工程能力包。它面向自然语言或产品文档驱动的开发场景，让 AI 不只是生成页面代码，还必须完成需求确认、模块拆解、文件边界控制、自动测试、跨项目模块迁移、项目组合和最终验收。
 
@@ -145,7 +145,7 @@ node ai-baseline-kit/scripts/baseline-check.mjs --project-root <project-c> --fai
 
 | 产品展示名称 | 机器包名 | 版本 | 类型 | AI 主入口 | 安装说明 |
 | --- | --- | --- | --- | --- | --- |
-| AI 前端模块装配系统 | `ai-baseline-kit` | `0.12.1` | 可嵌入 AI 工程能力包 | [`ai-baseline-kit/AGENTS.md`](ai-baseline-kit/AGENTS.md) | [`ai-baseline-kit/INSTALL.md`](ai-baseline-kit/INSTALL.md) |
+| AI 前端模块装配系统 | `ai-baseline-kit` | `0.15.0` | 可嵌入 AI 工程能力包 | [`ai-baseline-kit/AGENTS.md`](ai-baseline-kit/AGENTS.md) | [`ai-baseline-kit/INSTALL.md`](ai-baseline-kit/INSTALL.md) |
 
 完整登记信息见 [`package-registry.json`](package-registry.json)。
 
@@ -215,6 +215,7 @@ ai-plugin/
 node scripts/package-check.mjs
 
 # 工具自测和离线契约回归
+node ai-baseline-kit/scripts/capability-registry-contract-check.mjs
 node ai-baseline-kit/scripts/project-tools-check.mjs
 node ai-baseline-kit/scripts/baseline-contract-check.mjs
 
@@ -247,6 +248,22 @@ node ai-baseline-kit/scripts/template-build-check.mjs --profile vue3-vite-ts
 - `plugin.json.entrypoints.primary` 必须指向包的 AI 主入口。
 - 包之间不得通过隐式相对路径耦合。
 - 新增包需要登记到 `package-registry.json` 并通过 `scripts/package-check.mjs`。
+
+## 0.15.0：两级能力路由与分阶段渐进加载
+
+- `capabilities/index.json` 收敛为轻量发现索引，不再承载全部 Skill、上下文和脚本清单。
+- 每项能力通过 `capabilities/manifests/*.json` 显式声明详细依赖；路由器只解析命中的 manifest 和它的显式依赖。
+- 路由结果新增 `load.stages`，按 bootstrap、dependencies、primary、project 顺序加载，并保留 `load.baselineFiles` 兼容旧入口。
+- 路由内核新增规范化索引缓存、manifest 文件缓存和有界 LRU 路由缓存，同时输出置信度、歧义、兜底和加载比例。
+- 新能力仍必须显式登记，不进行目录扫描、不动态执行脚本；用户仍只需复制覆盖目录并用自然语言描述目标。
+
+## 0.13.0：显式能力注册与渐进加载
+
+- 借鉴 Hermes 的能力注册思想，新增 `capabilities/index.json` 作为唯一显式能力目录。
+- AI 根据自然语言 intent/trigger 自动选择能力，用户无需知道或选择 Skill、脚本和工作流。
+- 只加载本次命中的 Skill、Schema 和上下文，避免一次性读取全部能力文档。
+- 注册表禁止隐式目录扫描和动态脚本注册，并通过契约测试校验路径、依赖、重复项和循环依赖。
+- `smart-develop` 自动记录 capability route，后续新增能力只需登记元数据并补契约，不改变复制覆盖和一句话使用方式。
 
 ## 0.12.1：复制覆盖自动安全升级
 

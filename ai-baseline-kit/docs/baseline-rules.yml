@@ -28,6 +28,8 @@ project_scheme:
     - 业务改动默认只发生在 project_root，不修改 ai-baseline-kit；只有维护规范包时才改 baseline_root。
     - 项目根 AGENTS.md 和 CLAUDE.md 应包含 ai-baseline 强入口约束；缺失时创建，已有但不完整时追加受控段落，不覆盖原内容。
     - 多 AI 自动发现入口当前仅限 AGENTS.md 和 CLAUDE.md，不创建 Cursor、Copilot 或其他工具专属文件。
+    - 能力发现必须先读取 capabilities/index.json 轻量索引，只解析索引显式指向且本次命中的 capabilities/manifests/*.json；禁止目录扫描、动态注册或执行 manifest 中的脚本。
+    - AI 必须按 capability-route 返回的 load.stages 顺序读取存在文件；load.baselineFiles 仅用于兼容旧调用方，不得借兼容字段退化为全量 Skill 加载。
     - 目标项目专属状态必须写入 .ai-frontend-assembler/，不得写回可替换的 ai-baseline-kit/ 包目录。
     - 不要自动向目标项目 .gitignore 追加 ai-baseline-kit/；规范包变化应允许在 Git 中显示，便于审计、同步和提交。
     - 首次 activate/init 必须自动建立构建隔离：ai-baseline-kit/.npmignore 与 .ai-frontend-assembler/.npmignore 使用嵌套排除，根 .dockerignore / .vercelignore 使用受控规则块，已有 .npmignore / .gcloudignore / .cfignore 则安全追加受控规则。

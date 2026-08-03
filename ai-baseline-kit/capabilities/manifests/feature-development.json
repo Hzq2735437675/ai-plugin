@@ -1,0 +1,25 @@
+{
+  "$schema": "../../docs/capability-manifest.schema.json",
+  "schemaVersion": 1,
+  "kind": "ai-baseline-capability-manifest",
+  "id": "feature-development",
+  "loadPhase": "planning",
+  "skillFiles": [
+    "skills/requirement-to-feature-spec/SKILL.md",
+    "skills/feature-architecture-planner/SKILL.md",
+    "skills/baseline-structure-skill/SKILL.md"
+  ],
+  "contextFiles": [
+    "docs/feature-spec.schema.json",
+    "docs/change-plan.schema.json"
+  ],
+  "scripts": [
+    "scripts/smart-develop.mjs",
+    "scripts/requirement-compile.mjs",
+    "scripts/feature-plan.mjs",
+    "scripts/feature-generate.mjs"
+  ],
+  "requires": [
+    "delivery-conformance"
+  ]
+}

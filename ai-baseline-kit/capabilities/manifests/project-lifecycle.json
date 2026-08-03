@@ -1,0 +1,19 @@
+{
+  "$schema": "../../docs/capability-manifest.schema.json",
+  "schemaVersion": 1,
+  "kind": "ai-baseline-capability-manifest",
+  "id": "project-lifecycle",
+  "loadPhase": "lifecycle",
+  "skillFiles": [
+    "skills/project-scheme-bootstrap/SKILL.md"
+  ],
+  "contextFiles": [
+    "INSTALL.md"
+  ],
+  "scripts": [
+    "scripts/ai-run.mjs",
+    "scripts/project-bootstrap.mjs",
+    "scripts/project-upgrade.mjs"
+  ],
+  "requires": []
+}

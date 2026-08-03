@@ -3,8 +3,22 @@
 > 文档性质：公司级软件资产说明与技术规格
 > 产品名称：AI 前端模块装配系统
 > 机器包名：`ai-baseline-kit`
-> 当前适用版本：`0.12.1`
-> 文档日期：2026-07-31
+> 当前适用版本：`0.15.0`
+> 文档日期：2026-08-03
+
+## 0.15.0 两级 manifest、确定性路由与加载计划
+
+系统将能力发现拆为两层：`capabilities/index.json` 是稳定、轻量、可审计的发现索引；`capabilities/manifests/*.json` 是按命中解析的详细能力契约。路由器不扫描目录，只按索引中的显式路径读取 manifest，并沿 `requires` 构建依赖拓扑。
+
+路由结果新增 `load.stages`，以 bootstrap、dependencies、primary、project 四个阶段描述 AI 应读取的文件，同时保留 `load.baselineFiles` 兼容已有入口。内核对索引归一化结果、manifest 文件和最终路由使用有界缓存，并通过文件 mtime/size、项目状态签名和请求摘要自动失效。每次路由都会输出置信度、兜底、歧义、加载 manifest 数量、字节数和加载比例，便于运行记录审计。
+
+该版本继续坚持零用户配置：复制覆盖后由 AI 内部执行 `ai-run activate` 和能力路由，用户不需要知道 manifest、Skill、脚本或加载阶段。
+
+## 0.13.0 显式能力注册与渐进加载
+
+系统新增 `capabilities/index.json` 作为显式能力注册表。AI 先读取轻量能力摘要，根据自然语言和 intent 选择能力，再只加载相关 Skill、Schema、规则和脚本映射。`smart-develop` 会自动记录路由结果，普通用户无需选择 Skill 或增加命令。注册表禁止隐式目录扫描和动态执行未知脚本，并由独立契约检查验证安全相对路径、文件存在性、能力依赖和循环依赖。
+
+该层借鉴 Hermes 的能力发现与按需加载思想，但不引入完整 Agent Loop、模型路由、记忆数据库或自修改 Skill，从而保持整目录复制、模型无关和低使用负担。
 
 ## 0.12.1 覆盖升级自动路由和状态保护
 
@@ -18,7 +32,7 @@
 | 英文建议名 | AI Frontend Module Assembly System |
 | 机器包名 | `ai-baseline-kit` |
 | 资产类型 | 内嵌式 AI 工程能力包 / 前端研发治理工具 |
-| 当前版本 | `0.12.1` |
+| 当前版本 | `0.15.0` |
 | 主入口 | `ai-baseline-kit/AGENTS.md` |
 | 统一执行入口 | `ai-baseline-kit/scripts/ai-run.mjs` |
 | 分发方式 | 整目录复制到目标项目根目录 |
@@ -413,6 +427,7 @@ node ai-baseline-kit/scripts/ai-run.mjs activate
 
 ```bash
 node scripts/package-check.mjs
+node ai-baseline-kit/scripts/capability-registry-contract-check.mjs
 node ai-baseline-kit/scripts/project-tools-check.mjs
 node ai-baseline-kit/scripts/package-upgrade-contract-check.mjs
 node ai-baseline-kit/scripts/intelligent-development-contract-check.mjs
@@ -424,6 +439,7 @@ git diff --check
 
 契约回归覆盖：
 
+- 两级显式能力注册、依赖拓扑、分阶段加载、有界缓存、路由诊断和注册表安全约束；
 - React/Vue 新建和扩展；
 - 主题入口；
 - 验收测试生成；

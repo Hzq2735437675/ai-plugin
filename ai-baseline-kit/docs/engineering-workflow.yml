@@ -4,6 +4,7 @@ path_mode:
   baseline_root: ai-baseline-kit 目录；规则、skills、scripts 和包参考地图位于此目录内。
   project_root: ai-baseline-kit 的父目录；业务代码、依赖、路由、模块和资源均按此目录扫描或修改。
   embedded_usage: 整包植入项目时，不把 docs/skills/scripts 抽到业务项目根目录；AI 首次接入先补齐项目根 AGENTS.md / CLAUDE.md，再读取 ai-baseline-kit/AGENTS.md。
+  capability_routing: 先读取 capabilities/index.json 轻量索引，由 capability-route 只解析命中的显式 manifest；AI 按 load.stages 顺序加载存在文件，不要求用户选择 Skill 或脚本。
 
 principles:
   - 先读规则，再做计划，再实施，再回归。

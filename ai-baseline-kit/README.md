@@ -2,7 +2,7 @@
 
 - 产品展示名称：AI 前端模块装配系统
 - 机器包名：`ai-baseline-kit`
-- 当前版本：`0.12.1`
+- 当前版本：`0.15.0`
 - 运行环境：Node.js 20 或以上版本（推荐使用公司统一的当前 LTS 版本）
 - 包元数据：[`plugin.json`](plugin.json)
 - 安装/植入说明：[`INSTALL.md`](INSTALL.md)
@@ -36,6 +36,30 @@
 ```
 
 用户不需要写固定长提示词，也不需要知道内部 Skill、Feature Spec、Change Plan、AST 或脚本命令。若根入口尚未接入，首次只需说“请接入并使用项目根目录 ai-baseline-kit 的 AI 前端模块装配系统处理本次需求：<需求>”；系统会创建或安全追加根 `AGENTS.md` / `CLAUDE.md`。之后 AI 从根入口自动展开完整流程，只在存在 blocking question 时一次性提问。
+
+## 两级能力路由与分阶段加载（0.15.0）
+
+0.15.0 在 0.13.0 显式注册表基础上进一步拆成“轻量索引 + 独立能力 manifest”：
+
+- `capabilities/index.json` 只保留能力 id、摘要、优先级、intent、触发词和 manifest 路径。
+- `capabilities/manifests/*.json` 保存 Skill、上下文、脚本、加载阶段和显式依赖；只有命中的能力及其依赖会被解析。
+- `capability-route.mjs` 输出 `load.stages`，AI 按 bootstrap、dependencies、primary、project 顺序加载存在文件，`load.baselineFiles` 继续兼容旧调用方。
+- 路由内核使用文件状态缓存、预归一化索引和最大 64 项的 LRU 路由缓存；结果包含置信度、兜底、歧义、manifest 加载比例和缓存命中信息。
+- `project-i18n`、功能开发和跨项目组合显式依赖交付回归，避免专项能力单独命中时遗漏最终验证。
+
+普通用户的操作没有增加：新旧项目仍直接复制覆盖 `ai-baseline-kit/`，然后告诉 AI“按新版装配包自动更新并处理需求”。
+
+## 自动能力路由与渐进加载（0.13.0）
+
+0.13.0 借鉴 Hermes 的一个核心思想：**能力先显式登记，再按需加载**。普通用户的使用方式不变，仍然只需复制覆盖 `ai-baseline-kit/` 并用一句自然语言告诉 AI 要做什么。
+
+- 0.13.0 首次引入集中式能力摘要、触发条件、Skill、上下文和脚本映射；0.15.0 已将详细映射拆分到独立 manifest。
+- `capability-route.mjs` 根据自然语言和已识别 intent 自动路由；功能开发、国际化、跨项目组合、接入升级和交付检查只在命中时加载。
+- `smart-develop` 自动把路由结果写入运行记录，用户不需要执行额外命令，也不需要知道内部能力名称。
+- 新增能力只需增加独立 Skill/脚本并显式登记；注册表契约会拒绝路径越界、缺失文件、重复 id、未知依赖和循环依赖。
+- 不使用目录扫描或 import-time 动态注册，避免复制覆盖后因为残留文件或未知脚本产生不可预测行为。
+
+这项改造减少 AI 的无效上下文读取，提高需求路由效率，并保留现有复制覆盖、自动升级、项目状态保护和构建隔离流程。
 
 ## 复制覆盖自动安全升级（0.12.1）
 
@@ -297,6 +321,13 @@ node ai-baseline-kit/scripts/baseline-check.mjs --mode changed --fail-on-warn
 ## 文件职责
 
 - `AGENTS.md`: AI 工作入口和硬约束。
+- `capabilities/index.json`: 两级能力注册表的轻量索引，只登记发现信息和显式 manifest 路径。
+- `capabilities/manifests/*.json`: 命中后才解析的能力详细契约。
+- `docs/capability-registry.schema.json`: 轻量能力索引结构契约。
+- `docs/capability-manifest.schema.json`: 独立能力 manifest 结构契约。
+- `docs/capability-route.schema.json`: 分阶段路由结果结构契约。
+- `scripts/capability-route.mjs`: AI 内部自然语言能力路由入口。
+- `scripts/capability-registry-contract-check.mjs`: 注册表路径、文件、依赖、路由与渐进加载契约回归。
 - `docs/baseline-rules.yml`: 通用基线规则，包含分层、模块契约、装配、命名、样式、i18n、迁移和回归规则。
 - `docs/engineering-workflow.yml`: 不同任务的执行流程，例如新功能、旧页模块化、模块迁移和回归闭环。
 - `.ai-frontend-assembler/project-scheme.yml`: 目标项目地图，记录真实技术栈、目录、入口、模块和迁移边界。

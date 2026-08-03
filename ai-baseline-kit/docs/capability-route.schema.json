@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ai-baseline.local/capability-route.schema.json",
+  "title": "AI Baseline Capability Route",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "kind", "routingMode", "routingStrategy", "requestIntent", "registry", "primaryCapabilities", "capabilities", "load", "diagnostics", "performance"],
+  "properties": {
+    "schemaVersion": { "const": 2 },
+    "kind": { "const": "ai-baseline-capability-route" },
+    "routingMode": { "const": "explicit-progressive" },
+    "routingStrategy": { "const": "two-stage-manifest" },
+    "requestIntent": { "type": "string" },
+    "registry": { "type": "object" },
+    "primaryCapabilities": { "type": "array", "minItems": 1, "items": { "type": "object" } },
+    "capabilities": { "type": "array", "minItems": 1, "items": { "type": "object" } },
+    "load": {
+      "type": "object",
+      "required": ["stages", "baselineFiles", "projectFiles", "manifests", "scripts"],
+      "properties": {
+        "stages": { "type": "array", "minItems": 1, "items": { "type": "object" } },
+        "baselineFiles": { "type": "array", "items": { "type": "string" } },
+        "projectFiles": { "type": "array", "items": { "type": "object" } },
+        "manifests": { "type": "array", "items": { "type": "string" } },
+        "scripts": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "diagnostics": { "type": "object" },
+    "performance": { "type": "object" }
+  }
+}
