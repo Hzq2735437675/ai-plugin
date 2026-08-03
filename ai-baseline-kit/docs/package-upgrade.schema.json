@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "package-upgrade.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "obsoleteFiles"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "schemaVersion": { "type": "integer", "const": 1 },
+    "obsoleteFiles": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    }
+  }
+}

@@ -1,10 +1,14 @@
 # AI 前端模块装配系统：系统说明书
 
-> 文档性质：公司级软件资产说明与技术规格  
-> 产品名称：AI 前端模块装配系统  
-> 机器包名：`ai-baseline-kit`  
-> 当前适用版本：`0.11.0`  
-> 文档日期：2026-07-27
+> 文档性质：公司级软件资产说明与技术规格
+> 产品名称：AI 前端模块装配系统
+> 机器包名：`ai-baseline-kit`
+> 当前适用版本：`0.12.1`
+> 文档日期：2026-07-31
+
+## 0.12.1 覆盖升级自动路由和状态保护
+
+复制新版 `ai-baseline-kit/` 覆盖后，统一入口 `ai-run activate` 根据 `.ai-frontend-assembler/` 是否已有状态自动选择首次 bootstrap 或安全 upgrade。升级不覆盖项目专属 `project-scheme.yml` 与 `legacy-baseline.json`，并依据包内 `upgrade-manifest.json` 在能力包目录内安全删除已声明的旧版残留文件。
 
 ## 1. 资产标识
 
@@ -14,7 +18,7 @@
 | 英文建议名 | AI Frontend Module Assembly System |
 | 机器包名 | `ai-baseline-kit` |
 | 资产类型 | 内嵌式 AI 工程能力包 / 前端研发治理工具 |
-| 当前版本 | `0.11.0` |
+| 当前版本 | `0.12.1` |
 | 主入口 | `ai-baseline-kit/AGENTS.md` |
 | 统一执行入口 | `ai-baseline-kit/scripts/ai-run.mjs` |
 | 分发方式 | 整目录复制到目标项目根目录 |
@@ -25,6 +29,10 @@
 | 源代码仓库 | 由公司资产管理员登记正式仓库地址和访问级别 |
 
 本说明书不替代公司的知识产权、开源合规、安全分级和发布审批制度。权属主体、责任人、仓库地址、密级等组织信息不得由工具自行猜测，应在纳入资产体系时由公司正式登记。
+
+## 1.1 构建隔离契约
+
+0.12.0 引入“Git 可审计、产物不可携带”的双轨策略：源码仓库保留 `ai-baseline-kit/` 与 `.ai-frontend-assembler/`，首次激活自动配置 npm 嵌套排除、Docker/Vercel ignore 和 `postbuild` 产物守卫。构建输出在 clean 后还会执行 check，非标准输出目录通过 CLI 或环境变量显式声明。
 
 ## 2. 建设目标
 
@@ -299,14 +307,14 @@ modules/<module>/
 
 ```text
 保留 .ai-frontend-assembler/
-→ 删除旧 ai-baseline-kit/
-→ 复制新 ai-baseline-kit/
-→ ai-run upgrade
-→ doctor
-→ gate
+→ 直接复制并覆盖新 ai-baseline-kit/
+→ AI 统一执行 ai-run activate
+→ 自动路由 bootstrap / upgrade
+→ 自动清理升级清单中的旧版残留
+→ doctor / validate / delivery gate
 ```
 
-0.10.0 起，升级不得重新生成项目地图，也不得刷新旧项目历史快照。
+0.10.0 起，升级不得重新生成项目地图，也不得刷新旧项目历史快照；0.12.1 起允许直接合并覆盖包目录，由安全升级清单清理已废弃文件。
 
 ## 10. 技术栈支持策略
 
@@ -394,7 +402,7 @@ node ai-baseline-kit/scripts/ai-run.mjs validate
 node ai-baseline-kit/scripts/ai-run.mjs gate
 node ai-baseline-kit/scripts/ai-run.mjs doctor
 node ai-baseline-kit/scripts/ai-run.mjs status
-node ai-baseline-kit/scripts/ai-run.mjs upgrade
+node ai-baseline-kit/scripts/ai-run.mjs activate
 ```
 
 `ai-run` 不提供可交互可视化界面，符合“降低使用者负担、优先智能化自动化”的产品原则。

@@ -30,6 +30,10 @@ project_scheme:
     - 多 AI 自动发现入口当前仅限 AGENTS.md 和 CLAUDE.md，不创建 Cursor、Copilot 或其他工具专属文件。
     - 目标项目专属状态必须写入 .ai-frontend-assembler/，不得写回可替换的 ai-baseline-kit/ 包目录。
     - 不要自动向目标项目 .gitignore 追加 ai-baseline-kit/；规范包变化应允许在 Git 中显示，便于审计、同步和提交。
+    - 首次 activate/init 必须自动建立构建隔离：ai-baseline-kit/.npmignore 与 .ai-frontend-assembler/.npmignore 使用嵌套排除，根 .dockerignore / .vercelignore 使用受控规则块，已有 .npmignore / .gcloudignore / .cfignore 则安全追加受控规则。
+    - 目标项目存在 scripts.build 时，首次接入必须幂等接入 scripts.postbuild 构建产物守卫；守卫只允许清理已识别输出目录内的 ai-baseline-kit/ 与 .ai-frontend-assembler/，不得删除源码目录。
+    - 自定义构建输出目录无法自动识别时，必须通过 --output 或 AI_BASELINE_OUTPUT_DIRS 显式声明，并在 Gate 中执行 build-artifact-guard --check。
+    - 业务源码禁止 import/require ai-baseline-kit/ 或 .ai-frontend-assembler/；否则构建器可能将能力包内容内联进前端产物，baseline-check 必须报错。
     - 如果目标项目 .gitignore 已忽略 ai-baseline-kit/，需要显示规范包变化时应由开发者显式移除该忽略规则。
   status:
     current_branch: generated_or_bootstrapped_per_project
@@ -41,7 +45,7 @@ project_scheme:
     - 空项目且用户未指定技术栈时，使用 stack-profiles.yml 的 default_new_frontend_profile；只有用户需求与默认方案冲突或关键信息不足时才提出最少确认问题
     - 无法可靠推断的字段保留为 unknown，并在 required_questions 中列出最少问题
     - 不因为缺少 scheme 直接开始业务改动
-    - 完成 0.10.0+ 接入后，升级通过整目录替换 ai-baseline-kit/ 完成；必须保留 .ai-frontend-assembler/。
+    - 完成 0.10.0+ 接入后，升级通过直接覆盖整目录 ai-baseline-kit/ 完成；统一入口 ai-run activate 自动路由首次 bootstrap 或安全 upgrade，必须保留 .ai-frontend-assembler/。
   required_when_enabled:
     - current tech stack summary
     - shell/shared/modules map

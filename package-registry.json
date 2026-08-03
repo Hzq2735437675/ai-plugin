@@ -13,7 +13,7 @@
   "packages": [
     {
       "name": "ai-baseline-kit",
-      "version": "0.11.0",
+      "version": "0.12.1",
       "path": "ai-baseline-kit",
       "manifest": "ai-baseline-kit/plugin.json",
       "readme": "ai-baseline-kit/README.md",
@@ -33,6 +33,8 @@
         "ai-baseline-kit/scripts/project-tools-check.mjs",
         "ai-baseline-kit/scripts/baseline-contract-check.mjs",
         "ai-baseline-kit/scripts/template-build-check.mjs",
+        "ai-baseline-kit/scripts/build-isolation-contract-check.mjs",
+        "ai-baseline-kit/scripts/build-artifact-guard.mjs",
         "ai-baseline-kit/scripts/requirement-compile.mjs",
         "ai-baseline-kit/scripts/feature-plan.mjs",
         "ai-baseline-kit/scripts/feature-generate.mjs",

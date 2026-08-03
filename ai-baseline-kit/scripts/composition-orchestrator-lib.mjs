@@ -119,7 +119,7 @@ function compositionScope(projectRoot, bundles) {
     'docs/project-composition.json', 'docs/module-imports',
     '.ai-frontend-assembler',
     ...(!fs.existsSync(path.join(projectRoot, 'ai-baseline-kit')) ? ['ai-baseline-kit'] : []),
-    'AGENTS.md', 'CLAUDE.md',
+    'AGENTS.md', 'CLAUDE.md', '.dockerignore', '.vercelignore', '.npmignore', '.gcloudignore', '.cfignore',
   ].filter((item) => item && item !== 'unknown');
   return { allowedRoots: [...new Set(allowedRoots)], allowBaselineMaintenance: true, targetWasEmpty: false };
 }

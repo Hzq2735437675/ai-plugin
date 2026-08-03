@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 import { spawnSync } from 'node:child_process';
+import fs from 'node:fs';
 import path from 'node:path';
 import { parseArgs, resolveRoots } from './project-tools-lib.mjs';
+import { getProjectStatePaths } from './project-state-lib.mjs';
 
 const raw = process.argv.slice(2);
 const args = parseArgs(raw);
@@ -40,7 +42,16 @@ try {
   let status;
   if (command === 'init' || command === 'activate') {
     const bootstrapArgs = ensureProjectRoot(passthrough.filter((item) => item !== '--plan-only'));
-    status = run('project-bootstrap.mjs', bootstrapArgs);
+    const statePaths = getProjectStatePaths(projectRoot, baselineRoot);
+    const hasExistingState = [statePaths.manifestFile, statePaths.schemeFile, statePaths.legacyBaselineFile]
+      .some((file) => fs.existsSync(file));
+    const explicitBootstrap = Boolean(args['init-template'] || args['refresh-project-scheme']);
+    if (hasExistingState && !explicitBootstrap) {
+      console.log('ai-run: 检测到已有项目状态，自动进入安全升级并保留项目地图。');
+      status = run('project-upgrade.mjs', ensureProjectRoot(passthrough));
+    } else {
+      status = run('project-bootstrap.mjs', bootstrapArgs);
+    }
   } else if (command === 'upgrade') {
     status = run('project-upgrade.mjs', ensureProjectRoot(passthrough));
   } else if (command === 'doctor' || command === 'status') {

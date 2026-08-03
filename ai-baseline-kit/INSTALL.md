@@ -1,7 +1,8 @@
 # AI Baseline Kit 安装与植入说明
 
 - 包名：`ai-baseline-kit`
-- 当前版本：`0.11.0`
+- 当前版本：`0.12.1`
+- 运行环境：Node.js 20 或以上版本（推荐使用公司统一的当前 LTS 版本）
 - 包元数据：[`plugin.json`](plugin.json)
 - 主入口：[`AGENTS.md`](AGENTS.md)
 - 详细说明：[`README.md`](README.md)
@@ -71,6 +72,23 @@ ai-baseline-kit/AGENTS.md
 ```
 
 运行 `ai-run.mjs activate` / `project-bootstrap.mjs` 后会自动完成此步骤：目标项目已有 `AGENTS.md` 或 `CLAUDE.md` 时只追加受控段落，不覆盖原内容；缺失时自动创建；再次运行不会重复追加。根级入口是 AI 自动发现和强制执行基线的必要激活层。
+
+### 首次接入自动隔离构建产物
+
+同一次 `activate/init` 还会自动完成构建隔离，新项目和旧项目行为一致：
+
+1. 保留 `ai-baseline-kit/` 和 `.ai-frontend-assembler/` 的 Git 可见性，不修改 `.gitignore`；
+2. 使用目录内 `.npmignore` 阻止二者进入 `npm pack`；
+3. 创建或增强 `.dockerignore`、`.vercelignore`，并增强已存在的 `.npmignore`、`.gcloudignore`、`.cfignore`；
+4. 如果 `package.json` 存在 `scripts.build`，幂等接入 `scripts.postbuild` 产物守卫；
+5. 构建后只清理输出目录内误复制的 `ai-baseline-kit/` 与 `.ai-frontend-assembler/`，不会删除项目根源码。
+
+自定义输出目录无法从构建配置中识别时，可执行：
+
+```bash
+node ai-baseline-kit/scripts/build-artifact-guard.mjs --clean --output release-web
+node ai-baseline-kit/scripts/build-artifact-guard.mjs --check --output release-web
+```
 
 ## 新项目植入
 
@@ -148,16 +166,11 @@ node ai-baseline-kit/scripts/project-validate.mjs
 
 1. 将最新 `ai-baseline-kit/` 复制到旧项目并直接覆盖/替换整个同名目录。
 2. 不删除 `.ai-frontend-assembler/`，不需要手工备份或恢复项目地图。
-3. 让 AI 执行统一升级与验证：
+3. 告诉 AI：“我已经复制覆盖了 ai-baseline-kit，请按新版装配包自动完成项目更新和自检，保留项目地图、历史状态和业务代码。”
 
-```bash
-node ai-baseline-kit/scripts/ai-run.mjs upgrade
-node ai-baseline-kit/scripts/ai-run.mjs gate --allow-parser-fallback
-```
+AI 统一执行 `ai-run activate` 并完成后续严格 Gate；普通用户不需要执行任何命令。生产 CI 仍应安装 TypeScript/Vue AST 解析依赖并执行严格门禁。
 
-生产 CI 建议移除 `--allow-parser-fallback`，要求目标项目安装 TypeScript/Vue AST 解析依赖后执行严格门禁。
-
-从 `0.9.x` 或更早版本首次过渡时，如果旧包仍保留项目专属的 `ai-baseline-kit/docs/project-scheme.yml` 或 `legacy-baseline.json`，先用新包运行 `ai-run upgrade`，系统会一次性迁移到 `.ai-frontend-assembler/`。如果在迁移前已经删除旧包内唯一的项目专属状态，则无法自动恢复，应从版本库找回旧文件后再升级。
+从 `0.9.x` 或更早版本首次过渡时，如果旧包仍保留项目专属的 `ai-baseline-kit/docs/project-scheme.yml` 或 `legacy-baseline.json`，覆盖新包后让 AI 运行 `ai-run activate`，系统会一次性迁移到 `.ai-frontend-assembler/`。如果在迁移前已经删除旧包内唯一的项目专属状态，则无法自动恢复，应从版本库找回旧文件后再升级。
 
 多 AI 自动发现暂时只维护目标项目根目录的 `AGENTS.md` 与 `CLAUDE.md`；不会创建 Cursor、Copilot 或其他工具专属入口。
 

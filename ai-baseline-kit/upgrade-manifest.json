@@ -1,0 +1,7 @@
+{
+  "$schema": "./docs/package-upgrade.schema.json",
+  "schemaVersion": 1,
+  "obsoleteFiles": [
+    "docs/company-user-manual.md"
+  ]
+}

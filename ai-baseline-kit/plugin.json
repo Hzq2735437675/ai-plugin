@@ -2,7 +2,7 @@
   "$schema": "./package-manifest.schema.json",
   "schemaVersion": 1,
   "name": "ai-baseline-kit",
-  "version": "0.11.0",
+  "version": "0.12.1",
   "type": "embedded-ai-capability-package",
   "description": "AI 前端模块装配系统：可完整植入目标项目，支持需求确认、结构化生成、验收测试、同栈模块迁移组合、AST 边界检查和旧项目增量治理闭环。",
   "entrypoints": {
@@ -74,7 +74,10 @@
     "implementationCompletenessCheck": "scripts/implementation-completeness-check.mjs",
     "deliveryReceiptLibrary": "scripts/delivery-receipt-lib.mjs",
     "deliveryReceiptSchema": "docs/delivery-receipt.schema.json",
-    "deliveryClosureContractSelfCheck": "scripts/delivery-closure-contract-check.mjs"
+    "deliveryClosureContractSelfCheck": "scripts/delivery-closure-contract-check.mjs",
+    "buildArtifactGuard": "scripts/build-artifact-guard.mjs",
+    "buildIsolationContractSelfCheck": "scripts/build-isolation-contract-check.mjs",
+    "upgradeManifest": "upgrade-manifest.json"
   },
   "installation": {
     "guide": "INSTALL.md",
@@ -90,11 +93,22 @@
     "preserveDirectoryName": true,
     "targetDirectory": "<project-root>/ai-baseline-kit/",
     "companionFiles": [],
-    "sameStackRequired": false
+    "sameStackRequired": false,
+    "buildIsolation": {
+      "gitTracked": true,
+      "npmPack": "nested-npmignore",
+      "deploymentIgnoreFiles": [
+        ".dockerignore",
+        ".vercelignore"
+      ],
+      "artifactGuard": "postbuild-clean-and-verify"
+    }
   },
   "dependencies": {
     "packages": [],
-    "runtime": [],
+    "runtime": [
+      "Node.js >=20"
+    ],
     "external": []
   }
 }

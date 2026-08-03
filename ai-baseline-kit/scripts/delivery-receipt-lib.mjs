@@ -21,40 +21,75 @@ function safeRelative(projectRoot, value) {
   return normalizePath(relativeToRoot);
 }
 
+function normalizeChangeType(value) {
+  const type = String(value || 'unknown').toLowerCase();
+  return ['create', 'modify', 'delete', 'unknown'].includes(type) ? type : 'unknown';
+}
+
 export function normalizeChangedFiles(projectRoot, changes = []) {
-  return changes
-    .map((item) => typeof item === 'string' ? { path: item, type: 'unknown' } : item)
-    .map((item) => {
-      const relative = safeRelative(projectRoot, item?.path);
-      if (!relative) return null;
-      const file = path.join(projectRoot, relative);
-      return {
-        path: relative,
-        type: String(item?.type || 'unknown'),
-        sha256: fs.existsSync(file) && fs.statSync(file).isFile() ? hashFile(file) : null,
-      };
-    })
-    .filter(Boolean)
-    .sort((left, right) => left.path.localeCompare(right.path));
+  const normalized = new Map();
+  for (const source of changes) {
+    const item = typeof source === 'string' ? { path: source, type: 'unknown' } : source;
+    const relative = safeRelative(projectRoot, item?.path);
+    if (!relative) continue;
+    const file = path.join(projectRoot, relative);
+    const exists = fs.existsSync(file) && fs.statSync(file).isFile();
+    normalized.set(relative, {
+      path: relative,
+      type: normalizeChangeType(item?.type),
+      sha256: exists ? hashFile(file) : null,
+    });
+  }
+  return [...normalized.values()].sort((left, right) => left.path.localeCompare(right.path));
 }
 
 export function changedFilesHash(manifest) {
   return hashBuffer(JSON.stringify(manifest));
 }
 
-function gitLines(projectRoot, args) {
-  const result = spawnSync('git', args, { cwd: projectRoot, encoding: 'utf8', shell: process.platform === 'win32' });
-  return result.status === 0
-    ? result.stdout.split(/\r?\n/).map((item) => item.trim()).filter(Boolean)
-    : [];
+function runGit(projectRoot, args) {
+  return spawnSync('git', ['-c', 'core.quotepath=false', ...args], {
+    cwd: projectRoot,
+    encoding: 'utf8',
+    windowsHide: true,
+  });
+}
+
+function gitRoot(projectRoot) {
+  const result = runGit(projectRoot, ['rev-parse', '--show-toplevel']);
+  if (result.status !== 0) return '';
+  return path.resolve(result.stdout.trim());
+}
+
+function gitPaths(projectRoot, repositoryRoot, args) {
+  const result = runGit(projectRoot, ['-C', repositoryRoot, ...args, '-z']);
+  if (result.status !== 0) return [];
+  return result.stdout
+    .split('\0')
+    .filter(Boolean)
+    .map((file) => {
+      const absolute = path.resolve(repositoryRoot, file);
+      const relative = path.relative(path.resolve(projectRoot), absolute);
+      if (!relative || relative.startsWith('..') || path.isAbsolute(relative)) return '';
+      return normalizePath(relative);
+    })
+    .filter(Boolean);
 }
 
 export function discoverGitChanges(projectRoot) {
-  return [...new Set([
-    ...gitLines(projectRoot, ['diff', '--name-only', '--diff-filter=ACMRD']),
-    ...gitLines(projectRoot, ['diff', '--cached', '--name-only', '--diff-filter=ACMRD']),
-    ...gitLines(projectRoot, ['ls-files', '--others', '--exclude-standard']),
-  ])].map((file) => ({ path: file, type: 'unknown' }));
+  const root = gitRoot(projectRoot);
+  if (!root) return [];
+  const changes = new Map();
+  const recordTracked = (file) => {
+    const absolute = path.join(projectRoot, file);
+    changes.set(file, { path: file, type: fs.existsSync(absolute) ? 'modify' : 'delete' });
+  };
+  for (const file of gitPaths(projectRoot, root, ['diff', '--name-only', '--diff-filter=ACMRD'])) recordTracked(file);
+  for (const file of gitPaths(projectRoot, root, ['diff', '--cached', '--name-only', '--diff-filter=ACMRD'])) recordTracked(file);
+  for (const file of gitPaths(projectRoot, root, ['ls-files', '--others', '--exclude-standard'])) {
+    changes.set(file, { path: file, type: 'create' });
+  }
+  return [...changes.values()].sort((left, right) => left.path.localeCompare(right.path));
 }
 
 export function buildChangedFileManifest(projectRoot, changes = []) {
@@ -92,9 +127,12 @@ export function verifyDeliveryReceipt(receiptFile, { projectRoot, requestId = ''
       violations.push(`交付回执包含非法路径: ${item?.path || '(empty)'}`);
       continue;
     }
+    const type = normalizeChangeType(item?.type);
+    if (type !== item?.type) violations.push(`交付回执包含无效变更类型: ${relative}`);
     const file = path.join(projectRoot, relative);
     const exists = fs.existsSync(file) && fs.statSync(file).isFile();
-    if (item.sha256 === null && exists) violations.push(`交付回执标记为删除但文件仍存在: ${relative}`);
+    if (item.sha256 === null && type !== 'delete') violations.push(`交付回执缺少非删除文件哈希: ${relative}`);
+    if (type === 'delete' && exists) violations.push(`交付回执标记为删除但文件仍存在: ${relative}`);
     if (typeof item.sha256 === 'string' && (!exists || hashFile(file) !== item.sha256)) violations.push(`交付回执文件哈希已失效: ${relative}`);
   }
   return { valid: violations.length === 0, receipt, violations };

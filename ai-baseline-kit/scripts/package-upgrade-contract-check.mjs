@@ -28,6 +28,10 @@ function copyKit(projectRoot) {
   copyDirectory(sourceKit, path.join(projectRoot, 'ai-baseline-kit'), { force: false, projectRoot });
 }
 
+function overlayKit(projectRoot) {
+  fs.cpSync(sourceKit, path.join(projectRoot, 'ai-baseline-kit'), { recursive: true, force: true });
+}
+
 function assertSafeTemp(target) {
   const resolved = path.resolve(target);
   assert.ok(resolved.startsWith(path.resolve(tempRoot) + path.sep), `unsafe temp target: ${resolved}`);

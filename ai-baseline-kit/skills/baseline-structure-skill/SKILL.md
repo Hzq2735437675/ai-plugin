@@ -45,6 +45,7 @@ description: 开发前将任意项目的变更需求整理成符合项目基线�
 - styles 或主题
 - dependencies
 - validation
+- build isolation（涉及构建、部署、输出目录或 package scripts 时）
 
 小改动可以输出压缩版，但必须覆盖范围、影响面和验证点。
 
@@ -56,7 +57,7 @@ description: 开发前将任意项目的变更需求整理成符合项目基线�
 5. 检查是否存在跨层、跨模块、命名、样式、国际化、依赖或装配风险。
    - 如果项目规则或现有体系要求国际化，且本次涉及用户可见文案，在方案中写明：`locales: 使用 project-i18n-localizer 独立完成国际化配置或文案抽取`。
    - 如果项目没有国际化规则或现有 i18n 体系，不强制新增国际化，只标注当前项目未启用或未要求。
-6. 明确开发后应运行的回归检查。
+6. 明确开发后应运行的回归检查；涉及构建或部署时，同时确认部署 ignore、npm 嵌套排除、`scripts.postbuild` 和实际输出目录守卫。
 
 ## 失败处理
 - 如果需求跨越多个模块或边界，先拆分方案，或把复用能力上移到项目规定的共享层。
@@ -76,5 +77,6 @@ store、状态或缓存: 无新增全局状态
 locales、文案或配置: 模块 zh/en 文案
 styles 或主题: 页面目录 index.scss
 dependencies: 不新增第三方依赖
-validation: 检查无跨模块直接引用、路由在模块入口注册、样式和文案归属正确
+build isolation: 保持 ai-baseline-kit 与项目装配状态不进入构建产物
+validation: 检查无跨模块直接引用、路由在模块入口注册、样式和文案归属正确，并运行 build-artifact-guard --check
 ```

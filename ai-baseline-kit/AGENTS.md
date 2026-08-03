@@ -8,15 +8,17 @@
 - 本文件中未特别说明的规范路径，都相对于 `baseline_root`。
 - `baseline_root/docs/project-scheme.yml` 是随包提供的仓库参考地图，不得在目标项目中覆盖为业务项目地图。
 - 目标项目专属状态统一位于 `project_root/.ai-frontend-assembler/`：项目地图为 `project-scheme.yml`，旧项目历史快照为 `legacy-baseline.json`，状态清单为 `state.json`。
+- 用户复制或覆盖新版 `ai-baseline-kit/` 后，统一运行 `ai-run activate`：不存在外置状态时首次 bootstrap，存在外置状态时自动 upgrade；升级路径必须保留项目地图和历史快照，并按 `upgrade-manifest.json` 安全清理旧版残留文件。
+- `project-bootstrap` 默认不得覆盖已有项目地图；只有用户明确要求重新扫描项目结构时才允许传入 `--refresh-project-scheme`。
 - 业务代码、依赖、路由、模块、资源扫描，都相对于 `project_root`；`.ai-frontend-assembler/` 必须保留并纳入版本管理。
 
 1. 任何改动前，先读取 `docs/baseline-rules.yml`、`docs/engineering-workflow.yml` 和 `project_root/.ai-frontend-assembler/project-scheme.yml`；如果目标项目地图不存在，先用 `skills/project-scheme-bootstrap/SKILL.md` 扫描 `project_root` 并生成外置项目状态。自然语言或产品文档需求先按 `skills/requirement-to-feature-spec/SKILL.md` 形成 ready Feature Spec，再按 `skills/feature-architecture-planner/SKILL.md` 和 `skills/baseline-structure-skill/SKILL.md` 固定模块归属与文件范围。
 2. 只在目标页面、模块或分层内工作，不碰无关文件；除非用户明确要求维护基线包，否则不要修改 `ai-baseline-kit/`。
-3. 不要自动向 `project_root/.gitignore` 追加 `ai-baseline-kit/`；规范包变化应允许在 Git 中显示，便于审计、同步和提交。
+3. 不要自动向 `project_root/.gitignore` 追加 `ai-baseline-kit/`；规范包变化应允许在 Git 中显示，便于审计、同步和提交。首次 `activate/init` 必须建立构建隔离：维护部署 ignore、npm 嵌套排除和 `postbuild` 产物守卫，使 `ai-baseline-kit/` 与 `.ai-frontend-assembler/` 不进入前端构建产物、npm 发布包或常见部署上下文。
 4. 新增或修改页面、模块、路由、组件、状态、API、文案、样式、资源、配置或依赖时，必须遵守基线：同技术栈、shell/shared/modules（或项目等价层）分层、零交叉依赖、静态装配、命名收敛、文案归属、样式外置、资源随模块走、依赖显式声明。
 5. 模块必须通过统一入口和 manifest 暴露自身能力。跨域复用先进入项目定义的 shared；基础 UI 包装只放在项目定义的基础组件层，不塞具体业务逻辑。
 6. 任何结构变更后，必须同步维护或重新生成 `project_root/.ai-frontend-assembler/project-scheme.yml`，并按 `skills/baseline-conformance-skill/SKILL.md` 回归；如结果为 `fail`，只修复违规项，再回归到 `pass`。
-7. 可运行 `node ai-baseline-kit/scripts/baseline-check.mjs` 做硬检查；脚本会读取 `baseline_root` 内规则并检查 `project_root` 业务代码。
+7. 可运行 `node ai-baseline-kit/scripts/baseline-check.mjs` 做硬检查；脚本会读取 `baseline_root` 内规则并检查 `project_root` 业务代码。构建后必须运行 `node ai-baseline-kit/scripts/build-artifact-guard.mjs --check`；标准 `activate/init` 会自动把 clean-and-verify 守卫接入 `scripts.postbuild`。
 8. 如果目标项目存在 `.claude-baseline-doc.txt`，它只作为长版参考源，不作为日常主入口。
 
 ## 产品需求到代码的强制入口
@@ -82,7 +84,7 @@ node ai-baseline-kit/scripts/project-validate.mjs
 - `按这个产品文档开发：<路径>`：读取并标准化文档；无法可靠提取时只提出必要的 blocking question。
 - `把项目 A 的 <模块> 和项目 B 的 <模块> 组合成项目 C`：自动执行项目发现、模块发现、导出、兼容性检查、事务化组合、冲突确认和完整门禁。
 - `检查并修复当前项目`：自动执行 validate、gate 和白名单内的有限修复。
-- `升级装配系统并验证项目`：保留 `.ai-frontend-assembler/`，执行升级迁移、doctor 和 gate。
+- `升级装配系统并验证项目`：直接覆盖新版包后统一执行 `ai-run activate`，保留 `.ai-frontend-assembler/`，由 AI 自动完成升级迁移、doctor、validate 和 gate。
 
 用户使用其他自然语言表达同等意图时同样处理，禁止要求用户改写成固定 Prompt。除非存在真正阻塞实施且无法从用户输入、产品文档或项目现状可靠推断的问题，否则不要把 Feature Spec、Change Plan、AST、validate、gate、CLI 参数或内部步骤转嫁给用户。对用户默认只输出两类信息：
 

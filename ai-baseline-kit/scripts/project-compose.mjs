@@ -42,7 +42,7 @@ try {
     if (!fs.existsSync(targetKit)) copyDirectory(baselineRoot, targetKit, { force: false, projectRoot });
     for (const bundlePath of bundlePaths) imports.push(importModuleBundle({ bundlePath, projectRoot }));
     const activeKit = fs.existsSync(targetKit) ? targetKit : baselineRoot;
-    run(path.join(activeKit, 'scripts', 'project-bootstrap.mjs'), ['--project-root', projectRoot, '--no-legacy-baseline']);
+    run(path.join(activeKit, 'scripts', 'project-bootstrap.mjs'), ['--project-root', projectRoot, '--no-legacy-baseline', '--refresh-project-scheme']);
   }
 
   const bundles = bundlePaths.map((bundlePath) => readModuleBundle(bundlePath).manifest);

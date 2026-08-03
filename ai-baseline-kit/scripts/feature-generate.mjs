@@ -241,7 +241,7 @@ try {
   });
 
   if (!args['dry-run'] && !args['skip-bootstrap']) {
-    const bootstrap = spawnSync(process.execPath, [path.join(baselineRoot, 'scripts', 'project-bootstrap.mjs'), '--project-root', projectRoot, '--no-legacy-baseline'], { cwd: projectRoot, encoding: 'utf8' });
+    const bootstrap = spawnSync(process.execPath, [path.join(baselineRoot, 'scripts', 'project-bootstrap.mjs'), '--project-root', projectRoot, '--no-legacy-baseline', '--refresh-project-scheme'], { cwd: projectRoot, encoding: 'utf8' });
     if (bootstrap.status !== 0) throw new Error(`代码已生成，但项目地图更新失败: ${bootstrap.stderr || bootstrap.stdout}`);
   }
 

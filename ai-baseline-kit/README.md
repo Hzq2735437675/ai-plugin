@@ -2,7 +2,8 @@
 
 - 产品展示名称：AI 前端模块装配系统
 - 机器包名：`ai-baseline-kit`
-- 当前版本：`0.11.0`
+- 当前版本：`0.12.1`
+- 运行环境：Node.js 20 或以上版本（推荐使用公司统一的当前 LTS 版本）
 - 包元数据：[`plugin.json`](plugin.json)
 - 安装/植入说明：[`INSTALL.md`](INSTALL.md)
 - AI 主入口：[`AGENTS.md`](AGENTS.md)
@@ -35,6 +36,30 @@
 ```
 
 用户不需要写固定长提示词，也不需要知道内部 Skill、Feature Spec、Change Plan、AST 或脚本命令。若根入口尚未接入，首次只需说“请接入并使用项目根目录 ai-baseline-kit 的 AI 前端模块装配系统处理本次需求：<需求>”；系统会创建或安全追加根 `AGENTS.md` / `CLAUDE.md`。之后 AI 从根入口自动展开完整流程，只在存在 blocking question 时一次性提问。
+
+## 复制覆盖自动安全升级（0.12.1）
+
+新项目和旧项目统一采用最小操作：
+
+1. 直接复制新版 `ai-baseline-kit/` 到项目根目录并选择覆盖。
+2. 告诉 AI：“我已经复制覆盖了 ai-baseline-kit，请按新版装配包自动完成项目更新和自检，保留项目地图、历史状态和业务代码。”
+3. AI 统一调用 `ai-run activate`：无外置状态时首次 bootstrap，有外置状态时自动安全 upgrade。
+4. 升级默认保留 `.ai-frontend-assembler/project-scheme.yml`、`legacy-baseline.json` 和业务代码，并按 `upgrade-manifest.json` 清理已声明的旧版残留文件。
+
+用户不需要判断 `bootstrap`、`upgrade`、`doctor` 或 `gate`。只有明确要求重新扫描项目结构时，AI 才允许使用 `--refresh-project-scheme`。
+
+## 构建与部署隔离（0.12.0）
+
+`ai-baseline-kit/` 继续保留在项目根目录并纳入 Git，便于审计和整包升级；但首次 `activate/init` 会自动建立构建隔离，不需要新项目或旧项目手工配置：
+
+- 包内 `ai-baseline-kit/.npmignore` 和项目状态目录 `.ai-frontend-assembler/.npmignore` 使用嵌套 `*`，阻止二者进入 `npm pack` / `npm publish`。
+- 根 `.dockerignore`、`.vercelignore` 自动写入受控排除块；已有规则保留，重复激活保持幂等。已有 `.npmignore`、`.gcloudignore`、`.cfignore` 也会安全追加排除块。
+- 目标项目存在 `scripts.build` 时，自动创建或增强 `scripts.postbuild`，调用 `build-artifact-guard.mjs --clean`，只在已识别的构建输出目录中移除误复制的能力包和项目装配状态。
+- `project-validate` 在构建后再次以 `--check` 模式验证产物；自定义输出目录可通过 `--output <dir>` 或 `AI_BASELINE_OUTPUT_DIRS=dir-a,dir-b` 声明。
+- 系统不会把 `ai-baseline-kit/` 写入 `.gitignore`；“源码可审计”和“发布产物不可携带”是两套独立策略。
+- 业务源码直接 import/require `ai-baseline-kit/` 或 `.ai-frontend-assembler/` 会被基线检查阻断，避免构建器将包内容内联进产物。
+
+常见 Vite、Vue CLI、React Scripts、Angular、Next、Nuxt、SvelteKit、Astro 构建本来只输出依赖图或指定输出目录；本隔离层用于覆盖 npm 发布、Docker/Vercel 源码上传和自定义复制脚本等额外风险。
 
 ## 技术栈选择模式
 
@@ -73,7 +98,8 @@ React 18 + TypeScript + Vite + Ant Design 5 + Tailwind CSS 3 + React Router 6
 - 通过两个标准模板示范 shell、shared、modules、manifest 和静态路由/菜单装配。
 - 通过 `project-doctor.mjs` 自动诊断旧项目技术栈和边界。
 - 通过 `project-bootstrap.mjs` 生成目标项目地图，或在空目录初始化 React/Vue 标准模板。
-- 通过 `project-validate.mjs` 统一执行基线检查、类型检查、lint、测试和构建。
+- 通过 `project-validate.mjs` 统一执行基线检查、类型检查、lint、测试、构建和产物隔离复检。
+- 通过 `build-artifact-guard.mjs` 自动清理并验证构建输出，阻止 AI 能力包和项目装配状态进入前端产物。
 - 通过 `delivery-gate.mjs` 拒绝占位实现并生成带变更文件哈希的交付回执；没有当前有效回执不得返回 `completed`。
 - 通过 `requirement-to-feature-spec` 与 `requirement-compile.mjs` 建立自然语言/产品文档的确认式规格。
 - 通过 `feature-architecture-planner`、`feature-plan.mjs` 和 `feature-generate.mjs` 生成受文件白名单约束的模块代码。
@@ -101,8 +127,8 @@ node ai-baseline-kit/scripts/ai-run.mjs activate
 # 自然语言或产品文档开发
 node ai-baseline-kit/scripts/ai-run.mjs develop --document <product-doc>
 
-# 整目录替换包后升级，不重建项目地图、不刷新旧项目快照
-node ai-baseline-kit/scripts/ai-run.mjs upgrade
+# 复制覆盖包后统一激活；自动识别首次接入或安全升级
+node ai-baseline-kit/scripts/ai-run.mjs activate
 
 # CI/交付硬门禁
 node ai-baseline-kit/scripts/ai-run.mjs gate
@@ -262,12 +288,9 @@ node ai-baseline-kit/scripts/baseline-check.mjs --mode changed --fail-on-warn
 
 ## 直接覆盖升级
 
-已使用 `0.10.0+` 完成接入的项目，升级只需直接替换整个 `ai-baseline-kit/`，然后运行：
+已接入项目不需要删除旧包，也不需要用户执行迁移命令。直接复制新版 `ai-baseline-kit/` 并覆盖后，由 AI 统一运行 `ai-run activate`；系统会自动识别新项目或旧项目，保留项目专属状态并清理升级清单中明确废弃的包内文件。
 
-```bash
-node ai-baseline-kit/scripts/ai-run.mjs upgrade
-node ai-baseline-kit/scripts/ai-run.mjs validate
-```
+排障或 CI 场景仍可显式调用 `ai-run upgrade`，但不作为普通用户流程。
 
 项目专属的 `.ai-frontend-assembler/`、根 `AGENTS.md`、根 `CLAUDE.md` 和业务代码都位于包目录外，不会因替换包目录丢失。`0.9.x` 及更早项目应在旧项目专属文件仍存在时执行一次迁移；详见 `INSTALL.md`。
 

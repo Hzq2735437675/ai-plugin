@@ -495,6 +495,13 @@ export function buildProjectScheme(report, options = {}) {
     'entrypoints:',
     ...Object.entries(report.entrypoints).map(([key, value]) => `  ${key}: ${yamlScalar(value)}`),
     '',
+    'build_isolation:',
+    '  git_tracking: enabled',
+    '  package_directory: ai-baseline-kit',
+    '  project_state_directory: .ai-frontend-assembler',
+    '  deployment_ignores: .dockerignore,.vercelignore',
+    '  artifact_guard: scripts.postbuild',
+    '',
     'modules:',
     `  root: ${yamlScalar(report.modules.root)}`,
     '  manifest_pattern: manifest.ts-or-equivalent',
@@ -593,7 +600,8 @@ ${baselineDirName}/AGENTS.md
 
 - 开发前：按 \`${baselineDirName}/skills/baseline-structure-skill/SKILL.md\` 明确范围。
 - 开发后：按 \`${baselineDirName}/skills/baseline-conformance-skill/SKILL.md\` 回归。
-- 首次接入或入口缺失：运行 \`node ${baselineDirName}/scripts/ai-run.mjs activate --project-root .\` 自动创建或增强根入口，不覆盖已有项目规则。
+- 统一接入与更新：复制或覆盖 \`${baselineDirName}/\` 后运行 \`node ${baselineDirName}/scripts/ai-run.mjs activate --project-root .\`；首次使用自动初始化，检测到已有 \`.ai-frontend-assembler/\` 状态时自动进入安全升级，保留项目地图和历史快照。
+- 项目地图保护：已有 \`.ai-frontend-assembler/project-scheme.yml\` 时禁止通过 bootstrap 重写；只有用户明确要求重新扫描时才允许使用 \`--refresh-project-scheme\`。
 - 完成声明：只有最终 Gate 通过并生成当前请求对应的有效交付回执后，才可以向用户声明“已完成”“全部通过”或“可以交付”。
 
 除非用户明确要求维护基线包，否则不要修改 \`${baselineDirName}/\`；业务开发按包内 \`baseline_root\` / \`project_root\` 路径约定执行。

@@ -48,6 +48,7 @@ workflows:
       - 如果用户没有说明技术栈且仓库为空，使用内置 `react18-antd-tailwind-ts` 作为默认新前端模板。
       - 如果项目已有依赖或配置，优先从文件推断，并按旧项目模式保留真实技术栈。
       - 使用 project-scheme-bootstrap 生成 project_root/.ai-frontend-assembler/project-scheme.yml 初版。
+      - 首次接入时建立构建隔离：保持 ai-baseline-kit 可被 Git 审计，同时写入部署 ignore、npm 嵌套排除和 postbuild 产物守卫。
       - 在 scheme 中记录 shell/shared/modules、基础组件层、API client、路由、状态、i18n、样式方案和验证命令。
       - 后续新增页面或模块必须先经过 baseline-structure-skill。
     output:
@@ -132,6 +133,7 @@ workflows:
       - 如需自动发现规范包，可在项目根目录放置分发目录同级的 AGENTS.md 和 CLAUDE.md 薄入口。
       - 不自动修改项目根 .gitignore；保留 ai-baseline-kit/ 的 Git 可见性，便于审计和同步规范包变化。
       - 使用 project-scheme-bootstrap 生成 project_root/.ai-frontend-assembler/project-scheme.yml 初版。
+      - 建立构建隔离并确认 ai-baseline-kit/ 与 .ai-frontend-assembler/ 不进入发布产物。
       - 建立统一 API client、权限上下文、模块装配器、文案装配器、状态装配器。
       - 生成示例模块，验证 manifest 和装配链路。
       - 跑 baseline-conformance-skill 和项目基础构建。
@@ -146,6 +148,7 @@ workflows:
       - 如果 project_root/.ai-frontend-assembler/project-scheme.yml 不存在，先运行 project-scheme-bootstrap 并生成项目地图。
       - 使用 baseline-conformance-skill 检查层级、边界、manifest、API、状态、资源、文案、样式、命名和依赖。
       - 运行项目要求的构建、类型检查、单测或等价验证。
+      - 构建完成后运行 build-artifact-guard --check，确认输出目录无 ai-baseline-kit/ 与 .ai-frontend-assembler/。
       - 输出 pass/fail、violations、required_fixes、rerun、verify。
     output:
       - 回归报告

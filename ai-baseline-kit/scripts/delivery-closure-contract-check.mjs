@@ -72,7 +72,34 @@ try {
     assert.equal(result.status, 0, result.stderr || result.stdout);
   }
   fs.rmSync(deletedFile);
-  assert.ok(discoverGitChanges(gitProject).some((item) => item.path === 'deleted.ts'), 'git deletion must be included in delivery manifest discovery');
+  assert.ok(discoverGitChanges(gitProject).some((item) => item.path === 'deleted.ts' && item.type === 'delete'), 'git deletion must be included in delivery manifest discovery');
+
+  const nestedRepository = path.join(root, 'nested-repository');
+  const nestedProject = path.join(nestedRepository, 'frontend');
+  fs.mkdirSync(path.join(nestedProject, 'src'), { recursive: true });
+  const chineseFile = path.join(nestedProject, 'src', '中文文件.ts');
+  const nestedDeletedFile = path.join(nestedProject, 'src', 'removed.ts');
+  fs.writeFileSync(chineseFile, 'export const value = 1;\n');
+  fs.writeFileSync(nestedDeletedFile, 'export const removed = true;\n');
+  for (const command of [
+    ['init'],
+    ['add', '.'],
+    ['-c', 'user.name=AI-Baseline', '-c', 'user.email=baseline@example.invalid', 'commit', '-m', 'nested fixture'],
+  ]) {
+    const result = spawnSync('git', command, { cwd: nestedRepository, encoding: 'utf8', windowsHide: true });
+    assert.equal(result.status, 0, result.stderr || result.stdout);
+  }
+  fs.writeFileSync(chineseFile, 'export const value = 2;\n');
+  fs.rmSync(nestedDeletedFile);
+  fs.writeFileSync(path.join(nestedProject, 'src', '新增文件.ts'), 'export const created = true;\n');
+  const nestedChanges = discoverGitChanges(nestedProject);
+  assert.deepEqual(nestedChanges, [
+    { path: 'src/removed.ts', type: 'delete' },
+    { path: 'src/中文文件.ts', type: 'modify' },
+    { path: 'src/新增文件.ts', type: 'create' },
+  ].sort((left, right) => left.path.localeCompare(right.path)), 'nested Git project changes must be project-relative and preserve non-ASCII paths');
+  const nestedManifest = buildChangedFileManifest(nestedProject, nestedChanges);
+  assert.ok(nestedManifest.manifest.every((item) => item.type === 'delete' ? item.sha256 === null : /^[a-f0-9]{64}$/.test(item.sha256)), 'only deleted files may have null hashes');
 
   const gateProject = path.join(root, 'gate-project');
   fs.mkdirSync(path.join(gateProject, 'src'), { recursive: true });

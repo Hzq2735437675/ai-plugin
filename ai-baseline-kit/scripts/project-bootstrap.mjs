@@ -14,7 +14,8 @@ import {
   DEFAULT_PROFILE_ID,
   resolveRoots,
 } from './project-tools-lib.mjs';
-import { isPackageRepositoryReferenceFile, migrateLegacyProjectState, projectStateRelative, resolveProjectSchemeFile, resolveLegacyBaselineFile, writeProjectStateManifest } from './project-state-lib.mjs';
+import { getProjectStatePaths, isPackageRepositoryReferenceFile, migrateLegacyProjectState, projectStateRelative, resolveProjectSchemeFile, resolveLegacyBaselineFile, writeProjectStateManifest } from './project-state-lib.mjs';
+import { ensureBuildIsolation } from './build-isolation-lib.mjs';
 
 const args = parseArgs(process.argv.slice(2));
 const { baselineRoot, projectRoot: defaultProjectRoot } = resolveRoots(import.meta.url);
@@ -58,7 +59,12 @@ try {
     preservedProfile: shouldInitTemplate ? undefined : preservedProfile,
   });
   const entrypointChanges = ensureRootEntrypoints(projectRoot, path.basename(baselineRoot));
-  const schemeFile = writeProjectScheme(report, baselineRoot, { projectRoot });
+  const buildIsolation = ensureBuildIsolation({ projectRoot, baselineRoot });
+  const statePaths = getProjectStatePaths(projectRoot, baselineRoot);
+  const preserveExistingScheme = fs.existsSync(statePaths.schemeFile) && !args['refresh-project-scheme'];
+  const schemeFile = preserveExistingScheme
+    ? statePaths.schemeFile
+    : writeProjectScheme(report, baselineRoot, { projectRoot });
   writeProjectStateManifest({ projectRoot, baselineRoot, mode: isPackageRepositoryReferenceFile(schemeFile) ? 'package-repository-reference' : 'target-project' });
   const legacyBaselineFile = resolveLegacyBaselineFile(projectRoot, baselineRoot);
   let legacyBaseline = 'not-applicable';
@@ -80,9 +86,11 @@ try {
   console.log(`mode: ${report.mode}`);
   console.log(`profile: ${report.profile}`);
   console.log(`scheme: ${projectStateRelative(projectRoot, schemeFile)}`);
+  console.log(`scheme-action: ${preserveExistingScheme ? 'preserved' : args['refresh-project-scheme'] ? 'refreshed' : 'created'}`);
   if (stateMigration.migrations.length) console.log(`project-state-migration: ${stateMigration.migrations.length}`);
   if (shouldInitTemplate) console.log(`template: ${profileId}`);
   console.log(`ai-entrypoints: ${entrypointChanges.length ? entrypointChanges.join(', ') : 'unchanged'}`);
+  console.log(`build-isolation: ${buildIsolation.packageHook.status}`);
   console.log(`legacy-baseline: ${legacyBaseline}`);
   if (args.json) console.log(JSON.stringify(report, null, 2));
 } catch (error) {

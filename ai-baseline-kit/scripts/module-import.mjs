@@ -14,7 +14,7 @@ try {
   if (!bundlePath || !fs.existsSync(bundlePath)) throw new Error('请通过 --bundle <directory> 提供模块包。');
   const result = importModuleBundle({ bundlePath, projectRoot, dryRun: Boolean(args['dry-run']) });
   if (!args['dry-run'] && !args['skip-bootstrap']) {
-    const bootstrap = spawnSync(process.execPath, [path.join(baselineRoot, 'scripts', 'project-bootstrap.mjs'), '--project-root', projectRoot, '--no-legacy-baseline'], { cwd: projectRoot, encoding: 'utf8' });
+    const bootstrap = spawnSync(process.execPath, [path.join(baselineRoot, 'scripts', 'project-bootstrap.mjs'), '--project-root', projectRoot, '--no-legacy-baseline', '--refresh-project-scheme'], { cwd: projectRoot, encoding: 'utf8' });
     if (bootstrap.status !== 0) throw new Error(`模块已导入，但项目地图更新失败: ${bootstrap.stderr || bootstrap.stdout}`);
   }
   console.log('module-import: pass');

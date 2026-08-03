@@ -138,6 +138,20 @@ properties:
   shared:
     type: object
     additionalProperties: true
+  build_isolation:
+    type: object
+    additionalProperties: true
+    properties:
+      git_tracking:
+        type: string
+      package_directory:
+        type: string
+      project_state_directory:
+        type: string
+      deployment_ignores:
+        type: string
+      artifact_guard:
+        type: string
   modules:
     type: object
     additionalProperties: true

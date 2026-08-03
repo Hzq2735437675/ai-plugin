@@ -65,6 +65,7 @@ const packageData = report.package.manifest !== 'unknown'
   : null;
 const packageManager = report.stack.package_manager || 'npm';
 const checkNames = ['typecheck', 'lint', 'test', 'build'];
+let buildExecuted = false;
 
 if (!args['baseline-only']) {
   for (const script of checkNames) {
@@ -82,8 +83,14 @@ if (!args['baseline-only']) {
     }
 
     const [command, commandArgs] = packageRunCommand(packageManager, script);
-    run(`${command} ${commandArgs.join(' ')}`, command, commandArgs);
+    const passed = run(`${command} ${commandArgs.join(' ')}`, command, commandArgs);
+    if (script === 'build' && passed) buildExecuted = true;
   }
+}
+
+if (!args['baseline-only'] && !args['skip-build'] && (buildExecuted || fs.existsSync(path.join(projectRoot, 'dist')) || fs.existsSync(path.join(projectRoot, 'build')))) {
+  const artifactGuard = path.join(baselineRoot, 'scripts', 'build-artifact-guard.mjs');
+  if (fs.existsSync(artifactGuard)) run('build-artifact-guard --check', process.execPath, [artifactGuard, '--project-root', projectRoot, '--check']);
 }
 
 

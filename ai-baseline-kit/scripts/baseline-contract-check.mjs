@@ -364,6 +364,10 @@ try {
   assertPass(deliveryClosureContracts, 'delivery closure contract check');
   console.log(deliveryClosureContracts.stdout.trim());
 
+  const buildIsolationContracts = spawnSync(process.execPath, [path.join(baselineRoot, 'scripts', 'build-isolation-contract-check.mjs')], { cwd: baselineRoot, encoding: 'utf8' });
+  assertPass(buildIsolationContracts, 'build isolation contract check');
+  console.log(buildIsolationContracts.stdout.trim());
+
   const packageUpgradeContracts = spawnSync(process.execPath, [path.join(baselineRoot, 'scripts', 'package-upgrade-contract-check.mjs')], { cwd: baselineRoot, encoding: 'utf8' });
   assertPass(packageUpgradeContracts, 'package upgrade contract check');
   console.log(packageUpgradeContracts.stdout.trim());
@@ -377,6 +381,7 @@ try {
   console.log('module-portability-and-compose: pass');
   console.log('controlled-execution-hard-gates: pass');
   console.log('delivery-closure-hard-gate: pass');
+  console.log('build-artifact-isolation: pass');
   console.log('smart-compose-zero-config: pass');
   console.log('smart-develop-unified-entry: pass');
   console.log('document-normalization-multiformat: pass');

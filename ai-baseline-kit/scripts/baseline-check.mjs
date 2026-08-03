@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { analyzeAstBoundaries } from './ast-boundary-lib.mjs';
 import { PROJECT_STATE_DIRECTORY, migrateLegacyProjectState, resolveLegacyBaselineFile, resolveProjectSchemeFile } from './project-state-lib.mjs';
 import { ensureRootEntrypoints, hasStrongRootEntrypoint } from './project-tools-lib.mjs';
+import { inspectBuildIsolation } from './build-isolation-lib.mjs';
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const baselineRoot = path.resolve(scriptDir, '..');
@@ -196,6 +197,18 @@ function checkGitignoreAllowsBaselineKitChanges() {
   if (text.split(/\r?\n/).some((line) => ['.ai-frontend-assembler', '.ai-frontend-assembler/'].includes(line.trim()))) record('warn', 'project_state_gitignored', `目标项目 .gitignore 隐藏 ${PROJECT_STATE_DIRECTORY}/；项目地图和旧项目基线必须保持可追踪。`, '.gitignore');
 }
 
+function checkBuildIsolation() {
+  if (isPackageRepositoryReference()) return;
+  const isolation = inspectBuildIsolation({ projectRoot: root, baselineRoot });
+  for (const item of isolation.ignoreFiles) {
+    if (item.required && item.status !== 'ready') record('warn', 'build_deploy_ignore_missing', `${item.file} 缺少 AI 能力包部署排除规则；重新运行 ai-run activate 可自动修复。`, item.file);
+  }
+  if (!isolation.packageNpmIgnore) record('error', 'baseline_package_npm_exclusion_missing', `${baselineDirName}/.npmignore 缺失，npm pack 可能包含能力包。`, `${baselineDirName}/.npmignore`);
+  if (!isolation.stateNpmIgnore) record('warn', 'project_state_npm_exclusion_missing', `${PROJECT_STATE_DIRECTORY}/.npmignore 缺失，npm pack 可能包含项目装配状态。`, `${PROJECT_STATE_DIRECTORY}/.npmignore`);
+  if (isolation.packageHook.status === 'missing') record('warn', 'build_artifact_guard_missing', 'package.json scripts.postbuild 未接入构建产物隔离守卫；重新运行 ai-run activate 可自动修复。', 'package.json');
+  if (isolation.packageHook.status === 'invalid') record('error', 'build_artifact_guard_invalid_package', `package.json 无法检查构建隔离: ${isolation.packageHook.reason}`, 'package.json');
+}
+
 function checkRequiredFiles() {
   const required = [
     'AGENTS.md',
@@ -232,6 +245,9 @@ function checkRequiredFiles() {
     'scripts/project-tools-check.mjs',
     'scripts/baseline-contract-check.mjs',
     'scripts/template-build-check.mjs',
+    'scripts/build-isolation-lib.mjs',
+    'scripts/build-artifact-guard.mjs',
+    'scripts/build-isolation-contract-check.mjs',
     'scripts/requirement-compile.mjs',
     'scripts/feature-plan.mjs',
     'scripts/feature-generate.mjs',
@@ -402,6 +418,26 @@ function checkSharedAndShellDirections(modulesRootAbs) {
   }
 }
 
+function checkProtectedPackageImports() {
+  const protectedStateRoot = path.join(root, PROJECT_STATE_DIRECTORY);
+  for (const file of walk(root).filter((item) => sourceExtensions.has(path.extname(item)))) {
+    const rel = normalize(path.relative(root, file));
+    const text = fs.readFileSync(file, 'utf8');
+    for (const specifier of extractImports(text)) {
+      const normalizedSpecifier = normalize(specifier).replace(/^\/+/, '');
+      const directProtectedImport = normalizedSpecifier === baselineDirName
+        || normalizedSpecifier.startsWith(`${baselineDirName}/`)
+        || normalizedSpecifier === PROJECT_STATE_DIRECTORY
+        || normalizedSpecifier.startsWith(`${PROJECT_STATE_DIRECTORY}/`);
+      const resolved = resolveProjectSpecifier(file, specifier);
+      const resolvedProtectedImport = pathWithin(resolved, baselineRoot) || pathWithin(resolved, protectedStateRoot);
+      if (directProtectedImport || resolvedProtectedImport) {
+        record('error', 'business_imports_ai_package', `业务源码不得导入 ${baselineDirName}/ 或 ${PROJECT_STATE_DIRECTORY}/；否则构建工具可能把装配包内容内联进前端产物: ${specifier}`, rel);
+      }
+    }
+  }
+}
+
 function checkDynamicAssembly() {
   for (const file of walk(root).filter((item) => sourceExtensions.has(path.extname(item)))) {
     const text = fs.readFileSync(file, 'utf8');
@@ -518,9 +554,11 @@ function checkI18nHints() {
 if (stateMigration.migrations.length) record('info', 'project_state_migrated', `已将 ${stateMigration.migrations.length} 个旧版项目状态文件迁移到 ${PROJECT_STATE_DIRECTORY}/。`, PROJECT_STATE_DIRECTORY);
 checkRequiredFiles();
 checkGitignoreAllowsBaselineKitChanges();
+checkBuildIsolation();
 ensureAiEntrypoints();
 checkProjectScheme();
 checkModules();
+checkProtectedPackageImports();
 checkAstBoundaries();
 checkDynamicAssembly();
 checkI18nHints();
