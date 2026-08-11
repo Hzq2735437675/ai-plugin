@@ -94,6 +94,59 @@
             "requiredTokens",
             "definitions"
           ]
+        },
+        "styleIsolation": {
+          "type": "object",
+          "required": [
+            "strategy",
+            "filePattern"
+          ],
+          "properties": {
+            "strategy": {
+              "type": "string"
+            },
+            "strategies": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "uniqueItems": true
+            },
+            "adapter": {
+              "type": "string"
+            },
+            "filePattern": {
+              "type": "string"
+            },
+            "scopedNamePattern": {
+              "type": "string"
+            },
+            "localStyleFallback": {
+              "type": "string"
+            },
+            "customAdapter": {
+              "type": "string"
+            },
+            "adapterFingerprint": {
+              "type": "string",
+              "pattern": "^(?:[a-f0-9]{64})?$"
+            },
+            "preprocessors": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "uniqueItems": true
+            },
+            "globalDependencies": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "uniqueItems": true
+            }
+          },
+          "additionalProperties": true
         }
       }
     },

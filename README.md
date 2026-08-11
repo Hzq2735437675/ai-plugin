@@ -2,7 +2,7 @@
 
 > 机器包名：`ai-baseline-kit`
 
-> 当前版本：`0.15.0`
+> 当前版本：`0.17.0`
 
 AI 前端模块装配系统是一套**由 AI 编排、以工程契约约束、在构建期组合模块**的前端工程能力包。它面向自然语言或产品文档驱动的开发场景，让 AI 不只是生成页面代码，还必须完成需求确认、模块拆解、文件边界控制、自动测试、跨项目模块迁移、项目组合和最终验收。
 
@@ -67,6 +67,7 @@ AI 从项目根目录 `AGENTS.md` 或 `CLAUDE.md` 自动进入装配闭环。只
 | 项目组合 | 支持将多个同技术栈模块包装配为新项目，并生成 `docs/project-composition.json` |
 | 边界治理 | TypeScript/Vue AST 依赖图检查模块、shared、shell 和 npm/dev 依赖边界 |
 | UI 一致性 | React 保持 Ant Design 默认视觉；Vue 保持 Element Plus 默认视觉；统一通过 `src/theme/theme.css` 修改全局主题 |
+| 样式隔离 | 统一 styleIsolation 契约 + 可插拔策略适配器；CSS Modules 为标准默认值，导出前执行目标兼容性检查 |
 | 硬约束执行 | Change Plan ready 门禁、实际 diff 白名单、禁止路径、状态机、事务快照和失败回滚 |
 | 验证闭环 | 支持 package、contract、baseline、typecheck、test 和 production build 回归 |
 
@@ -145,7 +146,7 @@ node ai-baseline-kit/scripts/baseline-check.mjs --project-root <project-c> --fai
 
 | 产品展示名称 | 机器包名 | 版本 | 类型 | AI 主入口 | 安装说明 |
 | --- | --- | --- | --- | --- | --- |
-| AI 前端模块装配系统 | `ai-baseline-kit` | `0.15.0` | 可嵌入 AI 工程能力包 | [`ai-baseline-kit/AGENTS.md`](ai-baseline-kit/AGENTS.md) | [`ai-baseline-kit/INSTALL.md`](ai-baseline-kit/INSTALL.md) |
+| AI 前端模块装配系统 | `ai-baseline-kit` | `0.17.0` | 可嵌入 AI 工程能力包 | [`ai-baseline-kit/AGENTS.md`](ai-baseline-kit/AGENTS.md) | [`ai-baseline-kit/INSTALL.md`](ai-baseline-kit/INSTALL.md) |
 
 完整登记信息见 [`package-registry.json`](package-registry.json)。
 
@@ -248,6 +249,20 @@ node ai-baseline-kit/scripts/template-build-check.mjs --profile vue3-vite-ts
 - `plugin.json.entrypoints.primary` 必须指向包的 AI 主入口。
 - 包之间不得通过隐式相对路径耦合。
 - 新增包需要登记到 `package-registry.json` 并通过 `scripts/package-check.mjs`。
+
+## 0.17.0：可插拔样式隔离策略
+
+- 将“所有模块必须使用 CSS Modules”调整为“所有模块必须声明并通过可验证的样式隔离契约”；CSS Modules 仍是 React/Vue Vite 标准模板默认值。
+- 内置 `css-modules`、`vue-scoped`、`utility-css`、`css-in-js`、`shadow-dom` 和 `hybrid` adapter，并支持项目显式登记 `.cjs` custom adapter。
+- 项目地图记录 `strategy`、`adapter`、支持策略、局部样式 fallback 和全局入口；旧项目扫描后保留可证明安全的真实策略。
+- 模块 bundle 携带实际使用策略、预处理器、外部全局样式依赖和 custom adapter 指纹，导入前校验目标项目是否兼容。
+
+## 0.16.0：模块样式唯一性与装配隔离
+
+- 标准 React/Vue Vite 模板统一使用 CSS Modules，不需要额外唯一化插件。
+- 模块级样式按 `styles/<module-id>.module.<ext>` 命名，组件级按 `<Owner>.module.<ext>` 命名。
+- 产物类名固定为 `m_[name]_[local]__[hash:base64:6]`，并由 `style-scope-check.mjs`、模块导出保护和 `baseline-check.mjs` 共同约束。
+- 旧项目保留原技术栈和历史快照，只治理新增或本轮修改引入的样式冲突。
 
 ## 0.15.0：两级能力路由与分阶段渐进加载
 

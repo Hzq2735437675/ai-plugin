@@ -13,7 +13,7 @@
   "packages": [
     {
       "name": "ai-baseline-kit",
-      "version": "0.15.0",
+      "version": "0.17.0",
       "path": "ai-baseline-kit",
       "manifest": "ai-baseline-kit/plugin.json",
       "readme": "ai-baseline-kit/README.md",
@@ -41,6 +41,9 @@
         "ai-baseline-kit/scripts/requirement-compile.mjs",
         "ai-baseline-kit/scripts/feature-plan.mjs",
         "ai-baseline-kit/scripts/feature-generate.mjs",
+        "ai-baseline-kit/scripts/style-scope-lib.mjs",
+        "ai-baseline-kit/scripts/style-scope-check.mjs",
+        "ai-baseline-kit/scripts/style-scope-contract-check.mjs",
         "ai-baseline-kit/scripts/module-create.mjs",
         "ai-baseline-kit/scripts/module-export.mjs",
         "ai-baseline-kit/scripts/module-import.mjs",

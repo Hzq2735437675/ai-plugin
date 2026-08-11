@@ -7,6 +7,7 @@ import { analyzeAstBoundaries } from './ast-boundary-lib.mjs';
 import { PROJECT_STATE_DIRECTORY, migrateLegacyProjectState, resolveLegacyBaselineFile, resolveProjectSchemeFile } from './project-state-lib.mjs';
 import { ensureRootEntrypoints, hasStrongRootEntrypoint } from './project-tools-lib.mjs';
 import { inspectBuildIsolation } from './build-isolation-lib.mjs';
+import { analyzeStyleIsolation } from './style-scope-lib.mjs';
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const baselineRoot = path.resolve(scriptDir, '..');
@@ -538,6 +539,14 @@ function checkAstBoundaries() {
   }
 }
 
+function checkStyleIsolation() {
+  if (isPackageRepositoryReference()) return;
+  const modulesRoot = detectModulesRoot();
+  if (!modulesRoot) return;
+  const report = analyzeStyleIsolation({ projectRoot: root, modulesRoot });
+  for (const violation of report.violations) record(violation.level || 'error', violation.id, violation.message, violation.file);
+}
+
 function checkI18nHints() {
   if (isPackageRepositoryReference()) return;
   const i18n = getYamlScalar(projectSchemeText(), 'stack.i18n').toLowerCase();
@@ -558,6 +567,7 @@ checkBuildIsolation();
 ensureAiEntrypoints();
 checkProjectScheme();
 checkModules();
+checkStyleIsolation();
 checkProtectedPackageImports();
 checkAstBoundaries();
 checkDynamicAssembly();

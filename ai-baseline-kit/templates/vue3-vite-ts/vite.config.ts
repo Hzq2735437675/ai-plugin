@@ -15,6 +15,11 @@ export default defineConfig({
       resolvers: [ElementPlusResolver({ importStyle: 'css' })],
     }),
   ],
+  css: {
+    modules: {
+      generateScopedName: 'm_[name]_[local]__[hash:base64:6]',
+    },
+  },
   resolve: {
     alias: {
       '@': path.resolve(templateRoot, './src'),

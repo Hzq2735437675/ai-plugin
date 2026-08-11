@@ -140,5 +140,11 @@ try {
   process.exitCode = 1;
 } finally {
   if (args['keep-temp']) console.log(`temp-root: ${tempRoot}`);
-  else fs.rmSync(tempRoot, { recursive: true, force: true });
+  else {
+    try {
+      fs.rmSync(tempRoot, { recursive: true, force: true, maxRetries: 8, retryDelay: 250 });
+    } catch (error) {
+      console.warn(`template-build-check: warning: 临时目录清理失败，可稍后手工删除 ${tempRoot}: ${error.message}`);
+    }
+  }
 }

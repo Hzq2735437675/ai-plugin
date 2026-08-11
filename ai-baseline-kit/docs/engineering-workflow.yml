@@ -50,7 +50,7 @@ workflows:
       - 如果项目已有依赖或配置，优先从文件推断，并按旧项目模式保留真实技术栈。
       - 使用 project-scheme-bootstrap 生成 project_root/.ai-frontend-assembler/project-scheme.yml 初版。
       - 首次接入时建立构建隔离：保持 ai-baseline-kit 可被 Git 审计，同时写入部署 ignore、npm 嵌套排除和 postbuild 产物守卫。
-      - 在 scheme 中记录 shell/shared/modules、基础组件层、API client、路由、状态、i18n、样式方案和验证命令。
+      - 在 scheme 中记录 shell/shared/modules、基础组件层、API client、路由、状态、i18n、样式方案、style_isolation strategy/adapter 和验证命令；CSS Modules 是标准默认值，不覆盖旧项目已验证的 scoped、utility、CSS-in-JS 或 Shadow DOM 策略。
       - 后续新增页面或模块必须先经过 baseline-structure-skill。
     output:
       - .ai-frontend-assembler/project-scheme.yml
@@ -64,6 +64,7 @@ workflows:
       - 如果 .ai-frontend-assembler/project-scheme.yml 不存在，先运行 bootstrap_existing_project 或 bootstrap_new_project。
       - 使用 baseline-structure-skill 输出目标层级、模块、页面、路由、组件、API、状态、文案、样式、资源、manifest、依赖和验证计划。
       - 只在目标模块或目标共享层内新增文件。
+      - 模块局部样式必须由项目地图登记的 style_isolation strategy/adapter 接管；Vite 标准模板默认生成 `styles/<module-id>.module.css`，其他项目按 vue-scoped、utility-css、css-in-js、shadow-dom、hybrid 或 custom adapter 验证。
       - 为模块补齐 manifest、routes、menus、access、locales、stores、assets 和 dependencies。
       - 使用静态装配入口接入模块，不新增隐式注册点。
       - 运行 baseline-conformance-skill。
@@ -235,10 +236,10 @@ ai_readability:
 
 module_composition_workflow:
   export:
-    - 读取 module.meta.json、manifest、shared 契约、npm/dev 版本、路由、权限和主题 token。
+    - 读取 module.meta.json、manifest、shared 契约、npm/dev 版本、路由、权限、主题 token 和 styleIsolation strategy/adapter。
     - 生成带 SHA-256 文件清单的 module-bundle.json。
   compatibility:
-    - 校验技术栈、目录根、同名模块、路由、shared hash、依赖、主题和静态装配器。
+    - 校验技术栈、目录根、同名模块、路由、shared hash、依赖、主题、样式隔离策略/预处理器和静态装配器。
     - blockers 非空时不得导入。
   import:
     - 只执行兼容性报告中的受控动作。

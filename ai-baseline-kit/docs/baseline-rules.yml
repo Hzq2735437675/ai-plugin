@@ -138,6 +138,59 @@ directory_conventions:
   component_layout:
     preferred: kebab-case 目录，内部使用 `index` 组件文件和同目录样式文件
 
+style_isolation:
+  objective: 模块迁移、组合和并行开发后，局部样式不得产生不受控全局污染，隔离策略必须可声明、可验证、可迁移。
+  invariant:
+    - 每个目标项目必须在 project-scheme.yml 的 style_isolation 中声明 strategy 和 adapter。
+    - CSS Modules 是标准 Vite 模板默认策略，不是整个装配系统唯一允许的策略。
+    - 模块局部样式必须由当前 strategy 接管；全局主题只能进入项目登记的 global_entrypoints 或 theme 入口。
+    - 模块 bundle 必须携带 strategy、adapter、实际使用策略、预处理器和外部全局样式依赖，导入前执行兼容性检查。
+  strategies:
+    css-modules:
+      adapter: builtin-css-modules
+      module_file_pattern: '*.module.{css,scss,sass,less,styl,stylus}'
+      scoped_name_pattern: 'm_[name]_[local]__[hash:base64:6]'
+      vite_plugin_required: false
+    vue-scoped:
+      adapter: builtin-vue-scoped
+      rule: Vue SFC style 必须声明 scoped 或 module；外置普通样式只能通过 `<style scoped src>` 接管。
+    utility-css:
+      adapter: builtin-utility-css
+      rule: 允许无模块样式文件；复杂局部样式默认回退 CSS Modules。
+    css-in-js:
+      adapter: builtin-css-in-js
+      rule: 样式由运行时或编译期 CSS-in-JS 接管；独立局部样式默认仅允许 CSS Modules 回退。
+    shadow-dom:
+      adapter: builtin-shadow-dom
+      rule: 普通样式必须通过带绑定的 `?inline` 或 `?raw` 导入进入 Shadow Root，或回退 CSS Modules。
+    hybrid:
+      adapter: builtin-hybrid
+      rule: 每个样式必须由 CSS Modules、Vue scoped src 或 Shadow DOM inline/raw 中至少一种方式明确接管。
+    custom:
+      adapter: custom
+      rule: custom_adapter 必须位于项目根目录内，当前同步 Gate 只加载显式登记的 CommonJS `.cjs` 适配器。
+  naming:
+    module_level: styles/<module-id>.module.<ext>
+    component_level: <Owner>.module.<ext>
+    forbidden_generic_files:
+      - index.css
+      - index.module.css
+      - index.scss
+      - index.module.scss
+      - index.less
+      - index.module.less
+  rules:
+    - owner 文件名负责源码可追踪；CSS Modules hash、Vue scoped 属性、Shadow Root 或已登记 adapter 负责运行时隔离。
+    - 模块局部样式不得定义 :root、html、body、#app 或 #root；全局主题只能进入项目登记的 theme/global_entrypoints。
+    - CSS Modules 允许在局部 owner 下使用 :global(...) 覆盖第三方组件，但不得把模块样式退化为全局样式表。
+    - utility-css、css-in-js、shadow-dom 默认允许 CSS Modules 作为复杂局部样式 fallback；可通过 local_style_fallback 调整。
+    - 旧项目首次接入记录 legacy snapshot；changed 模式只阻断新增或本轮修改引入的违规，不强制一次迁移全部历史样式。
+  validation:
+    command: node ai-baseline-kit/scripts/style-scope-check.mjs --project-root <project-root>
+    adapters: node ai-baseline-kit/scripts/style-scope-check.mjs --list-adapters
+    integrated_gate: baseline-check.mjs
+    export_guard: 不满足样式隔离契约的模块不得导出为可装配 bundle。
+
 module_contract:
   portability_scope: 同技术栈项目之间应具备直接迁移能力；跨技术栈只复用规则、数据契约和业务协议，不承诺页面组件直接迁移。
   required_files:

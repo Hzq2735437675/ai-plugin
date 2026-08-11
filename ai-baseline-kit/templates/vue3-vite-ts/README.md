@@ -101,3 +101,12 @@ npm run build
 ```
 
 模块 `tests/` 由 Feature Spec 自动生成；Playwright 浏览器执行使用 `npm run test:e2e`，首次运行前按 Playwright 提示安装浏览器。
+
+
+## 模块样式隔离
+
+- Vite 已内置 CSS Modules，不需要安装额外样式唯一化插件。 这是当前模板的默认 adapter；装配系统本身还支持在项目地图中登记其他隔离策略。
+- 模块级样式使用 `styles/<module-id>.module.css`；组件级样式使用 `<Owner>.module.css`，使用 Less/SCSS 时保持同样的 `.module.<ext>` 规则。
+- 页面或组件必须通过 `import styles from './Owner.module.css'` 绑定导入，并使用 `styles.xxx`；禁止副作用导入模块局部样式。
+- 模板将局部类名生成规则固定为 `m_[name]_[local]__[hash:base64:6]`：owner 文件名负责可追踪，hash 负责跨模块唯一。
+- `:root`、`html`、`body`、`#app`、`#root` 只能由全局主题/应用入口管理；第三方组件覆盖可在 owner 内谨慎使用 `:global(...)`。

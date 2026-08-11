@@ -68,8 +68,43 @@ function pageDefinitions(spec, framework) {
   });
 }
 
-function renderReactPage(page) {
-  return `import '../../styles/index.css';\n\nexport function ${page.component}() {\n  return (\n    <section className="module-page">\n      <header className="module-page__header">\n        <h1>${page.name}</h1>\n        <p>功能页面</p>\n      </header>\n      <div className="module-page__content" data-page-state="ready">\n        <p>路由：${page.route}</p>\n      </div>\n    </section>\n  );\n}\n`;
+function renderModuleStyles() {
+  return `.page {
+  display: grid;
+  gap: var(--app-space-lg, 24px);
+}
+
+.header h1,
+.header p {
+  margin: 0;
+}
+
+.content {
+  padding: var(--app-space-lg, 24px);
+  background: var(--app-color-bg-container);
+  border: 1px solid var(--app-color-border);
+  border-radius: var(--app-border-radius);
+}
+`;
+}
+
+function renderReactPage(page, styleFileName) {
+  return `import styles from '../../styles/${styleFileName}';
+
+export function ${page.component}() {
+  return (
+    <section className={styles.page}>
+      <header className={styles.header}>
+        <h1>${page.name}</h1>
+        <p>功能页面</p>
+      </header>
+      <div className={styles.content} data-page-state="ready">
+        <p>路由：${page.route}</p>
+      </div>
+    </section>
+  );
+}
+`;
 }
 
 function usesElementPlus(uiLibrary) {
@@ -82,12 +117,42 @@ function defaultNpmDependencies(framework, uiLibrary) {
   return [];
 }
 
-function renderVuePage(page, uiLibrary) {
+function renderVuePage(page, uiLibrary, styleFileName) {
   if (!usesElementPlus(uiLibrary)) {
-    return `<script setup lang="ts">\nimport '../../styles/index.css';\n</script>\n\n<template>\n  <section class="module-page">\n    <header class="module-page__header">\n      <h1>${page.name}</h1>\n      <p>功能页面</p>\n    </header>\n    <div class="module-page__content" data-page-state="ready">\n      <p>路由：${page.route}</p>\n    </div>\n  </section>\n</template>\n`;
+    return `<script setup lang="ts">
+import styles from '../../styles/${styleFileName}';
+</script>
+
+<template>
+  <section :class="styles.page">
+    <header :class="styles.header">
+      <h1>${page.name}</h1>
+      <p>功能页面</p>
+    </header>
+    <div :class="styles.content" data-page-state="ready">
+      <p>路由：${page.route}</p>
+    </div>
+  </section>
+</template>
+`;
   }
 
-  return `<script setup lang="ts">\nimport '../../styles/index.css';\n</script>\n\n<template>\n  <section class="module-page">\n    <header class="module-page__header">\n      <h1>${page.name}</h1>\n      <p>功能页面</p>\n    </header>\n    <el-card class="module-page__content" shadow="never" data-page-state="ready">\n      <p>路由：${page.route}</p>\n    </el-card>\n  </section>\n</template>\n`;
+  return `<script setup lang="ts">
+import styles from '../../styles/${styleFileName}';
+</script>
+
+<template>
+  <section :class="styles.page">
+    <header :class="styles.header">
+      <h1>${page.name}</h1>
+      <p>功能页面</p>
+    </header>
+    <el-card :class="styles.content" shadow="never" data-page-state="ready">
+      <p>路由：${page.route}</p>
+    </el-card>
+  </section>
+</template>
+`;
 }
 
 function renderRoutes(moduleVar, pages, framework) {
@@ -184,10 +249,13 @@ try {
   const moduleVar = { id: moduleId, camel, pascal, framework, typeImport };
   const npmDependencies = defaultNpmDependencies(framework, uiLibrary);
   const devDependencies = acceptanceDevDependencies(framework);
+  const styleFileName = `${moduleId}.module.css`;
+  const styleFile = path.join(moduleRoot, 'styles', styleFileName);
+  if (!fs.existsSync(styleFile)) writeFile(styleFile, renderModuleStyles());
 
   for (const page of pages) {
     const pageFile = path.join(moduleRoot, 'pages', page.id, `index.${page.extension}`);
-    if (!fs.existsSync(pageFile) || args.force) writeFile(pageFile, /vue/i.test(framework) ? renderVuePage(page, uiLibrary) : renderReactPage(page), { force: Boolean(args.force) });
+    if (!fs.existsSync(pageFile) || args.force) writeFile(pageFile, /vue/i.test(framework) ? renderVuePage(page, uiLibrary, styleFileName) : renderReactPage(page, styleFileName), { force: Boolean(args.force) });
   }
 
   if (plan.decision.type === 'create-module') {
@@ -222,7 +290,6 @@ try {
     writeFile(path.join(moduleRoot, 'types', 'index.ts'), 'export {};\n');
     const apiDescriptors = (spec.api ?? []).map((item) => `  { id: ${quote(item.id)}, method: ${quote(item.method)}, path: ${quote(item.path)} },`).join('\n');
     writeFile(path.join(moduleRoot, 'api', 'index.ts'), `export const ${camel}Api = [\n${apiDescriptors}${apiDescriptors ? '\n' : ''}] as const;\n`);
-    writeFile(path.join(moduleRoot, 'styles', 'index.css'), `.module-page {\n  display: grid;\n  gap: var(--app-space-lg, 24px);\n}\n\n.module-page__header h1,\n.module-page__header p {\n  margin: 0;\n}\n\n.module-page__content {\n  padding: var(--app-space-lg, 24px);\n  background: var(--app-color-bg-container);\n  border: 1px solid var(--app-color-border);\n  border-radius: var(--app-border-radius);\n}\n`);
     writeFile(path.join(moduleRoot, 'assets', 'README.md'), `# ${spec.feature.title} assets\n\n仅存放 ${moduleId} 模块私有资源。\n`);
     writeFile(path.join(moduleRoot, 'acceptance.md'), renderAcceptance(spec));
     const deps = unique([...npmDependencies, ...(spec.dependencies?.npm ?? [])]);

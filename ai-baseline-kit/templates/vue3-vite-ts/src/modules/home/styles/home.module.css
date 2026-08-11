@@ -1,0 +1,11 @@
+.overview {
+  min-width: 0;
+}
+
+.status {
+  margin-bottom: 16px;
+}
+
+.cards {
+  row-gap: 16px;
+}

@@ -3,8 +3,18 @@
 > 文档性质：公司级软件资产说明与技术规格
 > 产品名称：AI 前端模块装配系统
 > 机器包名：`ai-baseline-kit`
-> 当前适用版本：`0.15.0`
-> 文档日期：2026-08-03
+> 当前适用版本：`0.17.0`
+> 文档日期：2026-08-11
+
+## 0.17.0 样式策略适配器与可移植契约
+
+样式治理的系统不变量从“必须使用 CSS Modules”提升为“模块局部样式不得产生不受控全局污染，且隔离机制必须可声明、可验证、可迁移”。项目地图声明 `strategy`、`adapter`、支持策略、局部 fallback、custom adapter 和全局入口；标准模板仍默认 `builtin-css-modules`。
+
+`style-scope-lib.mjs` 提供内置 adapter registry，覆盖 CSS Modules、Vue scoped、utility CSS、CSS-in-JS、Shadow DOM 和 hybrid。custom 策略只允许加载项目根内显式登记的同步 `.cjs` adapter，避免扫描目录或隐式执行插件。模块 bundle 记录实际使用策略、预处理器、外部样式依赖以及 custom adapter SHA-256 指纹；兼容性检查在复制模块前确认目标项目能力并补齐可确定的依赖。
+
+## 0.16.0 模块样式隔离契约
+
+系统将模块局部样式作为可移植契约：标准 Vite 模板使用内置 CSS Modules，源码按 owner 命名，构建类名按 `m_[name]_[local]__[hash:base64:6]` 生成。`style-scope-check` 在基线验证和模块导出前检查普通局部样式、副作用导入、全局根选择器与泛化文件名，避免组合后类名覆盖。非 Vite 项目保留现有工具链，由项目地图登记等价的 CSS Modules 实现；旧项目仍按 changed/legacy 策略增量治理。
 
 ## 0.15.0 两级 manifest、确定性路由与加载计划
 
@@ -32,7 +42,7 @@
 | 英文建议名 | AI Frontend Module Assembly System |
 | 机器包名 | `ai-baseline-kit` |
 | 资产类型 | 内嵌式 AI 工程能力包 / 前端研发治理工具 |
-| 当前版本 | `0.15.0` |
+| 当前版本 | `0.17.0` |
 | 主入口 | `ai-baseline-kit/AGENTS.md` |
 | 统一执行入口 | `ai-baseline-kit/scripts/ai-run.mjs` |
 | 分发方式 | 整目录复制到目标项目根目录 |

@@ -1,7 +1,7 @@
 # AI Baseline Kit 安装与植入说明
 
 - 包名：`ai-baseline-kit`
-- 当前版本：`0.15.0`
+- 当前版本：`0.17.0`
 - 运行环境：Node.js 20 或以上版本（推荐使用公司统一的当前 LTS 版本）
 - 包元数据：[`plugin.json`](plugin.json)
 - 主入口：[`AGENTS.md`](AGENTS.md)
@@ -9,6 +9,20 @@
 - 使用指南：[`docs/使用指南.md`](docs/使用指南.md)
 - 系统说明书：[`docs/system-specification.md`](docs/system-specification.md)
 - Skill 独立使用：[`docs/skill-standalone-guide.md`](docs/skill-standalone-guide.md)
+
+## 0.17.0 样式策略适配器说明
+
+升级后 CSS Modules 仍是标准 Vite 模板默认值，但旧项目不再被强制改造成 CSS Modules。系统会在 `.ai-frontend-assembler/project-scheme.yml` 中登记 `style_isolation.strategy` / `adapter`，并按 CSS Modules、Vue scoped、utility CSS、CSS-in-JS、Shadow DOM、hybrid 或显式 custom adapter 执行检查。模块导出会携带样式契约，目标项目不支持时阻止导入。
+
+查看内置 adapter：
+
+```bash
+node ai-baseline-kit/scripts/style-scope-check.mjs --list-adapters
+```
+
+## 0.16.0 样式隔离说明
+
+覆盖升级后，标准 Vite 模板和新生成模块默认使用 CSS Modules。无需额外安装唯一化插件；旧项目已有普通样式由 legacy/changed 模式保留，新增或修改模块应迁移到 `Owner.module.<ext>`。
 
 ## 0.15.0 两级能力路由说明
 

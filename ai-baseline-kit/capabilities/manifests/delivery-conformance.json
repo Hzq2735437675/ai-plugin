@@ -13,6 +13,7 @@
   ],
   "scripts": [
     "scripts/project-validate.mjs",
+    "scripts/style-scope-check.mjs",
     "scripts/delivery-gate.mjs",
     "scripts/build-artifact-guard.mjs"
   ],

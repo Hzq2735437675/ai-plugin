@@ -66,6 +66,37 @@ properties:
         type: string
       package_manager:
         type: string
+  style_isolation:
+    type: object
+    additionalProperties: true
+    properties:
+      strategy:
+        type: string
+        enum: [css-modules, vue-scoped, utility-css, css-in-js, shadow-dom, hybrid, custom, project-defined, not-applicable-package-repository]
+      adapter:
+        type: string
+      supported_strategies:
+        type: string
+      module_file_pattern:
+        type: string
+      scoped_name_pattern:
+        type: string
+      local_style_fallback:
+        type: string
+      custom_adapter:
+        type: string
+      global_entrypoints:
+        type: string
+      generic_index_files:
+        type: string
+      module_global_selectors:
+        type: string
+      module_style_files:
+        type: integer
+        minimum: 0
+      unscoped_module_style_files:
+        type: integer
+        minimum: 0
   layers:
     type: object
     additionalProperties: true

@@ -2,6 +2,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { analyzeProject } from './project-tools-lib.mjs';
+import { analyzeStyleIsolation, STYLE_MODULE_PATTERN } from './style-scope-lib.mjs';
 import { camelCase, ensureInside, normalizePath, readJson, relativeImport, unique, writeJson } from './feature-tools-lib.mjs';
 
 const BUNDLE_FILE = 'module-bundle.json';
@@ -57,6 +58,78 @@ function dependencyVersion(packageData, name) {
     if (packageData?.[bucket]?.[name]) return packageData[bucket][name];
   }
   return '';
+}
+
+function splitCsv(value) {
+  if (Array.isArray(value)) return value.map(String).map((item) => item.trim()).filter(Boolean);
+  return String(value || '').split(',').map((item) => item.trim()).filter(Boolean);
+}
+
+function stylePreprocessorPackages(files) {
+  const packages = new Set();
+  for (const file of files) {
+    const extension = path.extname(String(file).split('?')[0]).toLowerCase();
+    if (extension === '.less') packages.add('less');
+    if (extension === '.scss' || extension === '.sass') packages.add('sass');
+    if (extension === '.styl' || extension === '.stylus') packages.add('stylus');
+  }
+  return [...packages].sort();
+}
+
+function stylePackageName(specifier) {
+  const value = String(specifier || '').replace(/^~+/, '');
+  if (value.startsWith('@')) return value.split('/').slice(0, 2).join('/');
+  return value.split('/')[0];
+}
+
+function styleAdapterFingerprint(projectRoot, styleReport) {
+  if (styleReport.strategy !== 'custom' || !styleReport.policy?.customAdapter) return '';
+  const file = path.resolve(projectRoot, styleReport.policy.customAdapter);
+  return fs.existsSync(file) ? sha256(file) : '';
+}
+
+function compareStyleIsolation(sourceContract = {}, targetStyleIsolation = {}, targetProjectRoot = '') {
+  const blockers = [];
+  const warnings = [];
+  const sourceStrategies = sourceContract.strategies?.length
+    ? sourceContract.strategies
+    : [sourceContract.strategy].filter(Boolean);
+  const targetStrategies = new Set([
+    targetStyleIsolation.strategy,
+    ...splitCsv(targetStyleIsolation.supported_strategies),
+  ].filter(Boolean));
+  if (targetStrategies.has('hybrid')) {
+    for (const strategy of ['css-modules', 'vue-scoped', 'utility-css', 'css-in-js', 'shadow-dom']) targetStrategies.add(strategy);
+  }
+  for (const strategy of sourceStrategies) {
+    if (strategy === 'custom') continue;
+    if (!targetStrategies.has(strategy)) {
+      blockers.push({
+        code: 'style-strategy-unsupported',
+        source: strategy,
+        target: [...targetStrategies],
+        message: `目标项目未声明支持模块所需样式隔离策略: ${strategy}`,
+      });
+    }
+  }
+  if (sourceContract.strategy === 'custom') {
+    const targetAdapter = targetStyleIsolation.custom_adapter;
+    if (!targetAdapter || targetAdapter === 'none') {
+      blockers.push({ code: 'custom-style-adapter-missing', message: '目标项目没有声明模块所需 custom 样式适配器。' });
+    } else if (sourceContract.adapterFingerprint) {
+      const targetFile = path.resolve(targetProjectRoot, targetAdapter);
+      if (!fs.existsSync(targetFile) || sha256(targetFile) !== sourceContract.adapterFingerprint) {
+        blockers.push({ code: 'custom-style-adapter-mismatch', source: sourceContract.customAdapter, target: targetAdapter, message: '目标项目 custom 样式适配器与模块导出契约不一致。' });
+      }
+    }
+  }
+  if (sourceContract.scopedNamePattern && sourceContract.strategy === 'css-modules') {
+    const targetPattern = targetStyleIsolation.scoped_name_pattern;
+    if (targetPattern && targetPattern !== 'bundler-defined' && targetPattern !== 'vite-default-hash' && targetPattern !== sourceContract.scopedNamePattern) {
+      warnings.push({ code: 'style-scoped-name-pattern-different', source: sourceContract.scopedNamePattern, target: targetPattern, message: '目标项目 CSS Modules scoped name 模式不同；类名仍应隔离，但构建快照可能变化。' });
+    }
+  }
+  return { blockers, warnings };
 }
 
 function resolveExistingPath(base) {
@@ -186,6 +259,12 @@ export function exportModuleBundle({ projectRoot, moduleName, output, force = fa
   if (!fs.existsSync(metadataFile)) throw new Error(`模块缺少 module.meta.json: ${moduleName}`);
   const metadata = readJson(metadataFile);
   if (metadata.name !== moduleName) throw new Error(`模块目录与 metadata.name 不一致: ${moduleName} != ${metadata.name}`);
+  const styleReport = analyzeStyleIsolation({ projectRoot: absoluteProjectRoot, modulesRoot, moduleName });
+  const styleErrors = styleReport.violations.filter((item) => item.level === 'error');
+  if (styleErrors.length) {
+    const details = styleErrors.map((item) => `${item.id}${item.file ? ` (${item.file})` : ''}: ${item.message}`).join('; ');
+    throw new Error(`模块样式隔离检查失败，禁止导出 ${moduleName}: ${details}`);
+  }
   const outputRoot = path.resolve(output);
   if (fs.existsSync(outputRoot)) {
     if (!force) throw new Error(`导出目录已存在: ${outputRoot}`);
@@ -212,6 +291,12 @@ export function exportModuleBundle({ projectRoot, moduleName, output, force = fa
   const packageData = readPackage(absoluteProjectRoot).data;
   const runtimeDependencies = Object.fromEntries((metadata.dependencies?.npm ?? []).map((name) => [name, dependencyVersion(packageData, name)]));
   const devDependencies = Object.fromEntries((metadata.dependencies?.dev ?? []).map((name) => [name, dependencyVersion(packageData, name)]));
+  const stylePreprocessors = stylePreprocessorPackages(styleReport.files);
+  for (const name of stylePreprocessors) devDependencies[name] ??= dependencyVersion(packageData, name);
+  for (const specifier of styleReport.globalDependencies) {
+    const name = stylePackageName(specifier);
+    if (name) runtimeDependencies[name] ??= dependencyVersion(packageData, name);
+  }
   const themeEntrypoint = report.entrypoints.theme;
   const themeFile = themeEntrypoint && themeEntrypoint !== 'unknown' ? path.join(absoluteProjectRoot, themeEntrypoint) : '';
   const themeVariables = themeFile && fs.existsSync(themeFile) ? parseCssVariables(fs.readFileSync(themeFile, 'utf8')) : {};
@@ -238,6 +323,18 @@ export function exportModuleBundle({ projectRoot, moduleName, output, force = fa
       dev: devDependencies,
       shared: sharedDependencies,
       theme: { requiredTokens, definitions: themeDefinitions },
+      styleIsolation: {
+        strategy: styleReport.strategy,
+        strategies: styleReport.usedStrategies,
+        adapter: styleReport.adapter,
+        filePattern: styleReport.policy.moduleFilePattern || STYLE_MODULE_PATTERN,
+        scopedNamePattern: styleReport.policy.scopedNamePattern || report.styleIsolation?.scoped_name_pattern || 'bundler-defined',
+        localStyleFallback: styleReport.policy.localStyleFallback,
+        customAdapter: styleReport.policy.customAdapter || '',
+        adapterFingerprint: styleAdapterFingerprint(absoluteProjectRoot, styleReport),
+        preprocessors: stylePreprocessors,
+        globalDependencies: styleReport.globalDependencies,
+      },
     },
     shared: { files: sharedFiles, unresolved: shared.unresolved },
   };
@@ -297,6 +394,9 @@ export function checkModuleCompatibility({ bundlePath, projectRoot }) {
   const actions = [];
   const moduleName = manifest.module.name;
   blockers.push(...compareStack(manifest.source.stack, stackFingerprint(report), manifest.module.portability?.sameStackOnly !== false));
+  const styleCompatibility = compareStyleIsolation(manifest.contracts.styleIsolation, report.styleIsolation, absoluteProjectRoot);
+  blockers.push(...styleCompatibility.blockers);
+  warnings.push(...styleCompatibility.warnings);
 
   const targetModulesRoot = report.layers.modules_root;
   const targetSharedRoot = report.layers.shared_root;

@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { PROJECT_STATE_DIRECTORY, getProjectStatePaths } from './project-state-lib.mjs';
+import { inferStyleIsolation, resolveStyleIsolationPolicy, STYLE_MODULE_PATTERN, VITE_SCOPED_NAME_PATTERN } from './style-scope-lib.mjs';
 
 export const STANDARD_PROFILES = Object.freeze({
   'react18-antd-tailwind-ts': {
@@ -14,7 +15,18 @@ export const STANDARD_PROFILES = Object.freeze({
     router: 'React Router 6',
     state_manager: 'project-defined',
     i18n: 'project-defined',
-    style_solution: 'Tailwind CSS 3 + project-defined local styles',
+    style_solution: 'Tailwind CSS 3 + CSS Modules',
+    style_isolation: {
+      strategy: 'css-modules',
+      adapter: 'builtin-css-modules',
+      supported_strategies: 'css-modules,utility-css,css-in-js,shadow-dom,hybrid,custom',
+      module_file_pattern: STYLE_MODULE_PATTERN,
+      scoped_name_pattern: VITE_SCOPED_NAME_PATTERN,
+      local_style_fallback: 'none',
+      custom_adapter: 'none',
+      generic_index_files: 'forbidden',
+      module_global_selectors: 'forbidden',
+    },
     template: 'templates/react18-antd-tailwind-ts',
     shell_root: 'src/app',
     shared_root: 'src/shared',
@@ -36,7 +48,18 @@ export const STANDARD_PROFILES = Object.freeze({
     router: 'Vue Router 4',
     state_manager: 'project-defined',
     i18n: 'project-defined',
-    style_solution: 'Element Plus CSS variables + project-defined local styles',
+    style_solution: 'Element Plus CSS variables + CSS Modules',
+    style_isolation: {
+      strategy: 'css-modules',
+      adapter: 'builtin-css-modules',
+      supported_strategies: 'css-modules,vue-scoped,utility-css,css-in-js,shadow-dom,hybrid,custom',
+      module_file_pattern: STYLE_MODULE_PATTERN,
+      scoped_name_pattern: VITE_SCOPED_NAME_PATTERN,
+      local_style_fallback: 'none',
+      custom_adapter: 'none',
+      generic_index_files: 'forbidden',
+      module_global_selectors: 'forbidden',
+    },
     template: 'templates/vue3-vite-ts',
     shell_root: 'src/app',
     shared_root: 'src/shared',
@@ -379,6 +402,28 @@ export function analyzeProject(projectRoot, options = {}) {
         package_manager: packageManager,
       };
 
+  const inferredStyleIsolation = existing
+    ? inferStyleIsolation({ projectRoot: absoluteRoot, modulesRoot: modules.root, buildTool: stack.build_tool })
+    : null;
+  const resolvedStylePolicy = existing
+    ? resolveStyleIsolationPolicy({ projectRoot: absoluteRoot, modulesRoot: modules.root, buildTool: stack.build_tool })
+    : null;
+  const styleIsolation = existing
+    ? {
+        ...inferredStyleIsolation,
+        strategy: resolvedStylePolicy.strategy,
+        adapter: resolvedStylePolicy.adapter,
+        supported_strategies: resolvedStylePolicy.supportedStrategies.join(',') || inferredStyleIsolation.supported_strategies,
+        module_file_pattern: resolvedStylePolicy.moduleFilePattern,
+        scoped_name_pattern: resolvedStylePolicy.scopedNamePattern,
+        local_style_fallback: resolvedStylePolicy.localStyleFallback,
+        custom_adapter: resolvedStylePolicy.customAdapter || 'none',
+        generic_index_files: resolvedStylePolicy.genericIndexFiles,
+        module_global_selectors: resolvedStylePolicy.moduleGlobalSelectors,
+        global_entrypoints: resolvedStylePolicy.globalEntrypoints.join(','),
+      }
+    : { ...(profile?.style_isolation ?? STANDARD_PROFILES[DEFAULT_PROFILE_ID].style_isolation), module_style_files: 0, unscoped_module_style_files: 0 };
+
   const roots = existing
     ? {
         shell_root: directoryExists(absoluteRoot, 'src/app') ? 'src/app' : 'unknown',
@@ -416,6 +461,7 @@ export function analyzeProject(projectRoot, options = {}) {
       dependencies: Object.fromEntries(dependencyVersions),
     },
     stack,
+    styleIsolation,
     layers: roots,
     entrypoints,
     modules,
@@ -488,6 +534,9 @@ export function buildProjectScheme(report, options = {}) {
     '',
     'stack:',
     ...Object.entries(report.stack).map(([key, value]) => `  ${key}: ${yamlScalar(value)}`),
+    '',
+    'style_isolation:',
+    ...Object.entries(report.styleIsolation ?? {}).map(([key, value]) => `  ${key}: ${yamlScalar(value)}`),
     '',
     'layers:',
     ...Object.entries(report.layers).map(([key, value]) => `  ${key}: ${yamlScalar(value)}`),

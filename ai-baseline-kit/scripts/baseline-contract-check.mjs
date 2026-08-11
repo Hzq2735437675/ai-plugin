@@ -228,6 +228,12 @@ try {
   ]);
   assertPass(exported, 'customer module export');
   assert.ok(fs.existsSync(path.join(customerBundle, 'module-bundle.json')));
+  const customerBundleManifest = JSON.parse(fs.readFileSync(path.join(customerBundle, 'module-bundle.json'), 'utf8'));
+  assert.equal(customerBundleManifest.contracts.styleIsolation.strategy, 'css-modules');
+  assert.equal(customerBundleManifest.contracts.styleIsolation.adapter, 'builtin-css-modules');
+  assert.deepEqual(customerBundleManifest.contracts.styleIsolation.strategies, ['css-modules']);
+  assert.match(customerBundleManifest.contracts.styleIsolation.scopedNamePattern, /m_\[name\]_\[local\]/);
+  assert.deepEqual(customerBundleManifest.contracts.styleIsolation.preprocessors, []);
 
   const vueTarget = bootstrap('vue3-vite-ts', 'vue-target');
   const compatible = run(vueTarget, 'ai-baseline-kit/scripts/module-compatibility-check.mjs', [

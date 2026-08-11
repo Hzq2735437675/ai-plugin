@@ -2,7 +2,7 @@
 
 - 产品展示名称：AI 前端模块装配系统
 - 机器包名：`ai-baseline-kit`
-- 当前版本：`0.15.0`
+- 当前版本：`0.17.0`
 - 运行环境：Node.js 20 或以上版本（推荐使用公司统一的当前 LTS 版本）
 - 包元数据：[`plugin.json`](plugin.json)
 - 安装/植入说明：[`INSTALL.md`](INSTALL.md)
@@ -36,6 +36,26 @@
 ```
 
 用户不需要写固定长提示词，也不需要知道内部 Skill、Feature Spec、Change Plan、AST 或脚本命令。若根入口尚未接入，首次只需说“请接入并使用项目根目录 ai-baseline-kit 的 AI 前端模块装配系统处理本次需求：<需求>”；系统会创建或安全追加根 `AGENTS.md` / `CLAUDE.md`。之后 AI 从根入口自动展开完整流程，只在存在 blocking question 时一次性提问。
+
+## 可插拔样式隔离契约（0.17.0）
+
+0.17.0 不再把 CSS Modules 写死为所有项目唯一方案，而是把“不受控全局污染”定义为统一不变量：
+
+- `project-scheme.yml` 通过 `style_isolation.strategy` 和 `adapter` 声明项目真实方案。
+- 内置 `css-modules`、`vue-scoped`、`utility-css`、`css-in-js`、`shadow-dom`、`hybrid` adapter；CSS Modules 仍是标准 Vite 模板默认值。
+- `utility-css`、`css-in-js`、`shadow-dom` 可以将 CSS Modules 作为复杂局部样式 fallback。
+- `custom` 策略可登记项目内 `.cjs` adapter；Gate 只执行显式路径，且模块导出记录 adapter SHA-256 指纹。
+- bundle 兼容性检查会校验目标项目支持的策略、预处理器依赖、外部样式依赖和 custom adapter 一致性。
+
+## 模块样式唯一性与装配隔离（0.16.0）
+
+0.16.0 将模块局部样式统一为 **owner 命名 + CSS Modules + hash**：
+
+- Vite 标准模板直接使用内置 CSS Modules，不新增 npm 插件；React/Vue 都通过 `import styles from './Owner.module.css'` 消费。
+- 模块级文件命名为 `styles/<module-id>.module.<ext>`，组件级文件命名为 `<Owner>.module.<ext>`，禁止 `styles/index.css` 等泛化名称。
+- 标准模板固定 `generateScopedName: 'm_[name]_[local]__[hash:base64:6]'`，保证产物类名唯一且可追踪。
+- `style-scope-check.mjs` 检查未隔离样式、副作用导入、缺少映射导入、模块全局选择器和泛化文件名，并已接入 `baseline-check.mjs`。
+- 模块导出前执行同一检查，避免把会冲突的样式装配到其他项目。旧项目继续使用 legacy/changed 模式，不要求一次迁移全部历史样式。
 
 ## 两级能力路由与分阶段加载（0.15.0）
 

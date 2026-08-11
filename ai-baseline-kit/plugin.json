@@ -2,9 +2,9 @@
   "$schema": "./package-manifest.schema.json",
   "schemaVersion": 1,
   "name": "ai-baseline-kit",
-  "version": "0.15.0",
+  "version": "0.17.0",
   "type": "embedded-ai-capability-package",
-  "description": "AI 前端模块装配系统：可完整植入目标项目，支持两级显式能力注册、确定性路由与分阶段渐进加载、需求确认、结构化生成、验收测试、同栈模块迁移组合、AST 边界检查和旧项目增量治理闭环。",
+  "description": "AI 前端模块装配系统：支持两级能力路由、需求到交付闭环、可插拔样式隔离策略、同栈模块迁移组合、AST 边界检查和旧项目增量治理。",
   "entrypoints": {
     "primary": "AGENTS.md",
     "documentation": "README.md",
@@ -84,7 +84,10 @@
     "capabilityRegistryLibrary": "scripts/capability-registry-lib.mjs",
     "capabilityRegistryContractSelfCheck": "scripts/capability-registry-contract-check.mjs",
     "capabilityManifestSchema": "docs/capability-manifest.schema.json",
-    "capabilityRouteSchema": "docs/capability-route.schema.json"
+    "capabilityRouteSchema": "docs/capability-route.schema.json",
+    "styleScopeChecker": "scripts/style-scope-check.mjs",
+    "styleScopeContractSelfCheck": "scripts/style-scope-contract-check.mjs",
+    "styleIsolationRegistry": "scripts/style-scope-lib.mjs"
   },
   "installation": {
     "guide": "INSTALL.md",
