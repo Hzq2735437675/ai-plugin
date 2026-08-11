@@ -3,6 +3,7 @@
 - 产品展示名称：AI 前端模块装配系统
 - 机器包名：`ai-baseline-kit`
 - 当前版本：`0.17.0`
+- 文档策略：只维护当前版本的能力和用法；历史变化通过 Git 或正式发布记录查询。`scripts/package-check.mjs` 会自动阻止使用文档出现非当前版本号。
 - 运行环境：Node.js 20 或以上版本（推荐使用公司统一的当前 LTS 版本）
 - 包元数据：[`plugin.json`](plugin.json)
 - 安装/植入说明：[`INSTALL.md`](INSTALL.md)
@@ -37,73 +38,26 @@
 
 用户不需要写固定长提示词，也不需要知道内部 Skill、Feature Spec、Change Plan、AST 或脚本命令。若根入口尚未接入，首次只需说“请接入并使用项目根目录 ai-baseline-kit 的 AI 前端模块装配系统处理本次需求：<需求>”；系统会创建或安全追加根 `AGENTS.md` / `CLAUDE.md`。之后 AI 从根入口自动展开完整流程，只在存在 blocking question 时一次性提问。
 
-## 可插拔样式隔离契约（0.17.0）
+## 当前样式隔离契约
 
-0.17.0 不再把 CSS Modules 写死为所有项目唯一方案，而是把“不受控全局污染”定义为统一不变量：
+当前系统把“不受控全局污染”定义为统一不变量，而不是把 CSS Modules 写死为所有项目唯一方案：
 
 - `project-scheme.yml` 通过 `style_isolation.strategy` 和 `adapter` 声明项目真实方案。
-- 内置 `css-modules`、`vue-scoped`、`utility-css`、`css-in-js`、`shadow-dom`、`hybrid` adapter；CSS Modules 仍是标准 Vite 模板默认值。
+- 内置 `css-modules`、`vue-scoped`、`utility-css`、`css-in-js`、`shadow-dom`、`hybrid` adapter；CSS Modules 是标准 Vite 模板默认值。
+- 标准 CSS Modules 使用 owner 文件名和 `m_[name]_[local]__[hash:base64:6]` 产物类名，禁止泛化局部样式文件名和不受控全局选择器。
 - `utility-css`、`css-in-js`、`shadow-dom` 可以将 CSS Modules 作为复杂局部样式 fallback。
-- `custom` 策略可登记项目内 `.cjs` adapter；Gate 只执行显式路径，且模块导出记录 adapter SHA-256 指纹。
-- bundle 兼容性检查会校验目标项目支持的策略、预处理器依赖、外部样式依赖和 custom adapter 一致性。
+- `custom` 策略可登记项目内同步 `.cjs` adapter；Gate 只执行显式路径，模块导出记录 adapter SHA-256 指纹。
+- bundle 兼容性检查校验目标项目支持的策略、预处理器依赖、外部样式依赖和 custom adapter 一致性。
+- 旧项目按项目地图和 changed/legacy 模式增量治理，不要求一次改写全部历史样式。
 
-## 模块样式唯一性与装配隔离（0.16.0）
+## 当前能力路由与加载机制
 
-0.16.0 将模块局部样式统一为 **owner 命名 + CSS Modules + hash**：
-
-- Vite 标准模板直接使用内置 CSS Modules，不新增 npm 插件；React/Vue 都通过 `import styles from './Owner.module.css'` 消费。
-- 模块级文件命名为 `styles/<module-id>.module.<ext>`，组件级文件命名为 `<Owner>.module.<ext>`，禁止 `styles/index.css` 等泛化名称。
-- 标准模板固定 `generateScopedName: 'm_[name]_[local]__[hash:base64:6]'`，保证产物类名唯一且可追踪。
-- `style-scope-check.mjs` 检查未隔离样式、副作用导入、缺少映射导入、模块全局选择器和泛化文件名，并已接入 `baseline-check.mjs`。
-- 模块导出前执行同一检查，避免把会冲突的样式装配到其他项目。旧项目继续使用 legacy/changed 模式，不要求一次迁移全部历史样式。
-
-## 两级能力路由与分阶段加载（0.15.0）
-
-0.15.0 在 0.13.0 显式注册表基础上进一步拆成“轻量索引 + 独立能力 manifest”：
-
-- `capabilities/index.json` 只保留能力 id、摘要、优先级、intent、触发词和 manifest 路径。
-- `capabilities/manifests/*.json` 保存 Skill、上下文、脚本、加载阶段和显式依赖；只有命中的能力及其依赖会被解析。
-- `capability-route.mjs` 输出 `load.stages`，AI 按 bootstrap、dependencies、primary、project 顺序加载存在文件，`load.baselineFiles` 继续兼容旧调用方。
-- 路由内核使用文件状态缓存、预归一化索引和最大 64 项的 LRU 路由缓存；结果包含置信度、兜底、歧义、manifest 加载比例和缓存命中信息。
-- `project-i18n`、功能开发和跨项目组合显式依赖交付回归，避免专项能力单独命中时遗漏最终验证。
-
-普通用户的操作没有增加：新旧项目仍直接复制覆盖 `ai-baseline-kit/`，然后告诉 AI“按新版装配包自动更新并处理需求”。
-
-## 自动能力路由与渐进加载（0.13.0）
-
-0.13.0 借鉴 Hermes 的一个核心思想：**能力先显式登记，再按需加载**。普通用户的使用方式不变，仍然只需复制覆盖 `ai-baseline-kit/` 并用一句自然语言告诉 AI 要做什么。
-
-- 0.13.0 首次引入集中式能力摘要、触发条件、Skill、上下文和脚本映射；0.15.0 已将详细映射拆分到独立 manifest。
-- `capability-route.mjs` 根据自然语言和已识别 intent 自动路由；功能开发、国际化、跨项目组合、接入升级和交付检查只在命中时加载。
-- `smart-develop` 自动把路由结果写入运行记录，用户不需要执行额外命令，也不需要知道内部能力名称。
-- 新增能力只需增加独立 Skill/脚本并显式登记；注册表契约会拒绝路径越界、缺失文件、重复 id、未知依赖和循环依赖。
-- 不使用目录扫描或 import-time 动态注册，避免复制覆盖后因为残留文件或未知脚本产生不可预测行为。
-
-这项改造减少 AI 的无效上下文读取，提高需求路由效率，并保留现有复制覆盖、自动升级、项目状态保护和构建隔离流程。
-
-## 复制覆盖自动安全升级（0.12.1）
-
-新项目和旧项目统一采用最小操作：
-
-1. 直接复制新版 `ai-baseline-kit/` 到项目根目录并选择覆盖。
-2. 告诉 AI：“我已经复制覆盖了 ai-baseline-kit，请按新版装配包自动完成项目更新和自检，保留项目地图、历史状态和业务代码。”
-3. AI 统一调用 `ai-run activate`：无外置状态时首次 bootstrap，有外置状态时自动安全 upgrade。
-4. 升级默认保留 `.ai-frontend-assembler/project-scheme.yml`、`legacy-baseline.json` 和业务代码，并按 `upgrade-manifest.json` 清理已声明的旧版残留文件。
-
-用户不需要判断 `bootstrap`、`upgrade`、`doctor` 或 `gate`。只有明确要求重新扫描项目结构时，AI 才允许使用 `--refresh-project-scheme`。
-
-## 构建与部署隔离（0.12.0）
-
-`ai-baseline-kit/` 继续保留在项目根目录并纳入 Git，便于审计和整包升级；但首次 `activate/init` 会自动建立构建隔离，不需要新项目或旧项目手工配置：
-
-- 包内 `ai-baseline-kit/.npmignore` 和项目状态目录 `.ai-frontend-assembler/.npmignore` 使用嵌套 `*`，阻止二者进入 `npm pack` / `npm publish`。
-- 根 `.dockerignore`、`.vercelignore` 自动写入受控排除块；已有规则保留，重复激活保持幂等。已有 `.npmignore`、`.gcloudignore`、`.cfignore` 也会安全追加排除块。
-- 目标项目存在 `scripts.build` 时，自动创建或增强 `scripts.postbuild`，调用 `build-artifact-guard.mjs --clean`，只在已识别的构建输出目录中移除误复制的能力包和项目装配状态。
-- `project-validate` 在构建后再次以 `--check` 模式验证产物；自定义输出目录可通过 `--output <dir>` 或 `AI_BASELINE_OUTPUT_DIRS=dir-a,dir-b` 声明。
-- 系统不会把 `ai-baseline-kit/` 写入 `.gitignore`；“源码可审计”和“发布产物不可携带”是两套独立策略。
-- 业务源码直接 import/require `ai-baseline-kit/` 或 `.ai-frontend-assembler/` 会被基线检查阻断，避免构建器将包内容内联进产物。
-
-常见 Vite、Vue CLI、React Scripts、Angular、Next、Nuxt、SvelteKit、Astro 构建本来只输出依赖图或指定输出目录；本隔离层用于覆盖 npm 发布、Docker/Vercel 源码上传和自定义复制脚本等额外风险。
+- `capabilities/index.json` 是轻量、可审计的能力发现索引。
+- `capabilities/manifests/*.json` 保存 Skill、上下文、脚本、加载阶段和显式依赖；只解析本次命中的能力及其依赖。
+- `capability-route.mjs` 输出 bootstrap、dependencies、primary、project 分阶段加载计划。
+- AI 根据自然语言 intent/trigger 自动选择能力，用户无需知道或选择 Skill、脚本和工作流。
+- 注册表禁止隐式目录扫描和动态执行未知脚本，并由契约检查验证路径、依赖、重复项和循环依赖。
+- 复制覆盖包后由 AI 内部执行 `ai-run activate` 和能力路由，普通使用方式始终是一句话描述目标。
 
 ## 技术栈选择模式
 
@@ -154,15 +108,15 @@ React 18 + TypeScript + Vite + Ant Design 5 + Tailwind CSS 3 + React Router 6
 - 通过 `baseline-check --mode changed` 对旧项目进行增量治理。
 - 通过 `template-build-check.mjs` 在临时目录真实安装依赖，并验证 React/Vue 生成模块后的 typecheck 与 production build。
 
-## 根入口自动接入与交付回执（0.11.0）
+## 根入口自动接入与交付回执
 
 首次调用装配系统时会自动检查目标项目根目录：缺少 `AGENTS.md` / `CLAUDE.md` 就创建；已有文件但未接入本包时保留原文并追加带标记的受控段落；再次运行只更新该段落，不重复追加。这样后续支持这些入口的 AI 可以从项目根目录自动发现本系统。
 
 最终交付由 `delivery-gate.mjs` 执行。它在原 CI Gate 前增加实现完整性检查，并在全部通过后生成 `.ai-frontend-assembler/deliveries/<request-id>.delivery.json`。回执记录 Feature Spec、Change Plan、变更文件及其 SHA-256；没有当前请求的有效回执，`smart-develop` 不得返回 `completed`，AI 也不得声明“已完成”或“全部通过”。
 
-## 可替换升级与统一 AI 入口（0.10.0）
+## 可替换升级与统一 AI 入口
 
-本版本把目标项目专属状态移出 `ai-baseline-kit/`，统一存放到项目根目录 `.ai-frontend-assembler/`。因此项目完成一次接入后，未来升级可以直接把最新 `ai-baseline-kit/` 整目录复制并替换旧目录，不再备份/恢复项目地图或历史快照。
+目标项目专属状态统一存放到项目根目录 `.ai-frontend-assembler/`，不保存在可替换的 `ai-baseline-kit/` 包目录中。因此项目完成接入后，可以直接复制当前 `ai-baseline-kit/` 并替换原目录，不需要备份、恢复或重建项目地图和历史快照。
 
 ```bash
 # 首次接入
@@ -180,7 +134,7 @@ node ai-baseline-kit/scripts/ai-run.mjs gate
 
 统一入口支持 `init / activate / develop / compose / repair / validate / gate / doctor / upgrade`。目标项目自动发现入口只保留 `AGENTS.md` 与 `CLAUDE.md`，不会生成 Cursor、Copilot 等额外配置。`.ai-frontend-assembler/` 必须提交到版本库且升级时不得删除。
 
-## 统一智能开发入口（0.9.0）
+## 统一智能开发入口
 
 普通使用者只需要提供原话或文档，不需要手工串联底层命令：
 
@@ -332,11 +286,11 @@ node ai-baseline-kit/scripts/baseline-check.mjs --mode changed --fail-on-warn
 
 ## 直接覆盖升级
 
-已接入项目不需要删除旧包，也不需要用户执行迁移命令。直接复制新版 `ai-baseline-kit/` 并覆盖后，由 AI 统一运行 `ai-run activate`；系统会自动识别新项目或旧项目，保留项目专属状态并清理升级清单中明确废弃的包内文件。
+已接入项目不需要预先删除原包，也不需要用户执行迁移命令。直接复制当前 `ai-baseline-kit/` 并覆盖后，由 AI 统一运行 `ai-run activate`；系统会自动识别首次接入或已接入项目，保留项目专属状态并清理升级清单中明确废弃的包内文件。
 
 排障或 CI 场景仍可显式调用 `ai-run upgrade`，但不作为普通用户流程。
 
-项目专属的 `.ai-frontend-assembler/`、根 `AGENTS.md`、根 `CLAUDE.md` 和业务代码都位于包目录外，不会因替换包目录丢失。`0.9.x` 及更早项目应在旧项目专属文件仍存在时执行一次迁移；详见 `INSTALL.md`。
+项目专属的 `.ai-frontend-assembler/`、根 `AGENTS.md`、根 `CLAUDE.md` 和业务代码都位于包目录外，不会因替换包目录丢失。仍把项目地图或历史快照保存在旧包目录内的项目，应在这些文件仍存在时执行一次状态迁移；详见 `INSTALL.md`。
 
 ## 文件职责
 
@@ -433,7 +387,7 @@ node ai-baseline-kit/scripts/template-build-check.mjs --profile react18-antd-tai
 9. 不自动向 `.gitignore` 追加 `ai-baseline-kit/`，让规范包变化保持 Git 可见。
 10. 可运行 `node ai-baseline-kit/scripts/baseline-check.mjs` 做硬检查。
 
-## 零配置智能装配与硬约束内核（0.8.0）
+## 零配置智能装配与硬约束内核
 
 - `smart-compose.mjs`：自然语言/产品文档零配置入口。
 - `workspace-discover.mjs`：自动识别工作区项目、别名和同栈 profile。
@@ -441,7 +395,7 @@ node ai-baseline-kit/scripts/template-build-check.mjs --profile react18-antd-tai
 - `intelligent-frontend-assembler`：不增加 UI 的 AI 总控 Skill。
 - 新增受控执行与智能装配契约测试。
 
-## 自然语言模块装配总控（0.7.0）
+## 自然语言模块装配总控
 
 ```bash
 # 默认仅规划，不改目标项目

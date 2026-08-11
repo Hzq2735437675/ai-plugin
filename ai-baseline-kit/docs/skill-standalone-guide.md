@@ -1,6 +1,7 @@
 # AI 前端模块装配系统：Skill 独立使用指南
 
-> 适用版本：`0.10.0`  
+> 当前版本：`0.17.0`
+> 文档策略：只描述当前版本的独立使用方式。
 > 结论摘要：各 Skill 在职责上可以独立调用，但当前并非全部都能“只复制一个 SKILL.md”后完整运行。
 
 ## 1. 直接回答
@@ -150,7 +151,7 @@ scripts/feature-tools-lib.mjs
 ```json
 {
   "name": "requirement-to-feature-spec",
-  "version": "0.10.0",
+  "version": "0.17.0",
   "requires": {
     "projectFiles": ["AGENTS.md"],
     "references": [

@@ -2,6 +2,7 @@
 
 - 包名：`ai-baseline-kit`
 - 当前版本：`0.17.0`
+- 文档策略：只维护当前版本的安装、接入和升级方式，不保留旧版本功能介绍。
 - 运行环境：Node.js 20 或以上版本（推荐使用公司统一的当前 LTS 版本）
 - 包元数据：[`plugin.json`](plugin.json)
 - 主入口：[`AGENTS.md`](AGENTS.md)
@@ -10,27 +11,13 @@
 - 系统说明书：[`docs/system-specification.md`](docs/system-specification.md)
 - Skill 独立使用：[`docs/skill-standalone-guide.md`](docs/skill-standalone-guide.md)
 
-## 0.17.0 样式策略适配器说明
+## 当前样式与能力路由说明
 
-升级后 CSS Modules 仍是标准 Vite 模板默认值，但旧项目不再被强制改造成 CSS Modules。系统会在 `.ai-frontend-assembler/project-scheme.yml` 中登记 `style_isolation.strategy` / `adapter`，并按 CSS Modules、Vue scoped、utility CSS、CSS-in-JS、Shadow DOM、hybrid 或显式 custom adapter 执行检查。模块导出会携带样式契约，目标项目不支持时阻止导入。
-
-查看内置 adapter：
-
-```bash
-node ai-baseline-kit/scripts/style-scope-check.mjs --list-adapters
-```
-
-## 0.16.0 样式隔离说明
-
-覆盖升级后，标准 Vite 模板和新生成模块默认使用 CSS Modules。无需额外安装唯一化插件；旧项目已有普通样式由 legacy/changed 模式保留，新增或修改模块应迁移到 `Owner.module.<ext>`。
-
-## 0.15.0 两级能力路由说明
-
-复制覆盖方式不变。AI 会先读取轻量 `capabilities/index.json`，内部调用 `capability-route.mjs`，再只解析命中的 `capabilities/manifests/*.json`，并按 `load.stages` 渐进读取 Skill 和上下文。用户不需要选择能力、manifest、Skill 或脚本。
-
-## 0.13.0 能力路由说明
-
-安装和升级步骤没有增加。AI 会先读取轻量的 `capabilities/index.json`，再自动按需求加载必要 Skill；普通用户不要手工选择 Skill，也不需要执行 `capability-route.mjs`。该脚本属于 AI 内部路由和维护者诊断入口。
+- 标准 React/Vue Vite 模板默认使用 CSS Modules，文件按 owner 命名，构建类名使用 `m_[name]_[local]__[hash:base64:6]`。
+- 装配系统同时支持 `vue-scoped`、`utility-css`、`css-in-js`、`shadow-dom`、`hybrid` 和项目内 `.cjs` custom adapter。
+- 项目通过 `.ai-frontend-assembler/project-scheme.yml` 的 `style_isolation.strategy` / `adapter` 声明真实隔离方式。
+- 模块导出和导入会验证样式策略、预处理器、外部样式依赖与 custom adapter 指纹。
+- 能力发现使用轻量 `capabilities/index.json` 和独立 `capabilities/manifests/*.json`；AI 自动完成能力路由和分阶段加载，使用者不需要选择 Skill。
 
 ## 推荐的日常入口
 
@@ -171,7 +158,7 @@ node ai-baseline-kit/scripts/project-validate.mjs
 
 ## 升级
 
-从 `0.10.0` 起，目标项目专属状态与能力包目录彻底分离：
+当前版本要求目标项目专属状态与能力包目录彻底分离：
 
 ```text
 <target-project>/
@@ -184,15 +171,15 @@ node ai-baseline-kit/scripts/project-validate.mjs
 └── CLAUDE.md
 ```
 
-已接入本版本后，后续升级只需：
+已接入当前版本后，后续升级只需：
 
 1. 将最新 `ai-baseline-kit/` 复制到旧项目并直接覆盖/替换整个同名目录。
 2. 不删除 `.ai-frontend-assembler/`，不需要手工备份或恢复项目地图。
-3. 告诉 AI：“我已经复制覆盖了 ai-baseline-kit，请按新版装配包自动完成项目更新和自检，保留项目地图、历史状态和业务代码。”
+3. 告诉 AI：“我已经复制覆盖了 ai-baseline-kit，请按当前装配包自动完成项目更新和自检，保留项目地图、历史状态和业务代码。”
 
 AI 统一执行 `ai-run activate` 并完成后续严格 Gate；普通用户不需要执行任何命令。生产 CI 仍应安装 TypeScript/Vue AST 解析依赖并执行严格门禁。
 
-从 `0.9.x` 或更早版本首次过渡时，如果旧包仍保留项目专属的 `ai-baseline-kit/docs/project-scheme.yml` 或 `legacy-baseline.json`，覆盖新包后让 AI 运行 `ai-run activate`，系统会一次性迁移到 `.ai-frontend-assembler/`。如果在迁移前已经删除旧包内唯一的项目专属状态，则无法自动恢复，应从版本库找回旧文件后再升级。
+如果历史项目仍把专属的 `project-scheme.yml` 或 `legacy-baseline.json` 保存在 `ai-baseline-kit/docs/`，应在这些文件仍存在时覆盖当前包并运行 `ai-run activate`，系统会一次性迁移到 `.ai-frontend-assembler/`。如果迁移前已经删除唯一的项目专属状态，则无法自动恢复，应先从版本库找回文件。
 
 多 AI 自动发现暂时只维护目标项目根目录的 `AGENTS.md` 与 `CLAUDE.md`；不会创建 Cursor、Copilot 或其他工具专属入口。
 
@@ -207,6 +194,7 @@ AI 统一执行 `ai-run activate` 并完成后续严格 Gate；普通用户不�
 - `MAJOR`：植入协议、入口或目录契约不兼容。
 - `MINOR`：向后兼容地新增 skill、规则或检查能力。
 - `PATCH`：向后兼容地修复文档、规则或脚本问题。
+- README、安装说明、使用指南和系统说明书只维护当前版本；提交前由 `node scripts/package-check.mjs` 检查，不允许重新加入历史版本介绍。
 
 ## 接入后的需求生产闭环
 

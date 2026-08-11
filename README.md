@@ -249,78 +249,42 @@ node ai-baseline-kit/scripts/template-build-check.mjs --profile vue3-vite-ts
 - `plugin.json.entrypoints.primary` 必须指向包的 AI 主入口。
 - 包之间不得通过隐式相对路径耦合。
 - 新增包需要登记到 `package-registry.json` 并通过 `scripts/package-check.mjs`。
+- 面向使用者的文档只能出现注册表中的当前包版本；`package-check.mjs` 会阻止历史版本介绍重新进入 README、安装说明、使用指南和系统说明书。
 
-## 0.17.0：可插拔样式隔离策略
+## 当前版本能力详解
 
-- 将“所有模块必须使用 CSS Modules”调整为“所有模块必须声明并通过可验证的样式隔离契约”；CSS Modules 仍是 React/Vue Vite 标准模板默认值。
+> 文档维护原则：本 README 只描述当前版本的能力、使用方式和约束，不保留以前版本的功能介绍。历史变化请通过 Git 提交记录或正式发布记录查询。
+
+### 可插拔样式隔离
+
+- 所有模块必须声明并通过可验证的样式隔离契约；CSS Modules 是 React/Vue Vite 标准模板默认值，但不是唯一允许的方案。
 - 内置 `css-modules`、`vue-scoped`、`utility-css`、`css-in-js`、`shadow-dom` 和 `hybrid` adapter，并支持项目显式登记 `.cjs` custom adapter。
-- 项目地图记录 `strategy`、`adapter`、支持策略、局部样式 fallback 和全局入口；旧项目扫描后保留可证明安全的真实策略。
+- 标准 CSS Modules 文件按 owner 命名，构建类名使用 `m_[name]_[local]__[hash:base64:6]`，禁止 `styles/index.css` 等泛化局部样式名称。
+- 项目地图记录 `strategy`、`adapter`、支持策略、局部样式 fallback 和全局入口。
 - 模块 bundle 携带实际使用策略、预处理器、外部全局样式依赖和 custom adapter 指纹，导入前校验目标项目是否兼容。
 
-## 0.16.0：模块样式唯一性与装配隔离
+### 两级能力路由与渐进加载
 
-- 标准 React/Vue Vite 模板统一使用 CSS Modules，不需要额外唯一化插件。
-- 模块级样式按 `styles/<module-id>.module.<ext>` 命名，组件级按 `<Owner>.module.<ext>` 命名。
-- 产物类名固定为 `m_[name]_[local]__[hash:base64:6]`，并由 `style-scope-check.mjs`、模块导出保护和 `baseline-check.mjs` 共同约束。
-- 旧项目保留原技术栈和历史快照，只治理新增或本轮修改引入的样式冲突。
+- `capabilities/index.json` 只承担轻量能力发现，不承载全部 Skill、上下文和脚本清单。
+- `capabilities/manifests/*.json` 显式声明详细依赖；路由器只解析本次命中的 manifest 及其依赖。
+- AI 按 bootstrap、dependencies、primary、project 阶段加载存在的文件，用户不需要选择 Skill 或内部脚本。
+- 能力注册表禁止隐式目录扫描和动态脚本注册，并通过契约检查验证路径、依赖和循环关系。
 
-## 0.15.0：两级能力路由与分阶段渐进加载
+### 安全接入、升级与构建隔离
 
-- `capabilities/index.json` 收敛为轻量发现索引，不再承载全部 Skill、上下文和脚本清单。
-- 每项能力通过 `capabilities/manifests/*.json` 显式声明详细依赖；路由器只解析命中的 manifest 和它的显式依赖。
-- 路由结果新增 `load.stages`，按 bootstrap、dependencies、primary、project 顺序加载，并保留 `load.baselineFiles` 兼容旧入口。
-- 路由内核新增规范化索引缓存、manifest 文件缓存和有界 LRU 路由缓存，同时输出置信度、歧义、兜底和加载比例。
-- 新能力仍必须显式登记，不进行目录扫描、不动态执行脚本；用户仍只需复制覆盖目录并用自然语言描述目标。
+- 新旧项目统一执行 `node ai-baseline-kit/scripts/ai-run.mjs activate`，系统自动判断首次接入或安全升级。
+- 项目地图、历史快照、状态和交付回执统一保存到 `.ai-frontend-assembler/`，直接覆盖 `ai-baseline-kit/` 不会丢失项目专属状态。
+- 能力包和项目状态保持 Git 可见，但通过 npm、Docker、Vercel ignore 与 `postbuild` 产物守卫排除出构建和部署产物。
+- `upgrade-manifest.json` 只清理明确登记的包内废弃文件，不覆盖业务代码和项目地图。
 
-## 0.13.0：显式能力注册与渐进加载
+### 根入口与交付闭环
 
-- 借鉴 Hermes 的能力注册思想，新增 `capabilities/index.json` 作为唯一显式能力目录。
-- AI 根据自然语言 intent/trigger 自动选择能力，用户无需知道或选择 Skill、脚本和工作流。
-- 只加载本次命中的 Skill、Schema 和上下文，避免一次性读取全部能力文档。
-- 注册表禁止隐式目录扫描和动态脚本注册，并通过契约测试校验路径、依赖、重复项和循环依赖。
-- `smart-develop` 自动记录 capability route，后续新增能力只需登记元数据并补契约，不改变复制覆盖和一句话使用方式。
+- 首次接入自动创建或安全追加根 `AGENTS.md` / `CLAUDE.md`，后续 AI 从项目根入口自动发现装配系统。
+- 自然语言或产品文档统一进入 Feature Spec、blocking question、Change Plan、文件白名单、受控实现和验证流程。
+- `implementation-completeness-check.mjs` 拒绝 TODO/FIXME、跳过测试、占位实现和未实现异常。
+- `delivery-gate.mjs` 生成绑定 request ID、变更文件和 SHA-256 的交付回执；没有当前有效回执时不得声明交付完成。
 
-## 0.12.1：复制覆盖自动安全升级
-
-- 新旧项目统一使用 `ai-run activate` 自动路由。
-- 直接覆盖新版包时保留项目地图、历史快照和业务代码。
-- 通过 `upgrade-manifest.json` 安全清理旧版残留文件。
-- 修复嵌套 Git 项目、中文路径和交付回执文件类型识别。
-
-## 0.12.0：构建与部署产物隔离
-
-- 首次 `activate/init` 对新旧项目统一建立构建隔离，不再依赖使用者手工排除 `ai-baseline-kit/`。
-- 能力包和 `.ai-frontend-assembler/` 保持 Git 可见，但通过嵌套 `.npmignore`、Docker/Vercel ignore 与已有发布 ignore 排除出打包/部署上下文。
-- 自动接入 `scripts.postbuild` 产物守卫，清理并复检常见或显式声明的输出目录。
-- 新增 `build-isolation-contract-check.mjs`，覆盖首次接入、幂等、npm pack、自定义输出目录和泄漏清理。
-
-## 0.11.0：根入口自动接入与首轮交付硬闭环
-
-- 首次使用不再依赖目标项目预先存在 `AGENTS.md` / `CLAUDE.md`：缺失时自动创建，已有自定义内容时原样保留并追加受控入口，重复执行保持幂等。
-- 根入口统一引导后续 AI 先读取 `ai-baseline-kit/AGENTS.md`，再执行 Feature Spec、blocking question、Change Plan、文件白名单、实现和验证闭环。
-- 新增 `implementation-completeness-check.mjs`，默认拒绝 TODO/FIXME、todo/skip 测试、显式占位实现和未实现异常。
-- 新增 `delivery-gate.mjs` 与可校验 delivery receipt；回执绑定当前 request ID、变更文件清单和 SHA-256，文件被二次修改后回执自动失效。
-- `smart-develop` 只有在受控执行完成且当前交付回执有效时才允许返回 `completed`，避免 AI 首轮漏做检查却直接宣称完成。
-
-## 0.10.0：外置项目状态与整包替换升级
-
-- 目标项目地图、旧项目历史快照和状态清单统一外置到 `.ai-frontend-assembler/`，与 `ai-baseline-kit/` 包目录彻底分离。
-- 已完成本版本接入后，后续可以直接复制最新 `ai-baseline-kit/` 并替换旧目录，不需要备份、恢复或重建目标项目地图。
-- 新增 `ai-run.mjs` 统一入口，覆盖初始化、开发、组合、修复、验证、CI 门禁、诊断和升级。
-- 新增 `project-upgrade.mjs` 和升级契约测试，验证整包删除后重新复制，项目专属状态仍逐字节保留。
-- 多 AI 自动发现暂时严格限制为根 `AGENTS.md` 与 `CLAUDE.md`，不生成 Cursor、Copilot 等额外入口。
-- 新增 `ci-gate.mjs`，默认要求真实 AST 解析器并执行完整项目验证；旧环境可显式选择 parser fallback，但生产门禁不建议放宽。
-
-## 0.9.0：统一智能开发与验收修复闭环
-
-- 新增 `smart-develop.mjs` 统一总入口：自然语言、产品文档和 ready Feature Spec 均进入“标准化 → 意图 → Feature Spec → Change Plan → 受控执行 → 验证 → 有界修复”闭环；跨项目组合自动委托 `smart-compose`。
-- 新增 `document-normalize.mjs`：支持文本、Markdown、HTML、JSON/OpenAPI、Figma JSON、DOCX、基础文本型 PDF；图片、扫描 PDF、在线 Figma 等通过可插拔提取器接入，缺少可靠内容时安全阻断而不是伪造。
-- 受控执行器支持默认 2 次、硬上限 3 次自动修复；每轮修复后重新计算实际 diff，越界、失败或耗尽次数立即回滚。
-- 每次受控生成会把审计版 Feature Spec 与 Change Plan 固化到目标项目 `docs/features/`、`docs/changes/`，模块 provenance 不再引用项目外临时文件。
-- 每个生成特性新增 `*.acceptance-coverage.json`，硬检查 Feature Spec acceptance、页面状态、权限和 API mock 到真实测试文件及 marker 的映射；缺失覆盖清单、测试文件或真实来源规格时直接失败，并校验覆盖统计不可伪造。
-- 新项目必须显式使用创建模式；旧项目路径错误不会被误判为新项目，从而避免意外覆盖或在错误目录创建工程。
-
-统一入口示例：
+### 智能开发入口
 
 ```bash
 # 旧项目增量开发
@@ -328,7 +292,7 @@ node ai-baseline-kit/scripts/smart-develop.mjs \
   --document docs/product/order-review.docx \
   --project-root <existing-project>
 
-# 在空目录创建新项目；Vue 3 使用 Element Plus 默认主题
+# 在空目录创建新项目
 node ai-baseline-kit/scripts/smart-develop.mjs \
   --request "创建订单审核前端，包含列表、权限、接口和验收条件" \
   --target <new-project> \
@@ -336,28 +300,11 @@ node ai-baseline-kit/scripts/smart-develop.mjs \
   --stack vue3-vite-ts
 ```
 
-复杂扫描 PDF、图片 OCR 和在线 Figma 不由内置解析器假装完成；需配置 `--extractor <node-script>` 或 `AI_BASELINE_DOCUMENT_EXTRACTOR`，否则返回 blocking question。
+`smart-develop.mjs` 接收自然语言、产品文档或 ready Feature Spec，执行标准化、意图识别、架构计划、受控生成、验收覆盖、验证和有界修复。复杂扫描 PDF、图片 OCR 和在线 Figma 需要显式配置 extractor；无法可靠提取时必须阻断并提问，不能伪造内容。
 
-## 0.8.0：零配置智能入口与硬约束执行内核
-
-- 新增 `smart-compose.mjs`：自然语言/产品文档单入口，自动发现工作区项目、识别来源与目标并默认执行。
-- 新增受控执行状态机和 `controlled-change-executor.mjs`，强制 Change Plan ready、blocking question、文件白名单和禁止路径门禁。
-- 实际文件 diff 越界、验证失败或执行异常时自动回滚，并生成 `controlled-execution.json` 审计记录。
-- 新项目组合可自动安装依赖（禁用 lifecycle scripts）并运行 baseline、typecheck、test 和 build。
-- 新增 `intelligent-frontend-assembler` 总控 Skill，以及工作区发现、意图、执行策略和执行记录 Schema。
-
-## 0.7.0：自然语言模块装配总控
-
-现在可以把“从项目 A 抽离客户管理、从项目 B 抽离结算模块并形成项目 C”作为大白话或 JSON 请求交给统一入口：
+### 自然语言模块组合
 
 ```bash
-node ai-baseline-kit/scripts/project-compose-from-requirement.mjs \
-  --request docs/composition-request.json \
-  --sources "a=<project-a>;b=<project-b>" \
-  --target <project-c> \
-  --stack vue3-vite-ts
-
-# 确认计划后真正执行
 node ai-baseline-kit/scripts/project-compose-from-requirement.mjs \
   --request docs/composition-request.json \
   --sources "a=<project-a>;b=<project-b>" \
@@ -366,6 +313,4 @@ node ai-baseline-kit/scripts/project-compose-from-requirement.mjs \
   --apply
 ```
 
-默认先做模块自动发现和置信度判断；无法可靠识别、shared 内容冲突、npm 主版本冲突等语义问题会生成 blocking questions。可机械证明安全的同名模块、路由和权限冲突可按策略添加来源/模块前缀。执行前创建项目外事务快照，失败默认自动回滚；可通过 `--rollback <workspace>` 手工回滚，通过 `--resume <workspace>` 断点重跑。
-
-相关入口：`module-discover.mjs`、`module-bundle-repair.mjs`、`project-compose-from-requirement.mjs`、`composition-contract-check.mjs`。Feature Spec 的 acceptance 可声明结构化 `automation`，生成真实 Playwright 动作和断言；未声明时继续保留 `fixme`，不伪造验收完成。`project-validate.mjs --with-e2e` 可运行项目的 `test:e2e`，`--install-playwright` 仅在明确要求时安装 Chromium。
+组合流程按 `discover -> select/question -> export -> safe repair -> compatibility -> transaction -> compose -> validate -> commit/rollback` 执行。自动修复仅限可机械证明安全的模块身份、路由前缀和权限命名空间；shared 内容和 npm 主版本等语义冲突继续阻断并提问。

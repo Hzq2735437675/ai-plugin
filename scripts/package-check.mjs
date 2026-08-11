@@ -54,7 +54,7 @@ function checkFile(relativePath, label) {
 
 function checkManifest(item) {
   const manifest = readJson(item.manifest);
-  if (!manifest) return;
+  if (!manifest) return null;
 
   for (const field of ['schemaVersion', 'name', 'version', 'type', 'description', 'entrypoints', 'installation', 'distribution', 'dependencies']) {
     if (!(field in manifest)) fail(`manifest 缺少字段: ${field}`, item.manifest);
@@ -76,6 +76,51 @@ function checkManifest(item) {
   if (!isSafeRelativePath(guide)) fail('manifest.installation.guide 不是安全的相对路径', item.manifest);
   else if (normalize(item.installation) !== `${packageRoot}/${normalize(guide)}`) {
     fail('manifest.installation.guide 与注册表 installation 不一致', item.name);
+  }
+
+  return manifest;
+}
+
+function collectSemanticVersions(content) {
+  return [...content.matchAll(/(?<![\d.])\d+\.\d+\.\d+(?![\d.])/g)].map((match) => match[0]);
+}
+
+function checkCurrentPackageDocumentation(item, manifest) {
+  const packageRoot = normalize(path.dirname(item.manifest));
+  const documents = new Set([item.readme, item.installation]);
+  for (const field of ['usageGuide', 'systemSpecification', 'skillStandaloneGuide']) {
+    const value = manifest.entrypoints?.[field];
+    if (typeof value === 'string' && isSafeRelativePath(value)) {
+      documents.add(`${packageRoot}/${normalize(value)}`);
+    }
+  }
+
+  for (const relativePath of documents) {
+    if (!checkFile(relativePath, '当前版本使用文档')) continue;
+    const content = fs.readFileSync(path.join(root, relativePath), 'utf8');
+    const versions = collectSemanticVersions(content);
+    const historicalVersions = [...new Set(versions.filter((version) => version !== item.version))];
+    if (historicalVersions.length > 0) {
+      fail(`使用文档只能展示当前版本 ${item.version}，发现其他版本: ${historicalVersions.join(', ')}`, relativePath);
+    }
+    if (!versions.includes(item.version)) {
+      fail(`使用文档必须明确展示当前版本 ${item.version}`, relativePath);
+    }
+  }
+}
+
+function checkRepositoryReadmeVersions(registry) {
+  const relativePath = 'README.md';
+  if (!checkFile(relativePath, '仓库 README')) return;
+  const currentVersions = new Set((registry.packages ?? []).map((item) => item?.version).filter(Boolean));
+  const content = fs.readFileSync(path.join(root, relativePath), 'utf8');
+  const versions = collectSemanticVersions(content);
+  const unknownVersions = [...new Set(versions.filter((version) => !currentVersions.has(version)))];
+  if (unknownVersions.length > 0) {
+    fail(`仓库 README 只能展示注册包的当前版本，发现其他版本: ${unknownVersions.join(', ')}`, relativePath);
+  }
+  for (const version of currentVersions) {
+    if (!versions.includes(version)) fail(`仓库 README 缺少当前包版本 ${version}`, relativePath);
   }
 }
 
@@ -107,8 +152,11 @@ if (registry) {
     checkFile(item.installation, '安装说明');
     for (const template of item.templates ?? []) checkFile(template, '标准模板');
     for (const tool of item.tools ?? []) checkFile(tool, '包工具');
-    checkManifest(item);
+    const manifest = checkManifest(item);
+    if (manifest) checkCurrentPackageDocumentation(item, manifest);
   }
+
+  checkRepositoryReadmeVersions(registry);
 }
 
 if (errors.length > 0) {
@@ -120,3 +168,4 @@ if (errors.length > 0) {
 console.log('package-check: pass');
 console.log(`registry: ${path.relative(root, registryPath)}`);
 console.log(`packages: ${registry.packages.length}`);
+console.log('documentation-version-contract: pass');

@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "kind": "ai-frontend-delivery-receipt",
+  "status": "passed",
+  "requestId": "current-version-docs-20260811",
+  "createdAt": "2026-08-11T08:53:01.732Z",
+  "projectRoot": "C:\\Users\\侯政强\\Desktop\\算力云基线改造\\ai-plugin",
+  "featureSpec": "",
+  "changePlan": "",
+  "changedFilesHash": "a2e01bef9189b29a2090e79f2a8c559f499dbf273886758b73b28cb01028c004",
+  "changedFiles": [
+    {
+      "path": ".ai-frontend-assembler/state.json",
+      "type": "modify",
+      "sha256": "0c0247294ea025e41257753aa310c3f8e7db6f0397d92f6c8bc6c8bae0184fda"
+    },
+    {
+      "path": "ai-baseline-kit/docs/使用指南.md",
+      "type": "modify",
+      "sha256": "5882e2548e8605658ed9707963997b724cb1a8d55746068afb448f4405112cd6"
+    },
+    {
+      "path": "ai-baseline-kit/docs/skill-standalone-guide.md",
+      "type": "modify",
+      "sha256": "a47d4cf39caa696022b6a018823d270ada2d0bf03b9510a635467ce1d01837d9"
+    },
+    {
+      "path": "ai-baseline-kit/docs/system-specification.md",
+      "type": "modify",
+      "sha256": "d6ae01164460b76f9e1b13fa037c7b007c0e44219cad8c6f0308912b8f8b1172"
+    },
+    {
+      "path": "ai-baseline-kit/INSTALL.md",
+      "type": "modify",
+      "sha256": "67e6937fd49cf5da2642a9f2284cde38d4d375b7b57d4a959a487e334f4b99fa"
+    },
+    {
+      "path": "ai-baseline-kit/README.md",
+      "type": "modify",
+      "sha256": "ba029267562682b48f97e6d54ced37219148dbcba0590c001e160b799ccbce70"
+    },
+    {
+      "path": "ai-baseline-kit/skills/project-scheme-bootstrap/SKILL.md",
+      "type": "modify",
+      "sha256": "27e22722a9cd197dbb030fa52079aec613639f6bdc5dd025fcc84831898afe1d"
+    },
+    {
+      "path": "README.md",
+      "type": "modify",
+      "sha256": "656df539b62e40d906a43f44c9fc089cf66757671367d8d7c1b72c5689b1cfcd"
+    },
+    {
+      "path": "scripts/package-check.mjs",
+      "type": "modify",
+      "sha256": "0198dda2605b818614bf6b8234faba6d1c59e61dfde2c3ca23aa92bd7aedceed"
+    }
+  ],
+  "checks": {
+    "implementationCompleteness": "passed",
+    "astBoundary": "not-run",
+    "projectValidation": "passed",
+    "finalGate": "passed"
+  },
+  "gateOutput": [
+    "[pass] project-state: package repository reference",
+    "[pass] AGENTS entrypoint: AGENTS.md",
+    "[pass] CLAUDE entrypoint: CLAUDE.md",
+    "implementation-completeness-check: pass",
+    "files: 0",
+    "violations: 0",
+    "[pass] implementation completeness: exit 0",
+    "baseline_root: C:\\Users\\侯政强\\Desktop\\算力云基线改造\\ai-plugin\\ai-baseline-kit",
+    "project_root: C:\\Users\\侯政强\\Desktop\\算力云基线改造\\ai-plugin",
+    "mode: full",
+    "",
+    "",
+    "summary: 0 error(s), 0 warning(s)",
+    "acceptance-coverage-check: pass",
+    "manifests: 0",
+    "project-validate: pass",
+    "profile: react18-antd-tailwind-ts",
+    "package-manager: npm",
+    "checks: 2",
+    "[pass] project validation: exit 0",
+    "ci-gate: pass",
+    "checks: 5"
+  ],
+  "remainingRisks": []
+}

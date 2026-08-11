@@ -5,34 +5,27 @@
 > 机器包名：`ai-baseline-kit`
 > 当前适用版本：`0.17.0`
 > 文档日期：2026-08-11
+> 文档策略：只描述当前版本的系统能力和契约，不保留以前版本的功能介绍。
 
-## 0.17.0 样式策略适配器与可移植契约
+## 当前核心能力与契约
 
-样式治理的系统不变量从“必须使用 CSS Modules”提升为“模块局部样式不得产生不受控全局污染，且隔离机制必须可声明、可验证、可迁移”。项目地图声明 `strategy`、`adapter`、支持策略、局部 fallback、custom adapter 和全局入口；标准模板仍默认 `builtin-css-modules`。
+### 样式策略适配器与可移植契约
 
-`style-scope-lib.mjs` 提供内置 adapter registry，覆盖 CSS Modules、Vue scoped、utility CSS、CSS-in-JS、Shadow DOM 和 hybrid。custom 策略只允许加载项目根内显式登记的同步 `.cjs` adapter，避免扫描目录或隐式执行插件。模块 bundle 记录实际使用策略、预处理器、外部样式依赖以及 custom adapter SHA-256 指纹；兼容性检查在复制模块前确认目标项目能力并补齐可确定的依赖。
+样式治理的系统不变量是“模块局部样式不得产生不受控全局污染，且隔离机制必须可声明、可验证、可迁移”。项目地图声明 `strategy`、`adapter`、支持策略、局部 fallback、custom adapter 和全局入口；标准模板默认使用 `builtin-css-modules`。
 
-## 0.16.0 模块样式隔离契约
+`style-scope-lib.mjs` 提供内置 adapter registry，覆盖 CSS Modules、Vue scoped、utility CSS、CSS-in-JS、Shadow DOM 和 hybrid。custom 策略只允许加载项目根内显式登记的同步 `.cjs` adapter。模块 bundle 记录实际使用策略、预处理器、外部样式依赖和 custom adapter SHA-256 指纹；兼容性检查在复制模块前确认目标项目能力并补齐可确定的依赖。
 
-系统将模块局部样式作为可移植契约：标准 Vite 模板使用内置 CSS Modules，源码按 owner 命名，构建类名按 `m_[name]_[local]__[hash:base64:6]` 生成。`style-scope-check` 在基线验证和模块导出前检查普通局部样式、副作用导入、全局根选择器与泛化文件名，避免组合后类名覆盖。非 Vite 项目保留现有工具链，由项目地图登记等价的 CSS Modules 实现；旧项目仍按 changed/legacy 策略增量治理。
+标准 Vite 模板使用 owner 命名的 CSS Modules，构建类名按 `m_[name]_[local]__[hash:base64:6]` 生成。`style-scope-check` 在基线验证和模块导出前检查普通局部样式、副作用导入、全局根选择器与泛化文件名。现有项目保留真实工具链，并按项目地图与 changed/legacy 模式增量治理。
 
-## 0.15.0 两级 manifest、确定性路由与加载计划
+### 两级能力路由与分阶段加载
 
-系统将能力发现拆为两层：`capabilities/index.json` 是稳定、轻量、可审计的发现索引；`capabilities/manifests/*.json` 是按命中解析的详细能力契约。路由器不扫描目录，只按索引中的显式路径读取 manifest，并沿 `requires` 构建依赖拓扑。
+`capabilities/index.json` 是稳定、轻量、可审计的发现索引；`capabilities/manifests/*.json` 是按命中解析的详细能力契约。路由器不扫描目录，只按索引中的显式路径读取 manifest，并沿 `requires` 构建依赖拓扑。
 
-路由结果新增 `load.stages`，以 bootstrap、dependencies、primary、project 四个阶段描述 AI 应读取的文件，同时保留 `load.baselineFiles` 兼容已有入口。内核对索引归一化结果、manifest 文件和最终路由使用有界缓存，并通过文件 mtime/size、项目状态签名和请求摘要自动失效。每次路由都会输出置信度、兜底、歧义、加载 manifest 数量、字节数和加载比例，便于运行记录审计。
+路由结果使用 bootstrap、dependencies、primary、project 四个阶段描述 AI 应读取的文件，同时保留 `load.baselineFiles` 兼容扁平调用方。内核对索引归一化结果、manifest 文件和最终路由使用有界缓存，并根据文件状态、项目状态签名和请求摘要自动失效。每次路由输出置信度、兜底、歧义和加载比例，便于运行记录审计。
 
-该版本继续坚持零用户配置：复制覆盖后由 AI 内部执行 `ai-run activate` 和能力路由，用户不需要知道 manifest、Skill、脚本或加载阶段。
+### 覆盖升级与状态保护
 
-## 0.13.0 显式能力注册与渐进加载
-
-系统新增 `capabilities/index.json` 作为显式能力注册表。AI 先读取轻量能力摘要，根据自然语言和 intent 选择能力，再只加载相关 Skill、Schema、规则和脚本映射。`smart-develop` 会自动记录路由结果，普通用户无需选择 Skill 或增加命令。注册表禁止隐式目录扫描和动态执行未知脚本，并由独立契约检查验证安全相对路径、文件存在性、能力依赖和循环依赖。
-
-该层借鉴 Hermes 的能力发现与按需加载思想，但不引入完整 Agent Loop、模型路由、记忆数据库或自修改 Skill，从而保持整目录复制、模型无关和低使用负担。
-
-## 0.12.1 覆盖升级自动路由和状态保护
-
-复制新版 `ai-baseline-kit/` 覆盖后，统一入口 `ai-run activate` 根据 `.ai-frontend-assembler/` 是否已有状态自动选择首次 bootstrap 或安全 upgrade。升级不覆盖项目专属 `project-scheme.yml` 与 `legacy-baseline.json`，并依据包内 `upgrade-manifest.json` 在能力包目录内安全删除已声明的旧版残留文件。
+复制当前 `ai-baseline-kit/` 覆盖包目录后，统一入口 `ai-run activate` 根据 `.ai-frontend-assembler/` 是否已有状态自动选择首次 bootstrap 或安全 upgrade。升级不覆盖项目专属 `project-scheme.yml` 与 `legacy-baseline.json`，并依据包内 `upgrade-manifest.json` 安全删除明确登记的废弃文件。
 
 ## 1. 资产标识
 
@@ -56,7 +49,7 @@
 
 ## 1.1 构建隔离契约
 
-0.12.0 引入“Git 可审计、产物不可携带”的双轨策略：源码仓库保留 `ai-baseline-kit/` 与 `.ai-frontend-assembler/`，首次激活自动配置 npm 嵌套排除、Docker/Vercel ignore 和 `postbuild` 产物守卫。构建输出在 clean 后还会执行 check，非标准输出目录通过 CLI 或环境变量显式声明。
+系统采用“Git 可审计、产物不可携带”的双轨策略：源码仓库保留 `ai-baseline-kit/` 与 `.ai-frontend-assembler/`，首次激活自动配置 npm 嵌套排除、Docker/Vercel ignore 和 `postbuild` 产物守卫。构建输出在 clean 后还会执行 check，非标准输出目录通过 CLI 或环境变量显式声明。
 
 ## 2. 建设目标
 
@@ -334,11 +327,11 @@ modules/<module>/
 → 直接复制并覆盖新 ai-baseline-kit/
 → AI 统一执行 ai-run activate
 → 自动路由 bootstrap / upgrade
-→ 自动清理升级清单中的旧版残留
+→ 自动清理升级清单中明确登记的废弃包内文件
 → doctor / validate / delivery gate
 ```
 
-0.10.0 起，升级不得重新生成项目地图，也不得刷新旧项目历史快照；0.12.1 起允许直接合并覆盖包目录，由安全升级清单清理已废弃文件。
+升级不得重新生成已有项目地图，也不得刷新旧项目历史快照；允许直接覆盖包目录，并由安全升级清单清理明确登记的废弃文件。
 
 ## 10. 技术栈支持策略
 
