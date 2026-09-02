@@ -1,0 +1,184 @@
+{
+  "schemaVersion": 1,
+  "kind": "ai-frontend-delivery-receipt",
+  "status": "passed",
+  "requestId": "css-class-naming-20260902",
+  "createdAt": "2026-09-02T10:01:45.273Z",
+  "projectRoot": "C:\\Users\\侯政强\\Desktop\\算力云基线改造\\ai-plugin",
+  "featureSpec": "",
+  "changePlan": "",
+  "changedFilesHash": "7a35d7a0dcbddc44b8bf556615e67b0f70d3d19fbd088cad25ecaf1236577d8b",
+  "changedFiles": [
+    {
+      "path": ".ai-frontend-assembler/state.json",
+      "type": "modify",
+      "sha256": "c1cd3fbfdf2ab9de37a16a59f6ce923e2b7535c580c195d433482428f53d0ab6"
+    },
+    {
+      "path": "ai-baseline-kit/docs/使用指南.md",
+      "type": "modify",
+      "sha256": "bfe0c7be3268fdab2fdfe5a9c0d0a03c8c7a4eecf473f2f974bbb55397f7eaec"
+    },
+    {
+      "path": "ai-baseline-kit/docs/baseline-rules.yml",
+      "type": "modify",
+      "sha256": "e0856d9f46ad1081446f4448b5d37a641084796f18f9c62ea1e6a37386cead4b"
+    },
+    {
+      "path": "ai-baseline-kit/docs/engineering-workflow.yml",
+      "type": "modify",
+      "sha256": "d20617d44da900e4b684b0924bb1e1a467001f72b530c928b00f48bcc406f287"
+    },
+    {
+      "path": "ai-baseline-kit/docs/module-meta.schema.json",
+      "type": "modify",
+      "sha256": "f44296f24437f4608a0715242715da72e2a49f4e7672975c927067e539eb92fc"
+    },
+    {
+      "path": "ai-baseline-kit/docs/project-scheme.schema.yml",
+      "type": "modify",
+      "sha256": "44f310dc4ebebd35c66498f5407254692f43a21fa2fef092c594a9025903540b"
+    },
+    {
+      "path": "ai-baseline-kit/docs/project-scheme.template.yml",
+      "type": "modify",
+      "sha256": "8e1dbb4c89c6649547a8bc0856b168cdd0a6e7dd9874abf662af9745ceb7d744"
+    },
+    {
+      "path": "ai-baseline-kit/docs/project-scheme.yml",
+      "type": "modify",
+      "sha256": "37c7df9004712a71952cf03f672dd538ebcfda48ef3e55feeca0f8e21ce9217d"
+    },
+    {
+      "path": "ai-baseline-kit/docs/stack-profiles.yml",
+      "type": "modify",
+      "sha256": "9d8dc8b809a0787aef6c3d166acefcb9a7636e840ae580f2e39edaa7f1ecb794"
+    },
+    {
+      "path": "ai-baseline-kit/docs/system-specification.md",
+      "type": "modify",
+      "sha256": "1d6755594d28da07137ce674bd8ed383d4b142af1afbb12b413e0cf96b9ec02f"
+    },
+    {
+      "path": "ai-baseline-kit/INSTALL.md",
+      "type": "modify",
+      "sha256": "e1240fea8742726791fd247bdd97d395821aeeb9594feca83b49cdc10045577d"
+    },
+    {
+      "path": "ai-baseline-kit/plugin.json",
+      "type": "modify",
+      "sha256": "de677c3acf57a3b4994dc7fac7c491eb8a3dd3130cc11e5a53ff717fdae0aeac"
+    },
+    {
+      "path": "ai-baseline-kit/README.md",
+      "type": "modify",
+      "sha256": "39806ab0d5280695fc5374e53b0444a817953d675d77b3554b4a54f5589bb2d1"
+    },
+    {
+      "path": "ai-baseline-kit/scripts/feature-generate.mjs",
+      "type": "modify",
+      "sha256": "3099cd89741febf9d5c330103ab3a8b56d62487b559d85967a7648803a19ee54"
+    },
+    {
+      "path": "ai-baseline-kit/scripts/module-portability-lib.mjs",
+      "type": "modify",
+      "sha256": "287ebb14ec9ce2f6710f52d7ea2381e355d870bd8bc3a13c748219e3ef0f5ec4"
+    },
+    {
+      "path": "ai-baseline-kit/scripts/project-tools-lib.mjs",
+      "type": "modify",
+      "sha256": "7d7178de5aac0380b58e4e710d3c2510391a8e6b3ba550d39b04f6d0e7267ee3"
+    },
+    {
+      "path": "ai-baseline-kit/scripts/style-class-naming-lib.mjs",
+      "type": "create",
+      "sha256": "252de50f205ddda44a69e95211b85108b366d59c1b3de8b3975c28b41976c499"
+    },
+    {
+      "path": "ai-baseline-kit/scripts/style-scope-contract-check.mjs",
+      "type": "modify",
+      "sha256": "64794d27c3c9720f597418f46d497ad245776110da52b457e238550e72977376"
+    },
+    {
+      "path": "ai-baseline-kit/scripts/style-scope-lib.mjs",
+      "type": "modify",
+      "sha256": "ff8899afc77e8c9a1722a6c0c4402ddfaa4f156eea547bf8a73fbb3ea0cd35b1"
+    },
+    {
+      "path": "ai-baseline-kit/templates/react18-antd-tailwind-ts/README.md",
+      "type": "modify",
+      "sha256": "b2eaff97fc59a9075e07d3c9cac58a85235b769fb91581fafa3092a28de1ae74"
+    },
+    {
+      "path": "ai-baseline-kit/templates/react18-antd-tailwind-ts/src/modules/home/pages/HomePage.tsx",
+      "type": "modify",
+      "sha256": "973a0dfffd740131e119e53f5e4b521ac71dd2a062056c56f7fe1e6abe192391"
+    },
+    {
+      "path": "ai-baseline-kit/templates/react18-antd-tailwind-ts/src/modules/home/styles/home-overview.module.css",
+      "type": "create",
+      "sha256": "f17ae697999634dee78a9c092fae4ac606022341972eae12fc2ba199b435b8bb"
+    },
+    {
+      "path": "ai-baseline-kit/templates/react18-antd-tailwind-ts/src/modules/home/styles/home.module.css",
+      "type": "delete",
+      "sha256": null
+    },
+    {
+      "path": "ai-baseline-kit/templates/vue3-vite-ts/README.md",
+      "type": "modify",
+      "sha256": "c3d579ecd07fc61a18ea9d01a1424f539172bd44aea6777b134bac43d9cedb61"
+    },
+    {
+      "path": "ai-baseline-kit/templates/vue3-vite-ts/src/modules/home/pages/HomePage.vue",
+      "type": "modify",
+      "sha256": "54d8cfa3b5ac4c066eacc41e447fdb517d636413a89fa7eb9e318e6f2e7dd14f"
+    },
+    {
+      "path": "ai-baseline-kit/templates/vue3-vite-ts/src/modules/home/styles/home-overview.module.css",
+      "type": "create",
+      "sha256": "44a2db1af247d30cc0b5ba8106dad0888c39603a4308a605362975b042956aeb"
+    },
+    {
+      "path": "ai-baseline-kit/templates/vue3-vite-ts/src/modules/home/styles/home.module.css",
+      "type": "delete",
+      "sha256": null
+    },
+    {
+      "path": "package-registry.json",
+      "type": "modify",
+      "sha256": "8aedb1e31c7b011d33ba78cea2ec3724f358e656b24378d1268bd0f07e8b102e"
+    }
+  ],
+  "checks": {
+    "implementationCompleteness": "passed",
+    "astBoundary": "passed-with-fallback-allowed",
+    "projectValidation": "passed",
+    "finalGate": "passed"
+  },
+  "gateOutput": [
+    "[pass] project-state: package repository reference",
+    "[pass] AGENTS entrypoint: AGENTS.md",
+    "[pass] CLAUDE entrypoint: CLAUDE.md",
+    "implementation-completeness-check: pass",
+    "files: 0",
+    "violations: 0",
+    "[pass] implementation completeness: exit 0",
+    "baseline_root: C:\\Users\\侯政强\\Desktop\\算力云基线改造\\ai-plugin\\ai-baseline-kit",
+    "project_root: C:\\Users\\侯政强\\Desktop\\算力云基线改造\\ai-plugin",
+    "mode: full",
+    "",
+    "",
+    "summary: 0 error(s), 0 warning(s)",
+    "acceptance-coverage-check: pass",
+    "manifests: 0",
+    "project-validate: pass",
+    "profile: react18-antd-tailwind-ts",
+    "package-manager: npm",
+    "checks: 2",
+    "[pass] project validation: exit 0",
+    "ci-gate: pass",
+    "checks: 5"
+  ],
+  "remainingRisks": []
+}

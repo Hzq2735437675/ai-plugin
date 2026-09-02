@@ -1,10 +1,10 @@
 import { Button, Space } from 'antd';
 import { PageTitle, SectionCard } from '@/shared/components/PagePrimitives';
-import styles from '../styles/home.module.css';
+import styles from '../styles/home-overview.module.css';
 
 export function HomePage() {
   return (
-    <div className={styles.page}>
+    <div className={styles.homeOverviewPage}>
       <PageTitle
         title="AI Baseline Starter"
         description="这是新项目默认模板，用于展示清晰的 shell、shared、modules 和静态装配边界。"

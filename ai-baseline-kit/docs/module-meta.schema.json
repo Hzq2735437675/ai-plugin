@@ -116,6 +116,34 @@
         "type": "string"
       },
       "uniqueItems": true
+    },
+    "styleNaming": {
+      "type": "object",
+      "description": "页面 CSS Modules 语义命名契约。",
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": [
+            "owner-local",
+            "semantic-module-page-feature"
+          ]
+        },
+        "pattern": {
+          "type": "string"
+        },
+        "scope": {
+          "type": "string",
+          "enum": [
+            "module-page-feature"
+          ]
+        }
+      },
+      "required": [
+        "mode",
+        "pattern",
+        "scope"
+      ],
+      "additionalProperties": false
     }
   }
 }

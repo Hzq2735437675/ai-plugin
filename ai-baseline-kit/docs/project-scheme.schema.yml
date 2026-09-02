@@ -91,6 +91,13 @@ properties:
         type: string
       module_global_selectors:
         type: string
+      class_naming_mode:
+        type: string
+        enum: [owner-local, semantic-module-page-feature]
+      class_naming_pattern:
+        type: string
+      forbidden_generic_class_names:
+        type: string
       module_style_files:
         type: integer
         minimum: 0

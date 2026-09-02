@@ -170,6 +170,19 @@ style_isolation:
       adapter: custom
       rule: custom_adapter 必须位于项目根目录内，当前同步 Gate 只加载显式登记的 CommonJS `.cjs` 适配器。
   naming:
+    default_mode: semantic-module-page-feature
+    generated_class_pattern: 'm_[name]_[local]__[hash:base64:6]'
+    page_owner_pattern: <module-id>-<page-id>.module.<ext>
+    semantic_local_pattern: <module><page><feature><role>
+    forbidden_generic_locals:
+      - page
+      - root
+      - content
+      - container
+      - wrapper
+      - header
+      - footer
+      - section
     module_level: styles/<module-id>.module.<ext>
     component_level: <Owner>.module.<ext>
     forbidden_generic_files:
@@ -180,10 +193,12 @@ style_isolation:
       - index.less
       - index.module.less
   rules:
+    - 新项目和新生成页面默认使用 semantic-module-page-feature：owner 文件名至少包含模块与页面，局部类名按模块 + 页面 + 功能 + 角色生成，并在 Gate 中校验跨页面唯一性。
     - owner 文件名负责源码可追踪；CSS Modules hash、Vue scoped 属性、Shadow Root 或已登记 adapter 负责运行时隔离。
     - 模块局部样式不得定义 :root、html、body、#app 或 #root；全局主题只能进入项目登记的 theme/global_entrypoints。
     - CSS Modules 允许在局部 owner 下使用 :global(...) 覆盖第三方组件，但不得把模块样式退化为全局样式表。
     - utility-css、css-in-js、shadow-dom 默认允许 CSS Modules 作为复杂局部样式 fallback；可通过 local_style_fallback 调整。
+    - Tailwind、Ant Design、Element Plus、shared 公共组件和第三方 :global(...) 类名不强制按页面唯一；页面业务 CSS Module 才进入语义命名校验。
     - 旧项目首次接入记录 legacy snapshot；changed 模式只阻断新增或本轮修改引入的违规，不强制一次迁移全部历史样式。
   validation:
     command: node ai-baseline-kit/scripts/style-scope-check.mjs --project-root <project-root>

@@ -3,6 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { PROJECT_STATE_DIRECTORY, getProjectStatePaths } from './project-state-lib.mjs';
 import { inferStyleIsolation, resolveStyleIsolationPolicy, STYLE_MODULE_PATTERN, VITE_SCOPED_NAME_PATTERN } from './style-scope-lib.mjs';
+import { DEFAULT_CLASS_NAMING_MODE, DEFAULT_CLASS_NAMING_PATTERN, DEFAULT_FORBIDDEN_GENERIC_LOCALS, LEGACY_CLASS_NAMING_MODE } from './style-class-naming-lib.mjs';
 
 export const STANDARD_PROFILES = Object.freeze({
   'react18-antd-tailwind-ts': {
@@ -26,6 +27,9 @@ export const STANDARD_PROFILES = Object.freeze({
       custom_adapter: 'none',
       generic_index_files: 'forbidden',
       module_global_selectors: 'forbidden',
+      class_naming_mode: DEFAULT_CLASS_NAMING_MODE,
+      class_naming_pattern: DEFAULT_CLASS_NAMING_PATTERN,
+      forbidden_generic_class_names: DEFAULT_FORBIDDEN_GENERIC_LOCALS.join(','),
     },
     template: 'templates/react18-antd-tailwind-ts',
     shell_root: 'src/app',
@@ -59,6 +63,9 @@ export const STANDARD_PROFILES = Object.freeze({
       custom_adapter: 'none',
       generic_index_files: 'forbidden',
       module_global_selectors: 'forbidden',
+      class_naming_mode: DEFAULT_CLASS_NAMING_MODE,
+      class_naming_pattern: DEFAULT_CLASS_NAMING_PATTERN,
+      forbidden_generic_class_names: DEFAULT_FORBIDDEN_GENERIC_LOCALS.join(','),
     },
     template: 'templates/vue3-vite-ts',
     shell_root: 'src/app',
@@ -421,6 +428,9 @@ export function analyzeProject(projectRoot, options = {}) {
         generic_index_files: resolvedStylePolicy.genericIndexFiles,
         module_global_selectors: resolvedStylePolicy.moduleGlobalSelectors,
         global_entrypoints: resolvedStylePolicy.globalEntrypoints.join(','),
+        class_naming_mode: resolvedStylePolicy.classNamingMode || LEGACY_CLASS_NAMING_MODE,
+        class_naming_pattern: resolvedStylePolicy.classNamingPattern || DEFAULT_CLASS_NAMING_PATTERN,
+        forbidden_generic_class_names: (resolvedStylePolicy.forbiddenGenericLocals || DEFAULT_FORBIDDEN_GENERIC_LOCALS).join(','),
       }
     : { ...(profile?.style_isolation ?? STANDARD_PROFILES[DEFAULT_PROFILE_ID].style_isolation), module_style_files: 0, unscoped_module_style_files: 0 };
 

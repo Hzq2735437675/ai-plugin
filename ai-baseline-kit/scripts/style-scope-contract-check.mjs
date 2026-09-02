@@ -48,6 +48,46 @@ try {
   assert.equal(cssModulesPass.summary.cssModules, 1);
   assert.equal(inferStyleIsolation({ projectRoot: cssModulesRoot, modulesRoot: 'src/modules', buildTool: 'Vite' }).scoped_name_pattern, VITE_SCOPED_NAME_PATTERN);
 
+  const semanticRoot = project('semantic-class-naming');
+  write(semanticRoot, '.ai-frontend-assembler/project-scheme.yml', 'style_isolation:\n  strategy: css-modules\n  adapter: builtin-css-modules\n  class_naming_mode: semantic-module-page-feature\n  class_naming_pattern: m_[name]_[local]__[hash:base64:6]\n');
+  write(semanticRoot, 'src/modules/orders/styles/orders-review-list.module.css', '.ordersReviewListOrderReviewPage { display: grid; }\n.ordersReviewListOrderReviewHeader { margin: 0; }\n.ordersReviewListOrderReviewContent { padding: 8px; }\n:global(.ant-button) { color: red; }\n');
+  write(semanticRoot, 'src/modules/orders/pages/review-list/OrderReviewListPage.tsx', "import styles from '../../styles/orders-review-list.module.css';\nexport const pageClass = styles.ordersReviewListOrderReviewPage;\n");
+  const semanticPass = analyzeStyleIsolation({ projectRoot: semanticRoot, modulesRoot: 'src/modules' });
+  assert.equal(semanticPass.violations.length, 0);
+  assert.equal(semanticPass.policy.classNamingMode, 'semantic-module-page-feature');
+  assert.equal(semanticPass.summary.classNamingMode, 'semantic-module-page-feature');
+
+  const sharedOwnerRoot = project('style-owner-shared-by-pages');
+  write(sharedOwnerRoot, '.ai-frontend-assembler/project-scheme.yml', 'style_isolation:\n  strategy: css-modules\n  class_naming_mode: semantic-module-page-feature\n');
+  write(sharedOwnerRoot, 'src/modules/orders/styles/orders-shared.module.css', '.ordersSharedPanel { display: grid; }\n');
+  write(sharedOwnerRoot, 'src/modules/orders/pages/review-list/index.tsx', "import styles from '../../styles/orders-shared.module.css';\nexport const review = styles.ordersSharedPanel;\n");
+  write(sharedOwnerRoot, 'src/modules/orders/pages/detail/index.tsx', "import styles from '../../styles/orders-shared.module.css';\nexport const detail = styles.ordersSharedPanel;\n");
+  const sharedOwnerFail = analyzeStyleIsolation({ projectRoot: sharedOwnerRoot, modulesRoot: 'src/modules' });
+  assert.ok(sharedOwnerFail.violations.some((item) => item.id === 'style_owner_shared_by_pages'));
+
+  const moduleOnlyRoot = project('style-owner-module-only');
+  write(moduleOnlyRoot, '.ai-frontend-assembler/project-scheme.yml', 'style_isolation:\n  strategy: css-modules\n  class_naming_mode: semantic-module-page-feature\n');
+  write(moduleOnlyRoot, 'src/modules/orders/styles/orders.module.css', '.ordersReviewPanel { display: grid; }\n');
+  write(moduleOnlyRoot, 'src/modules/orders/pages/review-list/index.tsx', "import styles from '../../styles/orders.module.css';\nexport const review = styles.ordersReviewPanel;\n");
+  const moduleOnlyFail = analyzeStyleIsolation({ projectRoot: moduleOnlyRoot, modulesRoot: 'src/modules' });
+  assert.ok(moduleOnlyFail.violations.some((item) => item.id === 'style_owner_module_only'));
+
+  const genericClassRoot = project('style-class-generic-name');
+  write(genericClassRoot, '.ai-frontend-assembler/project-scheme.yml', 'style_isolation:\n  strategy: css-modules\n  class_naming_mode: semantic-module-page-feature\n');
+  write(genericClassRoot, 'src/modules/orders/styles/orders-review-list.module.css', '.page { display: grid; }\n.content { padding: 8px; }\n');
+  write(genericClassRoot, 'src/modules/orders/pages/review-list/index.tsx', "import styles from '../../styles/orders-review-list.module.css';\nexport const review = styles.page;\n");
+  const genericClassFail = analyzeStyleIsolation({ projectRoot: genericClassRoot, modulesRoot: 'src/modules' });
+  assert.ok(genericClassFail.violations.some((item) => item.id === 'style_class_generic_name'));
+
+  const duplicateOwnerRoot = project('style-owner-duplicate');
+  write(duplicateOwnerRoot, '.ai-frontend-assembler/project-scheme.yml', 'style_isolation:\n  strategy: css-modules\n  class_naming_mode: semantic-module-page-feature\n');
+  write(duplicateOwnerRoot, 'src/modules/orders/styles/review-list.module.css', '.ordersReviewListPanel { display: grid; }\n');
+  write(duplicateOwnerRoot, 'src/modules/orders/pages/review-list/index.tsx', "import styles from '../../styles/review-list.module.css';\nexport const review = styles.ordersReviewListPanel;\n");
+  write(duplicateOwnerRoot, 'src/modules/billing/styles/review-list.module.css', '.billingReviewListPanel { display: grid; }\n');
+  write(duplicateOwnerRoot, 'src/modules/billing/pages/review-list/index.tsx', "import styles from '../../styles/review-list.module.css';\nexport const review = styles.billingReviewListPanel;\n");
+  const duplicateOwnerFail = analyzeStyleIsolation({ projectRoot: duplicateOwnerRoot, modulesRoot: 'src/modules' });
+  assert.ok(duplicateOwnerFail.violations.some((item) => item.id === 'style_owner_duplicate'));
+
   write(cssModulesRoot, 'src/modules/orders/styles/index.css', '.page { color: red; }\n');
   write(cssModulesRoot, 'src/modules/orders/pages/legacy.tsx', "import '../styles/index.css';\nexport const legacy = true;\n");
   const cssModulesFail = analyzeStyleIsolation({ projectRoot: cssModulesRoot, modulesRoot: 'src/modules', strategy: 'css-modules' });
@@ -117,8 +157,8 @@ try {
   }
 
   for (const relative of [
-    'templates/react18-antd-tailwind-ts/src/modules/home/styles/home.module.css',
-    'templates/vue3-vite-ts/src/modules/home/styles/home.module.css',
+    'templates/react18-antd-tailwind-ts/src/modules/home/styles/home-overview.module.css',
+    'templates/vue3-vite-ts/src/modules/home/styles/home-overview.module.css',
     'templates/react18-antd-tailwind-ts/src/vite-env.d.ts',
     'templates/vue3-vite-ts/src/vite-env.d.ts',
   ]) assert.ok(fs.existsSync(path.join(baselineRoot, relative)), `缺少模板 CSS Module 支持文件: ${relative}`);
@@ -128,7 +168,7 @@ try {
     'templates/vue3-vite-ts/src/modules/home/pages/HomePage.vue',
   ]) {
     const text = fs.readFileSync(path.join(baselineRoot, relative), 'utf8');
-    assert.match(text, /import styles from ['"]\.\.\/styles\/home\.module\.css['"]/);
+    assert.match(text, /import styles from ['"]\.\.\/styles\/home-overview\.module\.css['"]/);
   }
 
   console.log('style-scope-contract-check: pass');

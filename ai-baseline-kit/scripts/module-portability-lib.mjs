@@ -129,6 +129,38 @@ function compareStyleIsolation(sourceContract = {}, targetStyleIsolation = {}, t
       warnings.push({ code: 'style-scoped-name-pattern-different', source: sourceContract.scopedNamePattern, target: targetPattern, message: '目标项目 CSS Modules scoped name 模式不同；类名仍应隔离，但构建快照可能变化。' });
     }
   }
+
+  const sourceClassNamingMode = sourceContract.classNamingMode || sourceContract.class_naming_mode || 'owner-local';
+  const targetClassNamingMode = targetStyleIsolation.class_naming_mode || targetStyleIsolation.classNamingMode || 'owner-local';
+  if (sourceClassNamingMode === 'semantic-module-page-feature' && targetClassNamingMode !== 'semantic-module-page-feature') {
+    blockers.push({
+      code: 'style-class-naming-mode-unsupported',
+      source: sourceClassNamingMode,
+      target: targetClassNamingMode,
+      message: '目标项目未启用模块-页面-功能语义 CSS 类名契约，导入该模块会丢失跨页面唯一性校验。',
+    });
+  }
+  const sourceClassNamingPattern = sourceContract.classNamingPattern || sourceContract.class_naming_pattern;
+  const targetClassNamingPattern = targetStyleIsolation.class_naming_pattern || targetStyleIsolation.classNamingPattern;
+  if (sourceClassNamingPattern && targetClassNamingPattern && targetClassNamingPattern !== sourceClassNamingPattern) {
+    warnings.push({
+      code: 'style-class-naming-pattern-different',
+      source: sourceClassNamingPattern,
+      target: targetClassNamingPattern,
+      message: '目标项目 CSS 类名生成模式不同；请确认构建产物的类名快照和调试定位预期。',
+    });
+  }
+  const sourceForbiddenLocals = splitCsv(sourceContract.forbiddenGenericLocals || sourceContract.forbidden_generic_class_names);
+  const targetForbiddenLocals = new Set(splitCsv(targetStyleIsolation.forbidden_generic_class_names || targetStyleIsolation.forbiddenGenericLocals));
+  const missingForbiddenLocals = sourceForbiddenLocals.filter((item) => !targetForbiddenLocals.has(item));
+  if (missingForbiddenLocals.length) {
+    warnings.push({
+      code: 'style-class-generic-list-incomplete',
+      source: sourceForbiddenLocals,
+      target: [...targetForbiddenLocals],
+      message: `目标项目未禁用全部泛化业务类名: ${missingForbiddenLocals.join(', ')}`,
+    });
+  }
   return { blockers, warnings };
 }
 
@@ -334,6 +366,9 @@ export function exportModuleBundle({ projectRoot, moduleName, output, force = fa
         adapterFingerprint: styleAdapterFingerprint(absoluteProjectRoot, styleReport),
         preprocessors: stylePreprocessors,
         globalDependencies: styleReport.globalDependencies,
+        classNamingMode: styleReport.policy.classNamingMode || styleReport.policy.mode || 'owner-local',
+        classNamingPattern: styleReport.policy.classNamingPattern || styleReport.policy.pattern || '',
+        forbiddenGenericLocals: styleReport.policy.forbiddenGenericLocals || [],
       },
     },
     shared: { files: sharedFiles, unresolved: shared.unresolved },

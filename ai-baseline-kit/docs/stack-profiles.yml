@@ -22,6 +22,9 @@ profiles:
       adapter: builtin-css-modules
       supported_strategies: css-modules,utility-css,css-in-js,shadow-dom,hybrid,custom
       local_style_fallback: none
+      class_naming_mode: semantic-module-page-feature
+      class_naming_pattern: m_[name]_[local]__[hash:base64:6]
+      forbidden_generic_class_names: page,root,content,container,wrapper,header,footer,section
     template_root: templates/react18-antd-tailwind-ts
     theme_entrypoint: src/theme/theme.css
     theme_adapter: src/theme/antd-theme.ts
@@ -40,7 +43,7 @@ profiles:
     notes:
       - 该 profile 只用于新项目初始化，不覆盖已有项目技术栈。
       - state_manager 和 i18n 在未提出需求时保持 project-defined，不凭空增加全局复杂度。
-      - 模块局部样式使用 Vite 内置 CSS Modules，文件按 owner 命名为 `Owner.module.<ext>`，不新增样式唯一化插件。
+      - 模块局部样式使用 Vite 内置 CSS Modules，页面 owner 按 `<module-id>-<page-id>.module.<ext>` 命名；默认启用 `semantic-module-page-feature`，类名包含模块、页面、功能和角色语义，不新增样式唯一化插件。
 
   vue3_vite:
     id: vue3-vite-ts
@@ -64,6 +67,9 @@ profiles:
       adapter: builtin-css-modules
       supported_strategies: css-modules,vue-scoped,utility-css,css-in-js,shadow-dom,hybrid,custom
       local_style_fallback: none
+      class_naming_mode: semantic-module-page-feature
+      class_naming_pattern: m_[name]_[local]__[hash:base64:6]
+      forbidden_generic_class_names: page,root,content,container,wrapper,header,footer,section
     template_root: templates/vue3-vite-ts
     theme_entrypoint: src/theme/theme.css
     theme_adapter: Element Plus CSS variables in src/theme/theme.css
@@ -86,7 +92,7 @@ profiles:
       - Element Plus 组件通过 unplugin-vue-components + ElementPlusResolver 按需导入，JavaScript API 保持显式 import。
       - 默认保留 Element Plus 原生配色，项目级覆盖只允许进入 src/theme/theme.css。
       - 用户初始化前明确指定其他 Vue UI 框架时，用户选择优先。
-      - 模块局部样式使用 Vite 内置 CSS Modules，文件按 owner 命名为 `Owner.module.<ext>`，不新增样式唯一化插件。
+      - 模块局部样式使用 Vite 内置 CSS Modules，页面 owner 按 `<module-id>-<page-id>.module.<ext>` 命名；默认启用 `semantic-module-page-feature`，类名包含模块、页面、功能和角色语义，不新增样式唯一化插件。
 
   existing_project_detected:
     id: existing-project-detected

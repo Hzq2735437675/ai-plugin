@@ -28,6 +28,9 @@ style_isolation:
   global_entrypoints: project-defined
   generic_index_files: forbidden
   module_global_selectors: forbidden
+  class_naming_mode: semantic-module-page-feature
+  class_naming_pattern: 'm_[name]_[local]__[hash:base64:6]'
+  forbidden_generic_class_names: page,root,content,container,wrapper,header,footer,section
 
 layers:
   shell_root: project-defined

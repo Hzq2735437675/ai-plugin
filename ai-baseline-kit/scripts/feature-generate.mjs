@@ -16,6 +16,7 @@ import {
   unique,
   writeJson,
 } from './feature-tools-lib.mjs';
+import { createPageStyleContract } from './style-class-naming-lib.mjs';
 
 const args = parseArgs(process.argv.slice(2));
 const { baselineRoot, projectRoot: defaultProjectRoot } = resolveRoots(import.meta.url);
@@ -68,18 +69,19 @@ function pageDefinitions(spec, framework) {
   });
 }
 
-function renderModuleStyles() {
-  return `.page {
+function renderPageStyles(page, moduleId, featureId) {
+  const styles = createPageStyleContract({ moduleId, pageId: page.id, featureId });
+  return `.${styles.page.local} {
   display: grid;
   gap: var(--app-space-lg, 24px);
 }
 
-.header h1,
-.header p {
+.${styles.header.local} h1,
+.${styles.header.local} p {
   margin: 0;
 }
 
-.content {
+.${styles.content.local} {
   padding: var(--app-space-lg, 24px);
   background: var(--app-color-bg-container);
   border: 1px solid var(--app-color-border);
@@ -88,17 +90,17 @@ function renderModuleStyles() {
 `;
 }
 
-function renderReactPage(page, styleFileName) {
+function renderReactPage(page, styleFileName, classNames) {
   return `import styles from '../../styles/${styleFileName}';
 
 export function ${page.component}() {
   return (
-    <section className={styles.page}>
-      <header className={styles.header}>
+    <section className={styles.${classNames.page.local}}>
+      <header className={styles.${classNames.header.local}}>
         <h1>${page.name}</h1>
         <p>功能页面</p>
       </header>
-      <div className={styles.content} data-page-state="ready">
+      <div className={styles.${classNames.content.local}} data-page-state="ready">
         <p>路由：${page.route}</p>
       </div>
     </section>
@@ -117,19 +119,19 @@ function defaultNpmDependencies(framework, uiLibrary) {
   return [];
 }
 
-function renderVuePage(page, uiLibrary, styleFileName) {
+function renderVuePage(page, uiLibrary, styleFileName, classNames) {
   if (!usesElementPlus(uiLibrary)) {
     return `<script setup lang="ts">
 import styles from '../../styles/${styleFileName}';
 </script>
 
 <template>
-  <section :class="styles.page">
-    <header :class="styles.header">
+  <section :class="styles.${classNames.page.local}">
+    <header :class="styles.${classNames.header.local}">
       <h1>${page.name}</h1>
       <p>功能页面</p>
     </header>
-    <div :class="styles.content" data-page-state="ready">
+    <div :class="styles.${classNames.content.local}" data-page-state="ready">
       <p>路由：${page.route}</p>
     </div>
   </section>
@@ -142,12 +144,12 @@ import styles from '../../styles/${styleFileName}';
 </script>
 
 <template>
-  <section :class="styles.page">
-    <header :class="styles.header">
+  <section :class="styles.${classNames.page.local}">
+    <header :class="styles.${classNames.header.local}">
       <h1>${page.name}</h1>
       <p>功能页面</p>
     </header>
-    <el-card :class="styles.content" shadow="never" data-page-state="ready">
+    <el-card :class="styles.${classNames.content.local}" shadow="never" data-page-state="ready">
       <p>路由：${page.route}</p>
     </el-card>
   </section>
@@ -213,6 +215,7 @@ function updateGeneratedModule(moduleRoot, moduleVar, pages, spec, npmDependenci
   meta.dependencies ??= { modules: [], shared: [], npm: [], dev: [] };
   meta.dependencies.npm = unique([...(meta.dependencies.npm ?? []), ...npmDependencies, ...(spec.dependencies?.npm ?? [])]);
   meta.dependencies.dev = unique([...(meta.dependencies.dev ?? []), ...devDependencies]);
+  meta.styleNaming = { ...(meta.styleNaming ?? {}), mode: 'semantic-module-page-feature', pattern: 'm_[name]_[local]__[hash:base64:6]', scope: 'module-page-feature' };
   meta.provenance = unique([...(meta.provenance ?? []), normalizePath(path.relative(projectRoot, specFile))]);
   if (!args['dry-run']) writeJson(metaFile, meta);
   changed.push(`modify:${normalizePath(path.relative(projectRoot, metaFile))}`);
@@ -249,13 +252,19 @@ try {
   const moduleVar = { id: moduleId, camel, pascal, framework, typeImport };
   const npmDependencies = defaultNpmDependencies(framework, uiLibrary);
   const devDependencies = acceptanceDevDependencies(framework);
-  const styleFileName = `${moduleId}.module.css`;
-  const styleFile = path.join(moduleRoot, 'styles', styleFileName);
-  if (!fs.existsSync(styleFile)) writeFile(styleFile, renderModuleStyles());
-
   for (const page of pages) {
+    const classNames = createPageStyleContract({ moduleId, pageId: page.id, featureId: spec.feature?.id || spec.feature?.domain || moduleId });
+    const styleFileName = `${classNames.page.owner}.module.css`;
+    const styleFile = path.join(moduleRoot, 'styles', styleFileName);
+    if (!fs.existsSync(styleFile)) writeFile(styleFile, renderPageStyles(page, moduleId, spec.feature?.id || spec.feature?.domain || moduleId));
+
     const pageFile = path.join(moduleRoot, 'pages', page.id, `index.${page.extension}`);
-    if (!fs.existsSync(pageFile) || args.force) writeFile(pageFile, /vue/i.test(framework) ? renderVuePage(page, uiLibrary, styleFileName) : renderReactPage(page, styleFileName), { force: Boolean(args.force) });
+    if (!fs.existsSync(pageFile) || args.force) {
+      const content = /vue/i.test(framework)
+        ? renderVuePage(page, uiLibrary, styleFileName, classNames)
+        : renderReactPage(page, styleFileName, classNames);
+      writeFile(pageFile, content, { force: Boolean(args.force) });
+    }
   }
 
   if (plan.decision.type === 'create-module') {
@@ -274,6 +283,7 @@ try {
       dependencies: { modules: [], shared: spec.dependencies?.shared ?? [], npm: unique([...npmDependencies, ...(spec.dependencies?.npm ?? [])]), dev: devDependencies },
       permissions: spec.permissions ?? [],
       portability: { sameStackOnly: true, shellPrivateImports: false, crossModuleImports: false },
+      styleNaming: { mode: 'semantic-module-page-feature', pattern: 'm_[name]_[local]__[hash:base64:6]', scope: 'module-page-feature' },
       provenance: [normalizePath(path.relative(projectRoot, specFile))],
     };
     writeFile(path.join(moduleRoot, 'module.meta.json'), `${JSON.stringify(moduleMeta, null, 2)}\n`);

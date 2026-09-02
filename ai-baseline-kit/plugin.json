@@ -87,7 +87,8 @@
     "capabilityRouteSchema": "docs/capability-route.schema.json",
     "styleScopeChecker": "scripts/style-scope-check.mjs",
     "styleScopeContractSelfCheck": "scripts/style-scope-contract-check.mjs",
-    "styleIsolationRegistry": "scripts/style-scope-lib.mjs"
+    "styleIsolationRegistry": "scripts/style-scope-lib.mjs",
+    "styleClassNamingLibrary": "scripts/style-class-naming-lib.mjs"
   },
   "installation": {
     "guide": "INSTALL.md",

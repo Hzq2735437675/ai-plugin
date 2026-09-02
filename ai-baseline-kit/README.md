@@ -44,7 +44,8 @@
 
 - `project-scheme.yml` 通过 `style_isolation.strategy` 和 `adapter` 声明项目真实方案。
 - 内置 `css-modules`、`vue-scoped`、`utility-css`、`css-in-js`、`shadow-dom`、`hybrid` adapter；CSS Modules 是标准 Vite 模板默认值。
-- 标准 CSS Modules 使用 owner 文件名和 `m_[name]_[local]__[hash:base64:6]` 产物类名，禁止泛化局部样式文件名和不受控全局选择器。
+- 标准 CSS Modules 默认启用 `semantic-module-page-feature`：页面 owner 使用 `<module-id>-<page-id>.module.css`，源码局部类名按模块 + 页面 + 功能 + 角色生成；构建产物继续使用 `m_[name]_[local]__[hash:base64:6]`。
+- 样式 Gate 会校验 owner 是否跨页面唯一、是否被多个页面共享、是否缺少模块/页面语义，以及是否使用 `page`、`content`、`header` 等泛化业务类名。Tailwind、Ant Design、Element Plus、shared 公共组件不在该页面业务校验范围内。
 - `utility-css`、`css-in-js`、`shadow-dom` 可以将 CSS Modules 作为复杂局部样式 fallback。
 - `custom` 策略可登记项目内同步 `.cjs` adapter；Gate 只执行显式路径，模块导出记录 adapter SHA-256 指纹。
 - bundle 兼容性检查校验目标项目支持的策略、预处理器依赖、外部样式依赖和 custom adapter 一致性。

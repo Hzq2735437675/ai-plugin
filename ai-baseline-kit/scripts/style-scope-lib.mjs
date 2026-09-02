@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { createRequire } from 'node:module';
+import { analyzeClassNaming, DEFAULT_CLASS_NAMING_PATTERN, LEGACY_CLASS_NAMING_MODE, resolveClassNamingPolicy } from './style-class-naming-lib.mjs';
 
 export const STYLE_MODULE_PATTERN = '*.module.{css,scss,sass,less,styl,stylus}';
 export const VITE_SCOPED_NAME_PATTERN = 'm_[name]_[local]__[hash:base64:6]';
@@ -293,6 +294,11 @@ export function resolveStyleIsolationPolicy({ projectRoot, modulesRoot, buildToo
     genericIndexFiles: valueOf(merged, 'generic_index_files', 'genericIndexFiles') || 'forbidden',
     moduleGlobalSelectors: valueOf(merged, 'module_global_selectors', 'moduleGlobalSelectors') || 'forbidden',
     globalEntrypoints: splitList(valueOf(merged, 'global_entrypoints', 'globalEntrypoints')),
+    ...resolveClassNamingPolicy({
+      classNamingMode: valueOf(merged, 'class_naming_mode', 'classNamingMode') || LEGACY_CLASS_NAMING_MODE,
+      classNamingPattern: valueOf(merged, 'class_naming_pattern', 'classNamingPattern') || DEFAULT_CLASS_NAMING_PATTERN,
+      forbiddenGenericLocals: valueOf(merged, 'forbidden_generic_class_names', 'forbiddenGenericLocals'),
+    }),
   };
 }
 
@@ -489,6 +495,16 @@ export function analyzeStyleIsolation({ projectRoot, modulesRoot, moduleName = '
     else adapterFn(context, policy, collector.add);
   }
 
+  if (context.cssModules.length && policy.classNamingMode === 'semantic-module-page-feature') {
+    const classNamingReport = analyzeClassNaming({
+      projectRoot: context.projectRoot,
+      modulesRoot: path.relative(context.projectRoot, context.modulesRoot),
+      moduleName: context.moduleName,
+      policy,
+    });
+    for (const violation of classNamingReport.violations) collector.violations.push(violation);
+  }
+
   const externalGlobalDependencies = [...new Set(context.imports
     .filter((item) => !item.specifier.startsWith('.'))
     .map((item) => item.specifier))].sort();
@@ -513,6 +529,7 @@ export function analyzeStyleIsolation({ projectRoot, modulesRoot, moduleName = '
       cssModules: context.cssModules.length,
       unscopedStyles: context.unscopedStyles.length,
       vueScopedBlocks: context.vueBlocks.filter((block) => block.scoped).length,
+      classNamingMode: policy.classNamingMode,
     },
   };
 }

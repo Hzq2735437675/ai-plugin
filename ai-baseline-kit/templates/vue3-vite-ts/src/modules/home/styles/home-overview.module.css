@@ -1,0 +1,11 @@
+.homeOverviewPage {
+  min-width: 0;
+}
+
+.homeOverviewStatus {
+  margin-bottom: 16px;
+}
+
+.homeOverviewFeatureCards {
+  row-gap: 16px;
+}

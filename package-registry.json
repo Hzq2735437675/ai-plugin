@@ -42,6 +42,7 @@
         "ai-baseline-kit/scripts/feature-plan.mjs",
         "ai-baseline-kit/scripts/feature-generate.mjs",
         "ai-baseline-kit/scripts/style-scope-lib.mjs",
+        "ai-baseline-kit/scripts/style-class-naming-lib.mjs",
         "ai-baseline-kit/scripts/style-scope-check.mjs",
         "ai-baseline-kit/scripts/style-scope-contract-check.mjs",
         "ai-baseline-kit/scripts/module-create.mjs",
