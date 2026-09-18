@@ -194,7 +194,9 @@ AI 统一执行 `ai-run activate` 并完成后续严格 Gate；普通用户不�
 - `MAJOR`：植入协议、入口或目录契约不兼容。
 - `MINOR`：向后兼容地新增 skill、规则或检查能力。
 - `PATCH`：向后兼容地修复文档、规则或脚本问题。
-- README、安装说明、使用指南和系统说明书只维护当前版本；提交前由 `node scripts/package-check.mjs` 检查，不允许重新加入历史版本介绍。
+- README、安装说明、使用指南和系统说明书只维护当前版本，不允许重新加入历史版本介绍。
+- 仅在本仓库 `ai-plugin` 根目录维护整个包仓库时，提交前才使用 `node scripts/package-check.mjs`。把 `ai-baseline-kit/` 单独嵌入业务项目后，目标项目通常没有该根脚本；此时应使用 `node ai-baseline-kit/scripts/project-tools-check.mjs`、`node ai-baseline-kit/scripts/baseline-contract-check.mjs` 和 `node ai-baseline-kit/scripts/baseline-check.mjs --fail-on-warn` 验证包自身或项目。
+- 嵌入项目还需要让宿主 ESLint 忽略 `ai-baseline-kit/**` 和 `.ai-frontend-assembler/**`；请修改宿主自己的 flat config、旧版 `.eslintignore`，或将 lint 范围限制为 `src`。`.gitignore` 不会控制 ESLint 扫描，本包也不会自动改写宿主工具配置。
 
 ## 接入后的需求生产闭环
 

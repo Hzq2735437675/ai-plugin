@@ -38,7 +38,7 @@ function readChanges() {
 
 try {
   const gateArgs = ['--project-root', projectRoot];
-  for (const flag of ['baseline-only', 'with-e2e', 'install-playwright', 'no-strict', 'skip-typecheck', 'skip-lint', 'skip-test', 'skip-build', 'allow-parser-fallback']) {
+  for (const flag of ['baseline-only', 'with-e2e', 'install-playwright', 'no-strict', 'skip-typecheck', 'skip-lint', 'skip-test', 'skip-build', 'allow-parser-fallback', 'allow-gitignored-baseline']) {
     if (args[flag]) gateArgs.push(`--${flag}`);
   }
   if (args['changed-files']) gateArgs.push('--changed-files', path.resolve(args['changed-files']));

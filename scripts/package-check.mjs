@@ -109,6 +109,20 @@ function checkCurrentPackageDocumentation(item, manifest) {
   }
 }
 
+function checkProjectSchemeTemplateVersion(item, manifest) {
+  const templatePath = `${normalize(path.dirname(item.manifest))}/docs/project-scheme.template.yml`;
+  if (!fs.existsSync(path.join(root, templatePath))) return;
+  const content = fs.readFileSync(path.join(root, templatePath), 'utf8');
+  const match = content.match(/^\s*scheme_version:\s*['"]?([^'"\r\n]+)['"]?\s*$/m);
+  if (!match) {
+    fail('project-scheme 模板缺少 scheme_version', templatePath);
+    return;
+  }
+  if (match[1].trim() !== manifest.version) {
+    fail(`project-scheme 模板 scheme_version=${match[1].trim()} 必须与 plugin.json.version=${manifest.version} 一致`, templatePath);
+  }
+}
+
 function checkRepositoryReadmeVersions(registry) {
   const relativePath = 'README.md';
   if (!checkFile(relativePath, '仓库 README')) return;
@@ -154,6 +168,7 @@ if (registry) {
     for (const tool of item.tools ?? []) checkFile(tool, '包工具');
     const manifest = checkManifest(item);
     if (manifest) checkCurrentPackageDocumentation(item, manifest);
+    if (manifest) checkProjectSchemeTemplateVersion(item, manifest);
   }
 
   checkRepositoryReadmeVersions(registry);

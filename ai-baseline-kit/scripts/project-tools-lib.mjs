@@ -332,11 +332,18 @@ function detectPackageManager(projectRoot, packageData) {
   return 'npm';
 }
 
-function detectValidation(packageData, profile, packageManager = 'npm') {
+export function resolveTypecheckScript(scripts = {}) {
+  if (typeof scripts.typecheck === 'string' && scripts.typecheck.trim()) return 'typecheck';
+  if (typeof scripts['type-check'] === 'string' && scripts['type-check'].trim()) return 'type-check';
+  return '';
+}
+
+function detectValidation(packageData, packageManager = 'npm') {
   const scripts = packageData?.scripts ?? {};
   const run = packageManager === 'yarn' ? 'yarn' : `${packageManager} run`;
+  const typecheckScript = resolveTypecheckScript(scripts);
   return {
-    typecheck: scripts.typecheck ? `${run} typecheck` : 'unknown',
+    typecheck: typecheckScript ? `${run} ${typecheckScript}` : 'unknown',
     lint: scripts.lint ? `${run} lint` : 'unknown',
     test: scripts.test ? `${run} test` : 'unknown',
     build: scripts.build ? `${run} build` : 'unknown',
@@ -475,7 +482,7 @@ export function analyzeProject(projectRoot, options = {}) {
     layers: roots,
     entrypoints,
     modules,
-    validation: detectValidation(packageData, profile, packageManager),
+    validation: detectValidation(packageData, packageManager),
     confidence: existing && !initialized
       ? (detectedFramework.label === 'unknown'
           ? 'low'
@@ -527,10 +534,25 @@ function buildRequiredQuestions(report) {
   return questions;
 }
 
+export function readPackageVersion(baselineRoot) {
+  const resolvedRoot = baselineRoot || resolveRoots(import.meta.url).baselineRoot;
+  const pluginFile = path.join(resolvedRoot, 'plugin.json');
+  if (!fs.existsSync(pluginFile)) {
+    throw new Error(`缺少 plugin.json，无法读取包版本: ${pluginFile}`);
+  }
+  try {
+    const plugin = JSON.parse(fs.readFileSync(pluginFile, 'utf8'));
+    if (!plugin.version) throw new Error('plugin.json 缺少 version 字段');
+    return plugin.version;
+  } catch (error) {
+    throw new Error(`无法从 plugin.json 读取包版本: ${error.message}`);
+  }
+}
+
 export function buildProjectScheme(report, options = {}) {
   const profile = STANDARD_PROFILES[report.profile] ?? null;
   const projectName = report.package.name || path.basename(report.projectRoot);
-  const schemeVersion = options.schemeVersion ?? '0.9.0';
+  const schemeVersion = readPackageVersion(options.baselineRoot);
   const modules = report.modules.items ?? [];
   const requiredQuestions = buildRequiredQuestions(report);
   const lines = [
@@ -611,7 +633,7 @@ export function writeProjectScheme(report, baselineRoot, options = {}) {
   const file = options.file
     || (options.projectRoot ? getProjectStatePaths(options.projectRoot, baselineRoot).schemeFile : path.join(baselineRoot, 'docs', 'project-scheme.yml'));
   fs.mkdirSync(path.dirname(file), { recursive: true });
-  fs.writeFileSync(file, buildProjectScheme(report, options), 'utf8');
+  fs.writeFileSync(file, buildProjectScheme(report, { ...options, baselineRoot }), 'utf8');
   return file;
 }
 

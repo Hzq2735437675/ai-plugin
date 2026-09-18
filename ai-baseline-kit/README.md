@@ -3,7 +3,7 @@
 - 产品展示名称：AI 前端模块装配系统
 - 机器包名：`ai-baseline-kit`
 - 当前版本：`0.17.0`
-- 文档策略：只维护当前版本的能力和用法；历史变化通过 Git 或正式发布记录查询。`scripts/package-check.mjs` 会自动阻止使用文档出现非当前版本号。
+- 文档策略：只维护当前版本的能力和用法；历史变化通过 Git 或正式发布记录查询。仅在本仓库 `ai-plugin` 根目录维护整个包仓库时，才使用 `node scripts/package-check.mjs` 检查版本和结构；只把 `ai-baseline-kit/` 嵌入业务项目时，该根脚本通常不存在，不应把它当作运行时依赖。
 - 运行环境：Node.js 20 或以上版本（推荐使用公司统一的当前 LTS 版本）
 - 包元数据：[`plugin.json`](plugin.json)
 - 安装/植入说明：[`INSTALL.md`](INSTALL.md)
@@ -362,7 +362,34 @@ node ai-baseline-kit/scripts/template-build-check.mjs
 node ai-baseline-kit/scripts/template-build-check.mjs --profile react18-antd-tailwind-ts
 ```
 
+Git 可见性默认严格：如果宿主 `.gitignore` 隐藏 `ai-baseline-kit/`，`baseline-check` 会产生 `baseline_kit_gitignored` warning，配合 `--fail-on-warn` 或 `--strict` 会失败。只有基线包由外部制品仓库管理、确实不需要在本仓库追踪该目录时，才可显式传入 `--allow-gitignored-baseline` 仅放宽这一条检查；它不会放宽 `.ai-frontend-assembler/`、其他 warning 或任何 error。不要用 `--no-strict` 替代，因为它会放过全部 warning。
+
 `project-bootstrap.mjs` 会安全创建或追加根级 `AGENTS.md`、`CLAUDE.md`，并生成项目地图。检测到已有项目时不会自动复制模板；如需初始化模板，目标目录必须为空或显式使用 `--force`。旧项目应只生成项目地图并保留真实技术栈。
+
+### 嵌入项目与仓库维护命令边界
+
+- 只把 `ai-baseline-kit/` 复制进业务项目时，使用 `node ai-baseline-kit/scripts/project-validate.mjs`、`node ai-baseline-kit/scripts/baseline-check.mjs --fail-on-warn` 等项目检查脚本；不要执行 `node scripts/package-check.mjs`，因为目标项目通常没有根级 `scripts/package-check.mjs` 和 `package-registry.json`。
+- 只有在 `ai-plugin` 这个多包仓库根目录维护、发布或检查多个包时，才运行 `node scripts/package-check.mjs`。它依赖仓库级 `package-registry.json`，不是嵌入业务项目的运行时依赖，也不要求复制到 `ai-baseline-kit/scripts/`。
+- `.gitignore` 不会控制 ESLint 的扫描范围。`baseline-check` 会自行跳过 `ai-baseline-kit/` 和 `.ai-frontend-assembler/`，但 `project-validate` 调用的宿主 `npm run lint` 仍可能由 `eslint .` 扫描这些目录。
+
+### 宿主 lint 集成
+
+业务项目应在自己的 ESLint 配置中排除能力包和装配状态，不要依赖 `.gitignore`：
+
+```js
+// eslint.config.js（ESLint flat config）
+export default [
+  {
+    ignores: [
+      'ai-baseline-kit/**',
+      '.ai-frontend-assembler/**',
+    ],
+  },
+  // ...项目原有配置
+];
+```
+
+仍在使用旧版配置的项目，可在 `.eslintignore` 中加入 `ai-baseline-kit/` 和 `.ai-frontend-assembler/`；或把 lint 命令限制为项目源码范围，例如 `eslint src`。不要在 `ai-baseline-kit/` 内新增 `.eslintignore` 期望影响宿主项目，也不要由本包自动改写宿主 ESLint、Stylelint 或其他工具配置。
 
 ## 启动方式
 

@@ -22,6 +22,7 @@ const root = projectRootArgIndex >= 0
     ? path.resolve(positionalRoot)
     : defaultProjectRoot;
 const failOnWarn = process.argv.includes('--fail-on-warn') || process.argv.includes('--strict');
+const allowGitignoredBaseline = process.argv.includes('--allow-gitignored-baseline');
 const fixGitignore = process.argv.includes('--fix-gitignore');
 const fixEntrypoints = process.argv.includes('--fix-entrypoints') || process.argv.includes('--fix-ai-entrypoints');
 const modeIndex = process.argv.indexOf('--mode');
@@ -194,7 +195,13 @@ function checkGitignoreAllowsBaselineKitChanges() {
   const gitignorePath = path.join(root, '.gitignore');
   const text = fs.existsSync(gitignorePath) ? fs.readFileSync(gitignorePath, 'utf8') : '';
   if (fixGitignore) record('info', 'fix_gitignore_deprecated', '--fix-gitignore 已废弃；脚本不会自动修改 .gitignore。', '.gitignore');
-  if (gitignoreHidesBaselineKit(text)) record('warn', 'baseline_kit_gitignored', `目标项目 .gitignore 隐藏 ${baselineDirName}/；请显式移除该规则。`, '.gitignore');
+  if (gitignoreHidesBaselineKit(text)) {
+    if (allowGitignoredBaseline) {
+      record('info', 'baseline_kit_gitignored_allowed', `目标项目 .gitignore 隐藏 ${baselineDirName}/；本次已通过 --allow-gitignored-baseline 显式允许。`, '.gitignore');
+    } else {
+      record('warn', 'baseline_kit_gitignored', `目标项目 .gitignore 隐藏 ${baselineDirName}/；请显式移除该规则。`, '.gitignore');
+    }
+  }
   if (text.split(/\r?\n/).some((line) => ['.ai-frontend-assembler', '.ai-frontend-assembler/'].includes(line.trim()))) record('warn', 'project_state_gitignored', `目标项目 .gitignore 隐藏 ${PROJECT_STATE_DIRECTORY}/；项目地图和旧项目基线必须保持可追踪。`, '.gitignore');
 }
 

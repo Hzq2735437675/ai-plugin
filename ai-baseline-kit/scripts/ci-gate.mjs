@@ -49,7 +49,7 @@ try {
   }
 
   const validateArgs = ['--project-root', projectRoot];
-  for (const flag of ['baseline-only', 'with-e2e', 'install-playwright', 'no-strict', 'skip-typecheck', 'skip-lint', 'skip-test', 'skip-build']) {
+  for (const flag of ['baseline-only', 'with-e2e', 'install-playwright', 'no-strict', 'skip-typecheck', 'skip-lint', 'skip-test', 'skip-build', 'allow-gitignored-baseline']) {
     if (args[flag]) validateArgs.push(`--${flag}`);
   }
   run('project validation', 'project-validate.mjs', validateArgs);

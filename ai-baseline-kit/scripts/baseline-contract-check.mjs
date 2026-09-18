@@ -329,6 +329,98 @@ try {
   assert.notEqual(changedAfter.status, 0, 'legacy changed baseline must reject new violations');
   assert.match(output(changedAfter), /shared_depends_on_module/);
 
+  const typecheckOnlyProject = path.join(tempRoot, 'typecheck-only');
+  fs.mkdirSync(typecheckOnlyProject, { recursive: true });
+  installKit(typecheckOnlyProject);
+  fs.writeFileSync(path.join(typecheckOnlyProject, 'package.json'), JSON.stringify({
+    name: 'typecheck-only',
+    scripts: { typecheck: 'node -e "require(\'fs\').writeFileSync(\'typecheck-ran\', \'1\')"' },
+    packageManager: 'npm@10.0.0',
+  }, null, 2));
+  const typecheckOnlyBootstrap = run(typecheckOnlyProject, 'ai-baseline-kit/scripts/project-bootstrap.mjs', ['--project-root', typecheckOnlyProject]);
+  assertPass(typecheckOnlyBootstrap, 'typecheck-only fixture bootstrap');
+  const typecheckOnly = run(typecheckOnlyProject, 'ai-baseline-kit/scripts/project-validate.mjs');
+  assertPass(typecheckOnly, 'project-validate must execute typecheck');
+  assert.equal(fs.readFileSync(path.join(typecheckOnlyProject, 'typecheck-ran'), 'utf8'), '1');
+
+  const typeCheckOnlyProject = path.join(tempRoot, 'type-check-only');
+  fs.mkdirSync(typeCheckOnlyProject, { recursive: true });
+  installKit(typeCheckOnlyProject);
+  fs.mkdirSync(path.join(typeCheckOnlyProject, 'src'), { recursive: true });
+  fs.writeFileSync(path.join(typeCheckOnlyProject, 'src', 'main.ts'), 'export const value = 1;\n');
+  fs.writeFileSync(path.join(typeCheckOnlyProject, 'package.json'), JSON.stringify({
+    name: 'type-check-only',
+    scripts: { 'type-check': 'node -e "require(\'fs\').writeFileSync(\'type-check-ran\', \'1\')"' },
+    packageManager: 'npm@10.0.0',
+  }, null, 2));
+  const typeCheckOnlyBootstrap = run(typeCheckOnlyProject, 'ai-baseline-kit/scripts/project-bootstrap.mjs', ['--project-root', typeCheckOnlyProject]);
+  assertPass(typeCheckOnlyBootstrap, 'type-check-only fixture bootstrap');
+  const typeCheckOnly = run(typeCheckOnlyProject, 'ai-baseline-kit/scripts/project-validate.mjs');
+  assertPass(typeCheckOnly, 'project-validate must execute type-check');
+  assert.equal(fs.readFileSync(path.join(typeCheckOnlyProject, 'type-check-ran'), 'utf8'), '1');
+  assert.doesNotMatch(output(typeCheckOnly), /缺少 package\.json scripts\.typecheck/);
+
+  const bothTypeScriptsProject = path.join(tempRoot, 'both-type-scripts');
+  fs.mkdirSync(bothTypeScriptsProject, { recursive: true });
+  installKit(bothTypeScriptsProject);
+  fs.writeFileSync(path.join(bothTypeScriptsProject, 'package.json'), JSON.stringify({
+    name: 'both-type-scripts',
+    scripts: {
+      typecheck: 'node -e "require(\'fs\').appendFileSync(\'typecheck-runs\', \'typecheck\\n\')"',
+      'type-check': 'node -e "require(\'fs\').appendFileSync(\'typecheck-runs\', \'type-check\\n\')"',
+    },
+    packageManager: 'npm@10.0.0',
+  }, null, 2));
+  const bothTypeScriptsBootstrap = run(bothTypeScriptsProject, 'ai-baseline-kit/scripts/project-bootstrap.mjs', ['--project-root', bothTypeScriptsProject]);
+  assertPass(bothTypeScriptsBootstrap, 'both type scripts fixture bootstrap');
+  const bothTypeScripts = run(bothTypeScriptsProject, 'ai-baseline-kit/scripts/project-validate.mjs');
+  assertPass(bothTypeScripts, 'project-validate must honor typecheck priority');
+  assert.equal(fs.readFileSync(path.join(bothTypeScriptsProject, 'typecheck-runs'), 'utf8'), 'typecheck\n');
+
+  const gitignoreProject = path.join(tempRoot, 'gitignore-contract');
+  fs.mkdirSync(gitignoreProject, { recursive: true });
+  installKit(gitignoreProject);
+  fs.writeFileSync(path.join(gitignoreProject, 'package.json'), JSON.stringify({ name: 'gitignore-contract', packageManager: 'npm@10.0.0' }), 'utf8');
+  const gitignoreBootstrap = run(gitignoreProject, 'ai-baseline-kit/scripts/project-bootstrap.mjs', ['--project-root', gitignoreProject]);
+  assertPass(gitignoreBootstrap, 'gitignore fixture bootstrap');
+  fs.writeFileSync(path.join(gitignoreProject, '.gitignore'), 'ai-baseline-kit/\n', 'utf8');
+  const gitignoreDefault = run(gitignoreProject, 'ai-baseline-kit/scripts/baseline-check.mjs', ['--fail-on-warn']);
+  assert.notEqual(gitignoreDefault.status, 0, 'gitignored baseline must fail by default');
+  assert.match(output(gitignoreDefault), /baseline_kit_gitignored/);
+  const gitignoreAllowed = run(gitignoreProject, 'ai-baseline-kit/scripts/baseline-check.mjs', ['--allow-gitignored-baseline']);
+  assertPass(gitignoreAllowed, 'gitignored baseline explicit allowance');
+  assert.match(output(gitignoreAllowed), /baseline_kit_gitignored_allowed/);
+  assert.doesNotMatch(output(gitignoreAllowed), /\[warn\] baseline_kit_gitignored:/);
+
+  fs.appendFileSync(path.join(gitignoreProject, '.gitignore'), '.ai-frontend-assembler/\n', 'utf8');
+  const stateIgnored = run(gitignoreProject, 'ai-baseline-kit/scripts/baseline-check.mjs', ['--fail-on-warn', '--allow-gitignored-baseline']);
+  assert.notEqual(stateIgnored.status, 0, 'allow-gitignored-baseline must not allow ignored project state');
+  assert.match(output(stateIgnored), /project_state_gitignored/);
+
+  fs.writeFileSync(path.join(gitignoreProject, '.gitignore'), 'ai-baseline-kit/\n', 'utf8');
+  fs.writeFileSync(path.join(gitignoreProject, 'AGENTS.md'), '# weak entrypoint\n', 'utf8');
+  const otherWarning = run(gitignoreProject, 'ai-baseline-kit/scripts/baseline-check.mjs', ['--fail-on-warn', '--allow-gitignored-baseline']);
+  assert.notEqual(otherWarning.status, 0, 'allow-gitignored-baseline must not allow other warnings');
+  assert.match(output(otherWarning), /weak_ai_entrypoint/);
+
+  const gateIgnoreProject = path.join(tempRoot, 'gate-ignore-contract');
+  fs.mkdirSync(path.join(gateIgnoreProject, 'src'), { recursive: true });
+  installKit(gateIgnoreProject);
+  fs.writeFileSync(path.join(gateIgnoreProject, 'package.json'), JSON.stringify({ name: 'gate-ignore-contract', scripts: {} }, null, 2));
+  fs.writeFileSync(path.join(gateIgnoreProject, 'src', 'main.ts'), 'export const ready = true;\n');
+  const gateIgnoreBootstrap = run(gateIgnoreProject, 'ai-baseline-kit/scripts/project-bootstrap.mjs', ['--project-root', gateIgnoreProject]);
+  assertPass(gateIgnoreBootstrap, 'gate gitignore fixture bootstrap');
+  const gateChanged = path.join(gateIgnoreProject, 'changed-files.json');
+  fs.writeFileSync(gateChanged, JSON.stringify({ changes: [{ path: 'src/main.ts', type: 'modify' }] }), 'utf8');
+  fs.writeFileSync(path.join(gateIgnoreProject, '.gitignore'), 'ai-baseline-kit/\n', 'utf8');
+  const gateCommonArgs = ['--project-root', gateIgnoreProject, '--changed-files', gateChanged, '--baseline-only', '--allow-parser-fallback'];
+  const gateWithoutAllowance = run(gateIgnoreProject, 'ai-baseline-kit/scripts/ci-gate.mjs', gateCommonArgs);
+  assert.notEqual(gateWithoutAllowance.status, 0, 'ci-gate must inherit default gitignore strictness');
+  assert.match(output(gateWithoutAllowance), /baseline_kit_gitignored/);
+  const gateWithAllowance = run(gateIgnoreProject, 'ai-baseline-kit/scripts/ci-gate.mjs', [...gateCommonArgs, '--allow-gitignored-baseline']);
+  assertPass(gateWithAllowance, 'ci-gate must pass allow-gitignored-baseline to project-validate');
+  assert.match(output(gateWithAllowance), /baseline_kit_gitignored_allowed/);
+
   const detectedLegacy = path.join(tempRoot, 'legacy-detection');
   fs.mkdirSync(path.join(detectedLegacy, 'src', 'domains'), { recursive: true });
   fs.mkdirSync(path.join(detectedLegacy, 'src', 'http'), { recursive: true });

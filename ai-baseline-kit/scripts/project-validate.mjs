@@ -2,7 +2,7 @@
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
-import { analyzeProject, parseArgs, resolveRoots } from './project-tools-lib.mjs';
+import { analyzeProject, parseArgs, resolveRoots, resolveTypecheckScript } from './project-tools-lib.mjs';
 import { resolveProjectSchemeFile } from './project-state-lib.mjs';
 
 const args = parseArgs(process.argv.slice(2));
@@ -51,6 +51,7 @@ if (fs.existsSync(baselineScript)) {
   const baselineMode = args.mode || (projectMode === 'existing-project' ? 'changed' : 'full');
   baselineArgs.push('--mode', baselineMode);
   if (!args['no-strict']) baselineArgs.push('--fail-on-warn');
+  if (args['allow-gitignored-baseline']) baselineArgs.push('--allow-gitignored-baseline');
   run(`baseline-check --mode ${baselineMode}`, process.execPath, baselineArgs);
 } else {
   results.push({ label: 'baseline-check', passed: false, status: null });
@@ -64,27 +65,35 @@ const packageData = report.package.manifest !== 'unknown'
   ? JSON.parse(fs.readFileSync(path.join(projectRoot, report.package.manifest), 'utf8'))
   : null;
 const packageManager = report.stack.package_manager || 'npm';
-const checkNames = ['typecheck', 'lint', 'test', 'build'];
+const packageScripts = packageData?.scripts ?? {};
+const typecheckScript = resolveTypecheckScript(packageScripts);
+const requestedChecks = [
+  { id: 'typecheck', script: typecheckScript },
+  { id: 'lint', script: packageScripts.lint ? 'lint' : '' },
+  { id: 'test', script: packageScripts.test ? 'test' : '' },
+  { id: 'build', script: packageScripts.build ? 'build' : '' },
+];
 let buildExecuted = false;
 
 if (!args['baseline-only']) {
-  for (const script of checkNames) {
-    const explicitlyRequested = Boolean(args[script]);
-    const explicitlySkipped = Boolean(args[`skip-${script}`]);
-    const exists = Boolean(packageData?.scripts?.[script]);
+  for (const { id, script } of requestedChecks) {
+    const explicitlyRequested = Boolean(args[id]);
+    const explicitlySkipped = Boolean(args[`skip-${id}`]);
+    const exists = Boolean(script);
 
     if (explicitlySkipped) continue;
     if (!exists) {
       if (explicitlyRequested) {
-        results.push({ label: script, passed: false, status: null });
-        console.error(`project-validate: 缺少 package.json scripts.${script}`);
+        const expected = id === 'typecheck' ? 'typecheck 或 type-check' : id;
+        results.push({ label: id, passed: false, status: null });
+        console.error(`project-validate: 缺少 package.json scripts.${expected}`);
       }
       continue;
     }
 
     const [command, commandArgs] = packageRunCommand(packageManager, script);
     const passed = run(`${command} ${commandArgs.join(' ')}`, command, commandArgs);
-    if (script === 'build' && passed) buildExecuted = true;
+    if (id === 'build' && passed) buildExecuted = true;
   }
 }
 

@@ -426,7 +426,7 @@ node ai-baseline-kit/scripts/ai-run.mjs activate
 
 ## 16. 验证与质量保证
 
-基线包维护时至少执行：
+在 `ai-plugin` 多包仓库根目录维护基线包时至少执行：
 
 ```bash
 node scripts/package-check.mjs
@@ -439,6 +439,8 @@ node ai-baseline-kit/scripts/baseline-contract-check.mjs
 node ai-baseline-kit/scripts/baseline-check.mjs --fail-on-warn
 git diff --check
 ```
+
+将 `ai-baseline-kit/` 单独嵌入其他业务项目时，不运行 `node scripts/package-check.mjs`，因为它属于本仓库的 `package-repository-reference` 维护场景，并依赖根 `package-registry.json`。嵌入项目改用 `ai-baseline-kit/scripts/` 下的项目检查与验证脚本。
 
 契约回归覆盖：
 

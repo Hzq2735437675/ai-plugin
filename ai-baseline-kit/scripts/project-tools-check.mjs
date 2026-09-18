@@ -8,8 +8,10 @@ import {
   buildProjectScheme,
   copyDirectory,
   ensureRootEntrypoints,
-  STANDARD_PROFILES,
+  readPackageVersion,
   resolveRoots,
+  resolveTypecheckScript,
+  STANDARD_PROFILES,
 } from './project-tools-lib.mjs';
 
 const { baselineRoot } = resolveRoots(import.meta.url);
@@ -108,6 +110,39 @@ try {
   assert.equal(reactReport.stack.framework, 'React');
   assert.equal(reactReport.stack.ui_library, 'Ant Design');
   assert.equal(reactReport.stack.router, 'React Router 6');
+
+  const packageVersion = readPackageVersion(baselineRoot);
+  const template = fs.readFileSync(path.join(baselineRoot, 'docs', 'project-scheme.template.yml'), 'utf8');
+  const templateVersion = template.match(/^\s*scheme_version:\s*['"]?([^'"\r\n]+)['"]?\s*$/m)?.[1];
+  const generatedVersion = buildProjectScheme(emptyReport).match(/^\s*scheme_version:\s*['"]?([^'"\r\n]+)['"]?\s*$/m)?.[1];
+  assert.equal(templateVersion, packageVersion, 'project-scheme 模板版本必须与 plugin.json 一致');
+  assert.equal(generatedVersion, packageVersion, 'project-scheme 生成版本必须与 plugin.json 一致');
+
+  assert.equal(resolveTypecheckScript({ typecheck: 'tsc --noEmit' }), 'typecheck');
+  assert.equal(resolveTypecheckScript({ 'type-check': 'tsc --noEmit' }), 'type-check');
+  assert.equal(resolveTypecheckScript({ typecheck: 'tsc --noEmit', 'type-check': 'vue-tsc --noEmit' }), 'typecheck');
+  assert.equal(resolveTypecheckScript({}), '');
+
+  const validationFixtures = [
+    { manager: 'npm', scripts: { typecheck: 'tsc --noEmit' }, expected: 'npm run typecheck' },
+    { manager: 'pnpm', scripts: { 'type-check': 'vue-tsc --noEmit' }, expected: 'pnpm run type-check' },
+    { manager: 'yarn', scripts: { typecheck: 'tsc --noEmit' }, expected: 'yarn typecheck' },
+    { manager: 'bun', scripts: { 'type-check': 'tsc --noEmit' }, expected: 'bun run type-check' },
+  ];
+  for (const fixture of validationFixtures) {
+    const fixtureRoot = path.join(tempRoot, `validation-${fixture.manager}`);
+    fs.mkdirSync(fixtureRoot, { recursive: true });
+    fs.writeFileSync(path.join(fixtureRoot, 'package.json'), JSON.stringify({
+      name: `validation-${fixture.manager}`,
+      packageManager: `${fixture.manager}@1.0.0`,
+      scripts: fixture.scripts,
+    }));
+    assert.equal(analyzeProject(fixtureRoot).validation.typecheck, fixture.expected);
+  }
+  const noValidationRoot = path.join(tempRoot, 'validation-none');
+  fs.mkdirSync(noValidationRoot, { recursive: true });
+  fs.writeFileSync(path.join(noValidationRoot, 'package.json'), JSON.stringify({ name: 'validation-none', scripts: {} }));
+  assert.equal(analyzeProject(noValidationRoot).validation.typecheck, 'unknown');
 
   const scheme = buildProjectScheme(emptyReport);
   assert.match(scheme, /map_status: target-project/);
