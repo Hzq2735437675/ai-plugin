@@ -13,6 +13,7 @@ import {
   resolveTypecheckScript,
   STANDARD_PROFILES,
 } from './project-tools-lib.mjs';
+import { DEFAULT_MODULE_STYLE_EXTENSION, detectModuleStyleExtension } from './style-class-naming-lib.mjs';
 
 const { baselineRoot } = resolveRoots(import.meta.url);
 
@@ -60,9 +61,59 @@ try {
   const emptyReport = analyzeProject(emptyProject);
   assert.equal(emptyReport.mode, 'new-frontend-project');
   assert.equal(emptyReport.profile, 'react18-antd-tailwind-ts');
+  assert.equal(emptyReport.styleIsolation.module_style_extension, DEFAULT_MODULE_STYLE_EXTENSION);
   assert.equal(STANDARD_PROFILES['react18-antd-tailwind-ts'].theme, 'src/theme/theme.css');
   assert.equal(STANDARD_PROFILES['vue3-vite-ts'].theme, 'src/theme/theme.css');
   assert.equal(STANDARD_PROFILES['vue3-vite-ts'].ui_library, 'Element Plus');
+
+  for (const extension of ['css', 'scss', 'less', 'sass']) {
+    const styleProject = path.join(tempRoot, `style-${extension}`);
+    const styleFile = path.join(styleProject, 'src', 'modules', 'orders', 'styles', `orders.module.${extension}`);
+    fs.mkdirSync(path.dirname(styleFile), { recursive: true });
+    fs.writeFileSync(styleFile, '.ordersPage { display: grid; }\n');
+    assert.equal(
+      detectModuleStyleExtension({ projectRoot: styleProject, modulesRoot: 'src/modules' }),
+      extension,
+      `旧项目应检测已有 .module.${extension} 后缀`,
+    );
+  }
+
+  const mixedStyleProject = path.join(tempRoot, 'style-mixed');
+  const mixedStyleFiles = [
+    ['orders', 'orders.module.css'],
+    ['orders', 'orders-copy.module.css'],
+    ['customers', 'customers.module.scss'],
+    ['billing', 'billing.module.less'],
+  ];
+  for (const [moduleName, fileName] of mixedStyleFiles) {
+    const styleFile = path.join(mixedStyleProject, 'src', 'modules', moduleName, 'styles', fileName);
+    fs.mkdirSync(path.dirname(styleFile), { recursive: true });
+    fs.writeFileSync(styleFile, '.mixedStylePage { display: grid; }\n');
+  }
+  const mixedStyleSnapshot = mixedStyleFiles.map(([moduleName, fileName]) => {
+    const styleFile = path.join(mixedStyleProject, 'src', 'modules', moduleName, 'styles', fileName);
+    return [styleFile, fs.readFileSync(styleFile, 'utf8')];
+  });
+  assert.equal(
+    detectModuleStyleExtension({ projectRoot: mixedStyleProject, modulesRoot: 'src/modules' }),
+    'scss',
+    '旧项目模块样式混合 css/scss/less 时必须回退到 scss',
+  );
+  for (const [styleFile, content] of mixedStyleSnapshot) {
+    assert.ok(fs.existsSync(styleFile), `后缀探测不得移动旧样式文件: ${styleFile}`);
+    assert.equal(fs.readFileSync(styleFile, 'utf8'), content, `后缀探测不得改写旧样式文件: ${styleFile}`);
+  }
+
+  const inlineVueStyleProject = path.join(tempRoot, 'style-vue-inline-scss');
+  fs.mkdirSync(path.join(inlineVueStyleProject, 'src', 'modules', 'orders', 'pages'), { recursive: true });
+  fs.mkdirSync(path.join(inlineVueStyleProject, 'src', 'theme'), { recursive: true });
+  fs.writeFileSync(path.join(inlineVueStyleProject, 'src', 'theme', 'theme.css'), ':root {}\n');
+  fs.writeFileSync(path.join(inlineVueStyleProject, 'src', 'modules', 'orders', 'pages', 'OrderPage.vue'), '<template><div /></template>\n<style scoped lang="scss">.orderPage { display: grid; }</style>\n');
+  assert.equal(
+    detectModuleStyleExtension({ projectRoot: inlineVueStyleProject, modulesRoot: 'src/modules' }),
+    'scss',
+    '旧 Vue 项目的模块内联样式应先于全局主题样式参与后缀识别',
+  );
 
   const vueProject = path.join(tempRoot, 'vue');
   fs.mkdirSync(path.join(vueProject, 'src', 'modules', 'home'), { recursive: true });

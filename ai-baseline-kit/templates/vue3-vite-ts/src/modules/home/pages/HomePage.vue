@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import PageTitle from '@/shared/components/PageTitle.vue';
 import SectionCard from '@/shared/components/SectionCard.vue';
-import styles from '../styles/home-overview.module.css';
+import styles from '../styles/home-overview.module.scss';
 </script>
 
 <template>

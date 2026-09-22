@@ -22,6 +22,7 @@ style_isolation:
   adapter: project-defined
   supported_strategies: 'css-modules,vue-scoped,utility-css,css-in-js,shadow-dom,hybrid,custom'
   module_file_pattern: '*.module.{css,scss,sass,less,styl,stylus}'
+  module_style_extension: scss
   scoped_name_pattern: 'm_[name]_[local]__[hash:base64:6]'
   local_style_fallback: css-modules
   custom_adapter: none

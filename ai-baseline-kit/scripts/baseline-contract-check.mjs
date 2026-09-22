@@ -105,7 +105,7 @@ function readyFeature({ id, module, title, pageId, pageName, route, permission }
   };
 }
 
-function generateFeature(projectRoot, spec, expectedDecision) {
+function generateFeature(projectRoot, spec, expectedDecision, expectedMode = 'new-frontend-project', expectedStyleExtension = 'scss') {
   const featuresDir = path.join(projectRoot, 'docs', 'features');
   const plansDir = path.join(projectRoot, 'docs', 'plans');
   fs.mkdirSync(featuresDir, { recursive: true });
@@ -123,7 +123,8 @@ function generateFeature(projectRoot, spec, expectedDecision) {
   assert.match(plan.stdout, new RegExp(`decision: ${expectedDecision}`));
   const planData = JSON.parse(fs.readFileSync(planFile, 'utf8'));
   assert.equal(planData.status, 'ready');
-  assert.equal(planData.project.mode, 'new-frontend-project');
+  assert.equal(planData.project.mode, expectedMode);
+  assert.equal(planData.project.styleExtension, expectedStyleExtension);
 
   const generated = run(projectRoot, 'ai-baseline-kit/scripts/feature-generate.mjs', [
     '--project-root', projectRoot,
@@ -157,6 +158,8 @@ try {
   });
   generateFeature(reactProject, orderSpec, 'create-module');
   assert.ok(fs.existsSync(path.join(reactProject, 'src', 'modules', 'order', 'module.meta.json')));
+  assert.ok(fs.existsSync(path.join(reactProject, 'src', 'modules', 'order', 'styles', 'order-order-list.module.scss')));
+  assert.match(fs.readFileSync(path.join(reactProject, 'src', 'modules', 'order', 'pages', 'order-list', 'index.tsx'), 'utf8'), /order-order-list\.module\.scss/);
   assert.ok(fs.existsSync(path.join(reactProject, 'src', 'modules', 'order', 'tests', 'order-management.component.test.tsx')));
   assert.ok(fs.existsSync(path.join(reactProject, 'src', 'modules', 'order', 'tests', 'e2e', 'order-management.spec.ts')));
   const reactAssembler = path.join(reactProject, 'src', 'app', 'module-assembler.ts');
@@ -203,6 +206,7 @@ try {
   generateFeature(vueProject, customerSpec, 'create-module');
   const customerPageFile = path.join(vueProject, 'src', 'modules', 'customer', 'pages', 'customer-list', 'index.vue');
   assert.ok(fs.existsSync(customerPageFile));
+  assert.ok(fs.existsSync(path.join(vueProject, 'src', 'modules', 'customer', 'styles', 'customer-customer-list.module.scss')));
   assert.match(fs.readFileSync(customerPageFile, 'utf8'), /<el-card/);
   const customerMeta = JSON.parse(fs.readFileSync(path.join(vueProject, 'src', 'modules', 'customer', 'module.meta.json'), 'utf8'));
   assert.deepEqual(customerMeta.dependencies.npm, ['element-plus']);
@@ -233,7 +237,54 @@ try {
   assert.equal(customerBundleManifest.contracts.styleIsolation.adapter, 'builtin-css-modules');
   assert.deepEqual(customerBundleManifest.contracts.styleIsolation.strategies, ['css-modules']);
   assert.match(customerBundleManifest.contracts.styleIsolation.scopedNamePattern, /m_\[name\]_\[local\]/);
-  assert.deepEqual(customerBundleManifest.contracts.styleIsolation.preprocessors, []);
+  assert.deepEqual(customerBundleManifest.contracts.styleIsolation.preprocessors, ['sass']);
+
+  const legacyStyleProject = path.join(tempRoot, 'legacy-sass-style');
+  copyDirectory(path.join(baselineRoot, 'templates', 'vue3-vite-ts'), legacyStyleProject, { force: false, projectRoot: legacyStyleProject });
+  installKit(legacyStyleProject);
+  const legacyTemplateStyle = path.join(legacyStyleProject, 'src', 'modules', 'home', 'styles', 'home-overview.module.scss');
+  const legacySassStyle = path.join(legacyStyleProject, 'src', 'modules', 'home', 'styles', 'home-overview.module.sass');
+  fs.renameSync(legacyTemplateStyle, legacySassStyle);
+  fs.writeFileSync(legacySassStyle, `.homeOverviewPage\n  display: grid\n`);
+  const legacyHomePage = path.join(legacyStyleProject, 'src', 'modules', 'home', 'pages', 'HomePage.vue');
+  fs.writeFileSync(legacyHomePage, fs.readFileSync(legacyHomePage, 'utf8').replace('home-overview.module.scss', 'home-overview.module.sass'));
+  const legacySpec = readyFeature({
+    id: 'legacy-order-management', module: 'legacy-order', title: '旧项目订单管理',
+    pageId: 'legacy-order-list', pageName: '旧项目订单列表', route: '/legacy-orders', permission: 'legacy-order:view',
+  });
+  generateFeature(legacyStyleProject, legacySpec, 'create-module', 'existing-project', 'sass');
+  const legacyGeneratedStyle = path.join(legacyStyleProject, 'src', 'modules', 'legacy-order', 'styles', 'legacy-order-legacy-order-list.module.sass');
+  assert.ok(fs.existsSync(legacyGeneratedStyle));
+  const legacyGeneratedStyleText = fs.readFileSync(legacyGeneratedStyle, 'utf8');
+  assert.doesNotMatch(legacyGeneratedStyleText, /\{/);
+  assert.match(legacyGeneratedStyleText, /\n  display: grid\n/);
+  assert.match(fs.readFileSync(path.join(legacyStyleProject, '.ai-frontend-assembler', 'project-scheme.yml'), 'utf8'), /module_style_extension: sass/);
+
+  const mixedStyleProject = path.join(tempRoot, 'legacy-mixed-style');
+  copyDirectory(path.join(baselineRoot, 'templates', 'vue3-vite-ts'), mixedStyleProject, { force: false, projectRoot: mixedStyleProject });
+  installKit(mixedStyleProject);
+  const mixedCssStyle = path.join(mixedStyleProject, 'src', 'modules', 'legacy-customer', 'styles', 'legacy-customer.module.css');
+  const mixedLessStyle = path.join(mixedStyleProject, 'src', 'modules', 'legacy-billing', 'styles', 'legacy-billing.module.less');
+  fs.mkdirSync(path.dirname(mixedCssStyle), { recursive: true });
+  fs.mkdirSync(path.dirname(mixedLessStyle), { recursive: true });
+  fs.writeFileSync(mixedCssStyle, '.legacyCustomerPage { display: grid; }\n');
+  fs.writeFileSync(mixedLessStyle, '.legacyBillingPage { display: grid; }\n');
+  const existingMixedStyleFiles = [
+    path.join(mixedStyleProject, 'src', 'modules', 'home', 'styles', 'home-overview.module.scss'),
+    mixedCssStyle,
+    mixedLessStyle,
+  ];
+  const existingMixedStyleSnapshot = new Map(existingMixedStyleFiles.map((file) => [file, fs.readFileSync(file, 'utf8')]));
+  const mixedSpec = readyFeature({
+    id: 'mixed-order-management', module: 'mixed-order', title: '混合样式旧项目订单管理',
+    pageId: 'mixed-order-list', pageName: '混合样式订单列表', route: '/mixed-orders', permission: 'mixed-order:view',
+  });
+  generateFeature(mixedStyleProject, mixedSpec, 'create-module', 'existing-project', 'scss');
+  assert.ok(fs.existsSync(path.join(mixedStyleProject, 'src', 'modules', 'mixed-order', 'styles', 'mixed-order-mixed-order-list.module.scss')));
+  for (const [styleFile, content] of existingMixedStyleSnapshot) {
+    assert.ok(fs.existsSync(styleFile), `混合旧项目不得移动已有样式文件: ${styleFile}`);
+    assert.equal(fs.readFileSync(styleFile, 'utf8'), content, `混合旧项目不得改写已有样式文件: ${styleFile}`);
+  }
 
   const vueTarget = bootstrap('vue3-vite-ts', 'vue-target');
   const compatible = run(vueTarget, 'ai-baseline-kit/scripts/module-compatibility-check.mjs', [

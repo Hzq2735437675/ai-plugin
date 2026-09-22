@@ -22,6 +22,7 @@ export const STANDARD_PROFILES = Object.freeze({
       adapter: 'builtin-css-modules',
       supported_strategies: 'css-modules,utility-css,css-in-js,shadow-dom,hybrid,custom',
       module_file_pattern: STYLE_MODULE_PATTERN,
+      module_style_extension: 'scss',
       scoped_name_pattern: VITE_SCOPED_NAME_PATTERN,
       local_style_fallback: 'none',
       custom_adapter: 'none',
@@ -58,6 +59,7 @@ export const STANDARD_PROFILES = Object.freeze({
       adapter: 'builtin-css-modules',
       supported_strategies: 'css-modules,vue-scoped,utility-css,css-in-js,shadow-dom,hybrid,custom',
       module_file_pattern: STYLE_MODULE_PATTERN,
+      module_style_extension: 'scss',
       scoped_name_pattern: VITE_SCOPED_NAME_PATTERN,
       local_style_fallback: 'none',
       custom_adapter: 'none',
@@ -429,6 +431,7 @@ export function analyzeProject(projectRoot, options = {}) {
         adapter: resolvedStylePolicy.adapter,
         supported_strategies: resolvedStylePolicy.supportedStrategies.join(',') || inferredStyleIsolation.supported_strategies,
         module_file_pattern: resolvedStylePolicy.moduleFilePattern,
+        module_style_extension: resolvedStylePolicy.moduleStyleExtension,
         scoped_name_pattern: resolvedStylePolicy.scopedNamePattern,
         local_style_fallback: resolvedStylePolicy.localStyleFallback,
         custom_adapter: resolvedStylePolicy.customAdapter || 'none',
@@ -464,6 +467,7 @@ export function analyzeProject(projectRoot, options = {}) {
   if (requestedProfile) evidence.push(`用户指定标准模板: ${requestedProfile.id}`);
   if (initialized) evidence.push(`已初始化标准模板: ${initializedProfile.id}`);
   if (!existing && !initialized) evidence.push(`新前端项目默认模板: ${(profile ?? STANDARD_PROFILES[DEFAULT_PROFILE_ID]).id}`);
+  if (styleIsolation.module_style_extension) evidence.push(`模块样式后缀: .${styleIsolation.module_style_extension}`);
   if (modules.root !== 'unknown') evidence.push(`模块根目录: ${modules.root}`);
 
   return {

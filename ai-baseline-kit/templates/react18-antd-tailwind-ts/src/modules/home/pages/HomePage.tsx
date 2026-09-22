@@ -1,6 +1,6 @@
 import { Button, Space } from 'antd';
 import { PageTitle, SectionCard } from '@/shared/components/PagePrimitives';
-import styles from '../styles/home-overview.module.css';
+import styles from '../styles/home-overview.module.scss';
 
 export function HomePage() {
   return (

@@ -194,6 +194,8 @@ style_isolation:
       - index.module.less
   rules:
     - 新项目和新生成页面默认使用 semantic-module-page-feature：owner 文件名至少包含模块与页面，局部类名按模块 + 页面 + 功能 + 角色生成，并在 Gate 中校验跨页面唯一性。
+    - 新项目生成模块样式时默认使用 `.module.scss`；旧项目模块样式只有一个后缀时沿用该后缀，出现 css、scss、less、sass、styl、stylus 中任意多个后缀时，新增页面统一生成 `.module.scss`，并把决策记录到 style_isolation.module_style_extension。
+    - 旧项目样式后缀探测必须保持只读：不得为统一后缀而迁移、重命名、转换或改写已有样式文件；决策只影响后续新增页面或组件的样式文件后缀。
     - owner 文件名负责源码可追踪；CSS Modules hash、Vue scoped 属性、Shadow Root 或已登记 adapter 负责运行时隔离。
     - 模块局部样式不得定义 :root、html、body、#app 或 #root；全局主题只能进入项目登记的 theme/global_entrypoints。
     - CSS Modules 允许在局部 owner 下使用 :global(...) 覆盖第三方组件，但不得把模块样式退化为全局样式表。

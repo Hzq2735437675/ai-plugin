@@ -22,6 +22,7 @@ style_isolation:
   adapter: not-applicable-package-repository
   supported_strategies: 'css-modules,vue-scoped,utility-css,css-in-js,shadow-dom,hybrid,custom'
   module_file_pattern: '*.module.{css,scss,sass,less,styl,stylus}'
+  module_style_extension: scss
   scoped_name_pattern: 'm_[name]_[local]__[hash:base64:6]'
   local_style_fallback: none
   custom_adapter: none

@@ -106,7 +106,7 @@ npm run build
 ## 模块样式隔离
 
 - Vite 已内置 CSS Modules，不需要安装额外样式唯一化插件。 这是当前模板的默认 adapter；装配系统本身还支持在项目地图中登记其他隔离策略。
-- 模块级样式使用 `styles/<module-id>.module.css`；组件级样式使用 `<Owner>.module.css`，使用 Less/SCSS 时保持同样的 `.module.<ext>` 规则。
-- 页面或组件必须通过 `import styles from './Owner.module.css'` 绑定导入，并使用 `styles.xxx`；禁止副作用导入模块局部样式。
-- 模板默认使用 `semantic-module-page-feature`：页面 owner 为 `<module-id>-<page-id>.module.css`，局部类名按模块 + 页面 + 功能 + 角色生成；构建规则仍为 `m_[name]_[local]__[hash:base64:6]`。
+- 模块级样式使用 `styles/<module-id>.module.scss`；组件级样式使用 `<Owner>.module.scss`，使用 Less/CSS 时保持同样的 `.module.<ext>` 规则。
+- 页面或组件必须通过 `import styles from './Owner.module.scss'` 绑定导入，并使用 `styles.xxx`；禁止副作用导入模块局部样式。
+- 标准新项目默认使用 SCSS；旧项目新增页面在模块样式后缀唯一时保持一致的 `.module.<ext>`，混合多个后缀时回退 `.module.scss`，且不改写旧样式文件。模板使用 `semantic-module-page-feature`，页面 owner 为 `<module-id>-<page-id>.module.scss`，局部类名按模块 + 页面 + 功能 + 角色生成；构建规则仍为 `m_[name]_[local]__[hash:base64:6]`。
 - `:root`、`html`、`body`、`#app`、`#root` 只能由全局主题/应用入口管理；第三方组件覆盖可在 owner 内谨慎使用 `:global(...)`。

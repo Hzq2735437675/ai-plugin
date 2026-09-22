@@ -64,7 +64,7 @@ workflows:
       - 如果 .ai-frontend-assembler/project-scheme.yml 不存在，先运行 bootstrap_existing_project 或 bootstrap_new_project。
       - 使用 baseline-structure-skill 输出目标层级、模块、页面、路由、组件、API、状态、文案、样式、资源、manifest、依赖和验证计划。
       - 只在目标模块或目标共享层内新增文件。
-      - 模块局部样式必须由项目地图登记的 style_isolation strategy/adapter 接管；Vite 标准模板默认生成 `styles/<module-id>.module.css`，其他项目按 vue-scoped、utility-css、css-in-js、shadow-dom、hybrid 或 custom adapter 验证。
+      - 模块局部样式必须由项目地图登记的 style_isolation strategy/adapter 接管；Vite 标准新项目默认生成 `styles/<module-id>-<page-id>.module.scss`，旧项目样式后缀唯一时新增页面保持 `styles/<module-id>-<page-id>.module.<ext>`，混合多个前缀处理器时新增页面回退 SCSS。后缀探测不得迁移、重命名或改写旧样式；其他项目按 vue-scoped、utility-css、css-in-js、shadow-dom、hybrid 或 custom adapter 验证。
       - 为模块补齐 manifest、routes、menus、access、locales、stores、assets 和 dependencies。
       - 使用静态装配入口接入模块，不新增隐式注册点。
       - 运行 baseline-conformance-skill。

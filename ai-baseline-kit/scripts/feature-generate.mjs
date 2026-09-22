@@ -16,7 +16,7 @@ import {
   unique,
   writeJson,
 } from './feature-tools-lib.mjs';
-import { createPageStyleContract } from './style-class-naming-lib.mjs';
+import { createPageStyleContract, resolveModuleStyleExtension } from './style-class-naming-lib.mjs';
 
 const args = parseArgs(process.argv.slice(2));
 const { baselineRoot, projectRoot: defaultProjectRoot } = resolveRoots(import.meta.url);
@@ -69,8 +69,24 @@ function pageDefinitions(spec, framework) {
   });
 }
 
-function renderPageStyles(page, moduleId, featureId) {
+function renderPageStyles(page, moduleId, featureId, extension = 'scss') {
   const styles = createPageStyleContract({ moduleId, pageId: page.id, featureId });
+  if (extension === 'sass') {
+    return `.${styles.page.local}
+  display: grid
+  gap: var(--app-space-lg, 24px)
+
+.${styles.header.local} h1,
+.${styles.header.local} p
+  margin: 0
+
+.${styles.content.local}
+  padding: var(--app-space-lg, 24px)
+  background: var(--app-color-bg-container)
+  border: 1px solid var(--app-color-border)
+  border-radius: var(--app-border-radius)
+`;
+  }
   return `.${styles.page.local} {
   display: grid;
   gap: var(--app-space-lg, 24px);
@@ -250,13 +266,24 @@ try {
   const typeImport = relativeImport(path.join(moduleRoot, 'manifest.ts'), sharedContract);
   const pages = pageDefinitions(spec, framework);
   const moduleVar = { id: moduleId, camel, pascal, framework, typeImport };
+  const styleExtension = resolveModuleStyleExtension({
+    projectRoot,
+    modulesRoot: path.dirname(moduleRoot),
+    mode: plan.project?.mode,
+    explicitExtension: plan.project?.styleExtension,
+  });
   const npmDependencies = defaultNpmDependencies(framework, uiLibrary);
   const devDependencies = acceptanceDevDependencies(framework);
   for (const page of pages) {
-    const classNames = createPageStyleContract({ moduleId, pageId: page.id, featureId: spec.feature?.id || spec.feature?.domain || moduleId });
-    const styleFileName = `${classNames.page.owner}.module.css`;
+    const classNames = createPageStyleContract({
+      moduleId,
+      pageId: page.id,
+      featureId: spec.feature?.id || spec.feature?.domain || moduleId,
+      extension: styleExtension,
+    });
+    const styleFileName = classNames.page.fileName;
     const styleFile = path.join(moduleRoot, 'styles', styleFileName);
-    if (!fs.existsSync(styleFile)) writeFile(styleFile, renderPageStyles(page, moduleId, spec.feature?.id || spec.feature?.domain || moduleId));
+    if (!fs.existsSync(styleFile)) writeFile(styleFile, renderPageStyles(page, moduleId, spec.feature?.id || spec.feature?.domain || moduleId, styleExtension));
 
     const pageFile = path.join(moduleRoot, 'pages', page.id, `index.${page.extension}`);
     if (!fs.existsSync(pageFile) || args.force) {

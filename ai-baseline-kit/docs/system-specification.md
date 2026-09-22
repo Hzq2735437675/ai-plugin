@@ -15,7 +15,7 @@
 
 `style-scope-lib.mjs` 提供内置 adapter registry，覆盖 CSS Modules、Vue scoped、utility CSS、CSS-in-JS、Shadow DOM 和 hybrid。custom 策略只允许加载项目根内显式登记的同步 `.cjs` adapter。模块 bundle 记录实际使用策略、预处理器、外部样式依赖和 custom adapter SHA-256 指纹；兼容性检查在复制模块前确认目标项目能力并补齐可确定的依赖。
 
-标准 Vite 模板使用 `semantic-module-page-feature` 的 owner 命名 CSS Modules：owner 为 `<module-id>-<page-id>.module.css`，构建类名按 `m_[name]_[local]__[hash:base64:6]` 生成，类名包含模块、页面、功能和角色语义。`style-scope-check` 在基线验证和模块导出前检查普通局部样式、副作用导入、全局根选择器与泛化文件名。现有项目保留真实工具链，并按项目地图与 changed/legacy 模式增量治理。
+标准 Vite 新项目使用 `semantic-module-page-feature` 的 owner 命名 CSS Modules：默认 owner 为 `<module-id>-<page-id>.module.scss`；旧项目新增页面在只有一种模块样式后缀时沿用，混合 css、scss、less、sass 等后缀时回退 SCSS。后缀探测不迁移、不重命名、不改写旧样式文件。构建类名按 `m_[name]_[local]__[hash:base64:6]` 生成，类名包含模块、页面、功能和角色语义。`style-scope-check` 在基线验证和模块导出前检查普通局部样式、副作用导入、全局根选择器与泛化文件名。现有项目保留真实工具链，并按项目地图与 changed/legacy 模式增量治理。
 
 ### 两级能力路由与分阶段加载
 

@@ -259,8 +259,8 @@ node ai-baseline-kit/scripts/template-build-check.mjs --profile vue3-vite-ts
 
 - 所有模块必须声明并通过可验证的样式隔离契约；CSS Modules 是 React/Vue Vite 标准模板默认值，但不是唯一允许的方案。
 - 内置 `css-modules`、`vue-scoped`、`utility-css`、`css-in-js`、`shadow-dom` 和 `hybrid` adapter，并支持项目显式登记 `.cjs` custom adapter。
-- 标准 CSS Modules 文件按 owner 命名，构建类名使用 `m_[name]_[local]__[hash:base64:6]`，禁止 `styles/index.css` 等泛化局部样式名称。
-- 项目地图记录 `strategy`、`adapter`、支持策略、局部样式 fallback 和全局入口。
+- 标准 CSS Modules 文件按 owner 命名；新项目默认生成 `.module.scss`，旧项目新增页面仅在模块样式后缀唯一时沿用，混合 css/scss/less/sass 时回退 SCSS，不迁移或改写旧样式文件。构建类名使用 `m_[name]_[local]__[hash:base64:6]`，禁止 `styles/index.css` 等泛化局部样式名称。
+- 项目地图记录 `strategy`、`adapter`、模块样式后缀、支持策略、局部样式 fallback 和全局入口。
 - 模块 bundle 携带实际使用策略、预处理器、外部全局样式依赖和 custom adapter 指纹，导入前校验目标项目是否兼容。
 
 ### 两级能力路由与渐进加载

@@ -157,8 +157,8 @@ try {
   }
 
   for (const relative of [
-    'templates/react18-antd-tailwind-ts/src/modules/home/styles/home-overview.module.css',
-    'templates/vue3-vite-ts/src/modules/home/styles/home-overview.module.css',
+    'templates/react18-antd-tailwind-ts/src/modules/home/styles/home-overview.module.scss',
+    'templates/vue3-vite-ts/src/modules/home/styles/home-overview.module.scss',
     'templates/react18-antd-tailwind-ts/src/vite-env.d.ts',
     'templates/vue3-vite-ts/src/vite-env.d.ts',
   ]) assert.ok(fs.existsSync(path.join(baselineRoot, relative)), `缺少模板 CSS Module 支持文件: ${relative}`);
@@ -168,7 +168,7 @@ try {
     'templates/vue3-vite-ts/src/modules/home/pages/HomePage.vue',
   ]) {
     const text = fs.readFileSync(path.join(baselineRoot, relative), 'utf8');
-    assert.match(text, /import styles from ['"]\.\.\/styles\/home-overview\.module\.css['"]/);
+    assert.match(text, /import styles from ['"]\.\.\/styles\/home-overview\.module\.scss['"]/);
   }
 
   console.log('style-scope-contract-check: pass');

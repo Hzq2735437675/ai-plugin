@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { analyzeProject, parseArgs, resolveRoots } from './project-tools-lib.mjs';
 import { resolveProjectSchemeFile } from './project-state-lib.mjs';
+import { createPageStyleNaming, resolveModuleStyleExtension } from './style-class-naming-lib.mjs';
 import {
   blockingQuestions,
   normalizePath,
@@ -33,9 +34,20 @@ function sourceExtension(framework) {
   return '';
 }
 
-function expectedFiles(moduleRoot, spec, framework) {
+function expectedFiles(moduleRoot, spec, framework, styleExtension) {
   const extension = sourceExtension(framework);
+  const moduleId = slugify(spec.feature?.module || spec.feature?.domain || spec.feature?.id);
+  const featureId = spec.feature?.id || spec.feature?.domain || moduleId;
   const pages = (spec.pages ?? []).map((page) => path.join(moduleRoot, 'pages', slugify(page.id, 'feature'), `index${extension}`));
+  const styleFiles = (spec.pages ?? []).map((page) => {
+    const naming = createPageStyleNaming({
+      moduleId,
+      pageId: slugify(page.id, 'feature'),
+      featureId,
+      extension: styleExtension,
+    });
+    return path.join(moduleRoot, 'styles', naming.fileName);
+  });
   return [
     path.join(moduleRoot, 'module.meta.json'),
     path.join(moduleRoot, 'index.ts'),
@@ -49,9 +61,9 @@ function expectedFiles(moduleRoot, spec, framework) {
     path.join(moduleRoot, 'stores', 'index.ts'),
     path.join(moduleRoot, 'directives', 'index.ts'),
     path.join(moduleRoot, 'locales', 'index.ts'),
-    path.join(moduleRoot, 'styles', 'index.css'),
     path.join(moduleRoot, 'assets', 'README.md'),
     path.join(moduleRoot, 'acceptance.md'),
+    ...styleFiles,
     ...pages,
   ].map(normalizePath);
 }
@@ -64,6 +76,12 @@ try {
   const questions = [...blockingQuestions(spec)];
   const modulesRoot = report.layers.modules_root;
   const framework = report.stack.framework;
+  const styleExtension = resolveModuleStyleExtension({
+    projectRoot,
+    modulesRoot,
+    mode: report.mode,
+    explicitExtension: report.styleIsolation?.module_style_extension,
+  });
 
   if (!moduleName) questions.push(question('module-name', 'feature.module', '请确认模块英文标识。'));
   if (!modulesRoot || modulesRoot === 'unknown') questions.push(question('modules-root', 'layers.modules_root', '请确认旧项目的模块根目录。', '生成器不会猜测文件边界。'));
@@ -112,7 +130,7 @@ try {
     }
   }
 
-  const files = moduleRoot === 'unknown' ? [] : expectedFiles(moduleRoot, spec, framework);
+  const files = moduleRoot === 'unknown' ? [] : expectedFiles(moduleRoot, spec, framework, styleExtension);
   const plan = {
     $schema: '../change-plan.schema.json',
     schemaVersion: 1,
@@ -125,6 +143,7 @@ try {
       uiLibrary: report.stack.ui_library,
       profile: report.profile,
       confidence: report.confidence,
+      styleExtension,
     },
     decision: {
       type: decisionType,

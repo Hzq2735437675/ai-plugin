@@ -1,7 +1,15 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { createRequire } from 'node:module';
-import { analyzeClassNaming, DEFAULT_CLASS_NAMING_PATTERN, LEGACY_CLASS_NAMING_MODE, resolveClassNamingPolicy } from './style-class-naming-lib.mjs';
+import {
+  analyzeClassNaming,
+  DEFAULT_CLASS_NAMING_PATTERN,
+  DEFAULT_MODULE_STYLE_EXTENSION,
+  LEGACY_CLASS_NAMING_MODE,
+  normalizeModuleStyleExtension,
+  resolveClassNamingPolicy,
+  resolveModuleStyleExtension,
+} from './style-class-naming-lib.mjs';
 
 export const STYLE_MODULE_PATTERN = '*.module.{css,scss,sass,less,styl,stylus}';
 export const VITE_SCOPED_NAME_PATTERN = 'm_[name]_[local]__[hash:base64:6]';
@@ -283,11 +291,18 @@ export function resolveStyleIsolationPolicy({ projectRoot, modulesRoot, buildToo
   if (['', 'project-defined', 'css-modules-preferred'].includes(resolvedStrategy)) resolvedStrategy = inferred.strategy === 'css-modules-preferred' ? 'css-modules' : inferred.strategy;
   if (resolvedStrategy === 'global-local-styles') resolvedStrategy = 'css-modules';
   const resolvedAdapter = adapter || valueOf(merged, 'adapter') || BUILTIN_ADAPTER_BY_STRATEGY[resolvedStrategy] || 'project-defined';
+  const moduleStyleExtension = resolveModuleStyleExtension({
+    projectRoot,
+    modulesRoot,
+    explicitExtension: valueOf(merged, 'module_style_extension', 'moduleStyleExtension'),
+    fallback: DEFAULT_MODULE_STYLE_EXTENSION,
+  });
   return {
     strategy: resolvedStrategy || 'css-modules',
     adapter: resolvedAdapter,
     supportedStrategies: splitList(valueOf(merged, 'supported_strategies', 'supportedStrategies')),
     moduleFilePattern: valueOf(merged, 'module_file_pattern', 'moduleFilePattern') || STYLE_MODULE_PATTERN,
+    moduleStyleExtension: normalizeModuleStyleExtension(moduleStyleExtension),
     scopedNamePattern: valueOf(merged, 'scoped_name_pattern', 'scopedNamePattern') || 'bundler-defined',
     localStyleFallback: normalizeStrategy(valueOf(merged, 'local_style_fallback', 'localStyleFallback') || (resolvedStrategy === 'css-modules' ? 'none' : 'css-modules')),
     customAdapter: customAdapter || valueOf(merged, 'custom_adapter', 'customAdapter') || '',

@@ -16,7 +16,10 @@ export const DEFAULT_FORBIDDEN_GENERIC_LOCALS = Object.freeze([
   'section',
 ]);
 
-const STYLE_EXTENSIONS = ['css', 'scss', 'sass', 'less', 'styl', 'stylus'];
+export const MODULE_STYLE_EXTENSIONS = Object.freeze(['css', 'scss', 'less', 'sass', 'styl', 'stylus']);
+export const DEFAULT_MODULE_STYLE_EXTENSION = 'scss';
+
+const STYLE_EXTENSIONS = [...MODULE_STYLE_EXTENSIONS];
 const SOURCE_EXTENSIONS = new Set(['.ts', '.tsx', '.js', '.jsx', '.vue', '.mjs', '.cjs']);
 const IGNORED_DIRECTORIES = new Set([
   'node_modules',
@@ -57,6 +60,92 @@ function stripStyleQuery(value) {
 
 function isCssModuleFile(file) {
   return CSS_MODULE_PATTERN.test(stripStyleQuery(file));
+}
+
+function acceptedModuleStyleExtension(value) {
+  const extension = String(value || '').trim().toLowerCase().replace(/^\./, '');
+  return MODULE_STYLE_EXTENSIONS.includes(extension) ? extension : '';
+}
+
+export function normalizeModuleStyleExtension(value, fallback = DEFAULT_MODULE_STYLE_EXTENSION) {
+  return acceptedModuleStyleExtension(value) || acceptedModuleStyleExtension(fallback) || DEFAULT_MODULE_STYLE_EXTENSION;
+}
+
+function isStyleFile(file) {
+  return Boolean(acceptedModuleStyleExtension(path.extname(stripStyleQuery(file))));
+}
+
+function countStyleExtensions(files) {
+  const counts = Object.fromEntries(MODULE_STYLE_EXTENSIONS.map((extension) => [extension, 0]));
+  for (const file of files) {
+    const extension = acceptedModuleStyleExtension(path.extname(stripStyleQuery(file)));
+    if (extension) counts[extension] += 1;
+  }
+  return counts;
+}
+
+function mergeStyleCounts(...countSets) {
+  const counts = Object.fromEntries(MODULE_STYLE_EXTENSIONS.map((extension) => [extension, 0]));
+  for (const countSet of countSets) {
+    for (const extension of MODULE_STYLE_EXTENSIONS) counts[extension] += countSet[extension] || 0;
+  }
+  return counts;
+}
+
+function resolveScopeStyleExtension(counts, fallback) {
+  const extensions = MODULE_STYLE_EXTENSIONS.filter((extension) => counts[extension] > 0);
+  if (extensions.length > 1) return normalizeModuleStyleExtension(fallback);
+  return extensions[0] || '';
+}
+
+function countVueStyleLanguages(files) {
+  const counts = Object.fromEntries(MODULE_STYLE_EXTENSIONS.map((extension) => [extension, 0]));
+  for (const file of files) {
+    if (path.extname(file).toLowerCase() !== '.vue') continue;
+    const text = fs.readFileSync(file, 'utf8');
+    for (const match of text.matchAll(/<style\b[^>]*\blang\s*=\s*['"]([^'"]+)['"]/gi)) {
+      const extension = acceptedModuleStyleExtension(match[1]);
+      if (extension) counts[extension] += 1;
+    }
+  }
+  return counts;
+}
+
+export function detectModuleStyleExtension({
+  projectRoot,
+  modulesRoot = 'src/modules',
+  fallback = DEFAULT_MODULE_STYLE_EXTENSION,
+} = {}) {
+  const absoluteProjectRoot = path.resolve(projectRoot || '.');
+  const modulesBase = modulesRoot && modulesRoot !== 'unknown'
+    ? path.resolve(absoluteProjectRoot, modulesRoot)
+    : absoluteProjectRoot;
+  const moduleFiles = fs.existsSync(modulesBase) ? walk(modulesBase) : [];
+  const moduleStyleExtension = resolveScopeStyleExtension(
+    mergeStyleCounts(countStyleExtensions(moduleFiles.filter(isStyleFile)), countVueStyleLanguages(moduleFiles)),
+    fallback,
+  );
+  if (moduleStyleExtension) return moduleStyleExtension;
+
+  const projectFiles = walk(absoluteProjectRoot);
+  const projectStyleExtension = resolveScopeStyleExtension(
+    mergeStyleCounts(countStyleExtensions(projectFiles.filter(isStyleFile)), countVueStyleLanguages(projectFiles)),
+    fallback,
+  );
+  return projectStyleExtension || normalizeModuleStyleExtension(fallback);
+}
+
+export function resolveModuleStyleExtension({
+  projectRoot,
+  modulesRoot = 'src/modules',
+  mode = '',
+  explicitExtension = '',
+  fallback = DEFAULT_MODULE_STYLE_EXTENSION,
+} = {}) {
+  const explicit = acceptedModuleStyleExtension(explicitExtension);
+  if (explicit) return explicit;
+  if (mode === 'new-frontend-project') return normalizeModuleStyleExtension(fallback);
+  return detectModuleStyleExtension({ projectRoot, modulesRoot, fallback });
 }
 
 function moduleNameFor(file, modulesRoot) {
@@ -158,16 +247,18 @@ export function resolveClassNamingPolicy(source = {}) {
   };
 }
 
-export function createPageStyleNaming({ moduleId, pageId, featureId = '', role = '' }) {
+export function createPageStyleNaming({ moduleId, pageId, featureId = '', role = '', extension = DEFAULT_MODULE_STYLE_EXTENSION }) {
   const moduleToken = kebab(moduleId);
   const pageToken = kebab(pageId);
   const featureToken = kebab(featureId || pageId || moduleId);
   const roleToken = kebab(role);
+  const styleExtension = normalizeModuleStyleExtension(extension);
   const owner = [moduleToken, pageToken].filter(Boolean).join('-');
   const local = camel(uniqueTokens([moduleToken, pageToken, featureToken, roleToken]).join('-'));
   return {
     owner,
-    fileName: `${owner}.module.css`,
+    fileName: `${owner}.module.${styleExtension}`,
+    extension: styleExtension,
     local,
     module: moduleToken,
     page: pageToken,
@@ -177,11 +268,11 @@ export function createPageStyleNaming({ moduleId, pageId, featureId = '', role =
   };
 }
 
-export function createPageStyleContract({ moduleId, pageId, featureId = '' }) {
+export function createPageStyleContract({ moduleId, pageId, featureId = '', extension = DEFAULT_MODULE_STYLE_EXTENSION }) {
   return {
-    page: createPageStyleNaming({ moduleId, pageId, featureId, role: 'page' }),
-    header: createPageStyleNaming({ moduleId, pageId, featureId, role: 'header' }),
-    content: createPageStyleNaming({ moduleId, pageId, featureId, role: 'content' }),
+    page: createPageStyleNaming({ moduleId, pageId, featureId, role: 'page', extension }),
+    header: createPageStyleNaming({ moduleId, pageId, featureId, role: 'header', extension }),
+    content: createPageStyleNaming({ moduleId, pageId, featureId, role: 'content', extension }),
   };
 }
 
@@ -240,10 +331,10 @@ export function analyzeClassNaming({ projectRoot, modulesRoot = 'src/modules', m
     const usage = usages.get(file);
     for (const pageId of usage?.pages || []) {
       if (!owner.toLowerCase().includes(kebab(moduleId))) {
-        add('error', 'style_owner_missing_module', `页面 ${pageId} 使用的 CSS Module owner “${owner}” 未包含模块语义；请使用 ${moduleId}-${pageId}.module.css。`, file);
+        add('error', 'style_owner_missing_module', `页面 ${pageId} 使用的 CSS Module owner “${owner}” 未包含模块语义；请使用 ${moduleId}-${pageId}.module.<ext>。`, file);
       }
       if (!owner.toLowerCase().includes(kebab(pageId))) {
-        add('error', 'style_owner_missing_page', `页面 ${pageId} 使用的 CSS Module owner “${owner}” 未包含页面语义；请使用 ${moduleId}-${pageId}.module.css。`, file);
+        add('error', 'style_owner_missing_page', `页面 ${pageId} 使用的 CSS Module owner “${owner}” 未包含页面语义；请使用 ${moduleId}-${pageId}.module.<ext>。`, file);
       }
     }
 

@@ -79,6 +79,9 @@ properties:
         type: string
       module_file_pattern:
         type: string
+      module_style_extension:
+        type: string
+        enum: [css, scss, less, sass, styl, stylus]
       scoped_name_pattern:
         type: string
       local_style_fallback:

@@ -13,7 +13,7 @@
 
 ## 当前样式与能力路由说明
 
-- 标准 React/Vue Vite 模板默认使用 CSS Modules，文件按 owner 命名，构建类名使用 `m_[name]_[local]__[hash:base64:6]`。 新页面默认按 `semantic-module-page-feature` 生成 `<module-id>-<page-id>.module.css`，类名包含模块、页面、功能和角色语义，并经过唯一性校验。
+- 标准 React/Vue Vite 模板默认使用 CSS Modules，文件按 owner 命名，构建类名使用 `m_[name]_[local]__[hash:base64:6]`。新项目页面默认按 `semantic-module-page-feature` 生成 `<module-id>-<page-id>.module.scss`；旧项目样式后缀唯一时新增页面沿用，混合时新增页面回退 SCSS，且不迁移或改写旧样式。类名包含模块、页面、功能和角色语义，并经过唯一性校验。
 - 装配系统同时支持 `vue-scoped`、`utility-css`、`css-in-js`、`shadow-dom`、`hybrid` 和项目内 `.cjs` custom adapter。
 - 项目通过 `.ai-frontend-assembler/project-scheme.yml` 的 `style_isolation.strategy` / `adapter` 声明真实隔离方式。
 - 模块导出和导入会验证样式策略、预处理器、外部样式依赖与 custom adapter 指纹。
